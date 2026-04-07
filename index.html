@@ -39,7 +39,7 @@
             
             <label for="seriennummer">2. Seriennummer:</label>
             <input type="text" id="seriennummer" placeholder="Scannen oder tippen...">
-            <button type="button" class="camera-btn" onclick="startScanner()">📷 Barcode scannen</button>
+            <button type="button" class="camera-btn" onclick="startScanner()">Barcode scannen</button>
             <div id="reader"></div>
 
             <label for="menge">3. Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="1">
@@ -50,12 +50,12 @@
             <select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
             <label for="maengel">7. Detailprüfung: Defekte/fehlendes Zubehör?</label>
             <select id="maengel"><option value="nein">Nein (Alles in Ordnung)</option><option value="ja">Ja (Mangel festgestellt)</option></select>
-            <button onclick="pruefen()">Ergebnis anzeigen</button>
+            <button onclick="pruefen()">Absenden</button>
         </div>
 
         <div id="resultPage" style="display:none;">
             <div class="logo-container">
-                <img src="logo.jpg" alt="CheckGate Logo">
+                <img src="logo.png" alt="CheckGate Logo">
             </div>
             
             <div id="resultBox" class="result"></div>
