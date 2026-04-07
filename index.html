@@ -8,6 +8,7 @@
     <title>CheckGate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root { --primary-blue: #0A3654; --accent-green: #1A8257; --bg-light: #f4f7f9; }
@@ -34,14 +35,10 @@
         
         <div id="formPage">
             <button class="login-btn-top" onclick="zeigeSeite('loginPage')">Admin-Login</button>
-            <div class="logo-container">
-                <img src="logo.png" alt="CheckGate Logo">
-            </div>
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
             <label for="datum">1. Datum:</label><input type="date" id="datum">
-            
-            <label for="seriennummer">2. Seriennummer:</label>
-            <input type="text" id="seriennummer" placeholder="Scannen oder tippen...">
+            <label for="seriennummer">2. Seriennummer:</label><input type="text" id="seriennummer" placeholder="Scannen oder tippen...">
             <button type="button" class="camera-btn" onclick="startScanner()">Barcode scannen</button>
             <div id="reader"></div>
 
@@ -57,31 +54,27 @@
         </div>
 
         <div id="resultPage" style="display:none;">
-            <div class="logo-container">
-                <img src="logo.png" alt="CheckGate Logo">
-            </div>
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <div id="resultBox" class="result"></div>
             
             <div id="errorActions" class="action-section" style="display:none;">
                 <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label>
                 <textarea id="mangelBeschreibung" rows="4" placeholder="Details eingeben..."></textarea>
-                <label for="mangelBilder">Bilder hochladen (Für lokalen Prototyp simuliert):</label>
+                <label for="mangelBilder">Bilder hochladen (derzeit inaktiv):</label>
                 <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment">
-                <button class="camera-btn" onclick="speichernUndZurueck(true)">Mängel sichern & Neue Prüfung</button>
+                <button class="camera-btn" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
             </div>
             
             <div id="successActions" class="action-section" style="display:none;">
-                <button class="camera-btn" onclick="speichernUndZurueck(false)">Sichern & Neue Prüfung starten</button>
+                <button class="camera-btn" onclick="inSupabaseSpeichern(false)">In Datenbank sichern & Neue Prüfung</button>
             </div>
         </div>
 
         <div id="loginPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2 style="text-align: center; color: #0A3654;">Admin Login</h2>
-            <label for="benutzername">Benutzername:</label>
-            <input type="text" id="benutzername" placeholder="Eingabe: admin">
-            <label for="passwort">Passwort:</label>
-            <input type="password" id="passwort" placeholder="Eingabe: admin">
+            <label for="benutzername">Benutzername:</label><input type="text" id="benutzername" placeholder="Eingabe: admin">
+            <label for="passwort">Passwort:</label><input type="password" id="passwort" placeholder="Eingabe: admin">
             <button onclick="login()">Einloggen</button>
             <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück</button>
         </div>
@@ -89,20 +82,21 @@
         <div id="adminPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2 style="text-align: center; color: #0A3654;">Daten-Export</h2>
-            <p style="text-align: center; font-size: 0.9em; color: #666;">Zeitraum auswählen, um alle in diesem Gerät gespeicherten Logs als ZIP herunterzuladen.</p>
-            
-            <label for="exportStart">Von Datum:</label>
-            <input type="date" id="exportStart">
-            <label for="exportEnde">Bis Datum:</label>
-            <input type="date" id="exportEnde">
-            
-            <button class="camera-btn" onclick="exportiereLogs()">Gesamtdaten (ZIP) herunterladen</button>
+            <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
+            <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
+            <button class="camera-btn" onclick="exportiereVonSupabase()">Gesamtdaten (ZIP) herunterladen</button>
             <button class="secondary-btn" onclick="zeigeSeite('formPage')">Logout / Zurück</button>
         </div>
 
     </div>
 
     <script>
+        // HIER DEINE EIGENEN SCHLÜSSEL EINTRAGEN:
+        const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
+        
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
         document.getElementById('datum').valueAsDate = new Date();
         document.getElementById('exportStart').valueAsDate = new Date();
         document.getElementById('exportEnde').valueAsDate = new Date();
@@ -110,7 +104,6 @@
         let currentStatus = "";
         let html5QrCode;
 
-        // Hilfsfunktion zum Wechseln der Seiten
         function zeigeSeite(seiteId) {
             document.getElementById('formPage').style.display = 'none';
             document.getElementById('resultPage').style.display = 'none';
@@ -119,7 +112,6 @@
             document.getElementById(seiteId).style.display = 'block';
         }
 
-        // Simulierter Login
         function login() {
             if (document.getElementById('benutzername').value === 'admin' && document.getElementById('passwort').value === 'admin') {
                 document.getElementById('benutzername').value = '';
@@ -189,62 +181,72 @@
             }
         }
 
-        // Speichert die Daten lokal im Browser-Speicher
-        function speichernUndZurueck(isError) {
-            const neuerEintrag = {
-                zeitstempel: new Date().toISOString().replace('T', ' ').substring(0, 19),
-                datum: document.getElementById('datum').value,
-                seriennummer: document.getElementById('seriennummer').value,
-                menge: document.getElementById('menge').value,
-                preis: document.getElementById('preis').value,
-                verpackung: document.getElementById('verpackung').value,
-                mengeOk: document.getElementById('mengeOk').value,
-                maengel: document.getElementById('maengel').value,
-                status: currentStatus,
-                beschreibung: isError ? document.getElementById('mangelBeschreibung').value.replace(/(\r\n|\n|\r)/gm, " ") : ""
-            };
+        async function inSupabaseSpeichern(isError) {
+            const beschreibung = isError ? document.getElementById('mangelBeschreibung').value.replace(/(\r\n|\n|\r)/gm, " ") : "";
+            
+            // Daten an Supabase senden
+            const { data, error } = await supabase
+                .from('wareneingang')
+                .insert([
+                    { 
+                        datum: document.getElementById('datum').value,
+                        seriennummer: document.getElementById('seriennummer').value,
+                        menge: parseInt(document.getElementById('menge').value),
+                        preis: parseFloat(document.getElementById('preis').value),
+                        verpackung: document.getElementById('verpackung').value,
+                        mengeOk: document.getElementById('mengeOk').value,
+                        maengel: document.getElementById('maengel').value,
+                        status: currentStatus,
+                        beschreibung: beschreibung
+                    }
+                ]);
 
-            let logs = JSON.parse(localStorage.getItem('wareneingangLogs') || '[]');
-            logs.push(neuerEintrag);
-            localStorage.setItem('wareneingangLogs', JSON.stringify(logs));
-
-            // Zurücksetzen
-            document.getElementById('seriennummer').value = ''; 
-            document.getElementById('mangelBeschreibung').value = '';
-            document.getElementById('mangelBilder').value = '';
-            zeigeSeite('formPage');
-            alert("Eintrag lokal gespeichert.");
+            if (error) {
+                alert("Fehler beim Speichern in der Datenbank: " + error.message);
+                console.error(error);
+            } else {
+                alert("Erfolgreich in der Datenbank gespeichert!");
+                // Zurücksetzen
+                document.getElementById('seriennummer').value = ''; 
+                document.getElementById('mangelBeschreibung').value = '';
+                document.getElementById('mangelBilder').value = '';
+                zeigeSeite('formPage');
+            }
         }
 
-        // Exportiert alle gefilterten Logs als ZIP
-        function exportiereLogs() {
+        async function exportiereVonSupabase() {
             const startDatum = document.getElementById('exportStart').value;
             const endeDatum = document.getElementById('exportEnde').value;
-            let logs = JSON.parse(localStorage.getItem('wareneingangLogs') || '[]');
             
-            // Nach Datum filtern
-            logs = logs.filter(log => log.datum >= startDatum && log.datum <= endeDatum);
+            // Daten aus Supabase abrufen
+            const { data: logs, error } = await supabase
+                .from('wareneingang')
+                .select('*')
+                .gte('datum', startDatum)
+                .lte('datum', endeDatum);
+
+            if (error) {
+                alert("Fehler beim Abrufen der Daten: " + error.message);
+                return;
+            }
             
-            if(logs.length === 0) {
-                alert("Keine Einträge in diesem Zeitraum gefunden.");
+            if(!logs || logs.length === 0) {
+                alert("Keine Einträge in diesem Zeitraum in der Datenbank gefunden.");
                 return;
             }
 
-            let csv = "Zeitstempel;Datum;Seriennummer;Menge;Preis_Netto;Verpackung_OK;Menge_OK;Keine_Maengel;Status;Mangelbeschreibung\n";
+            let csv = "ID;Zeitstempel_DB;Datum;Seriennummer;Menge;Preis_Netto;Verpackung_OK;Menge_OK;Keine_Maengel;Status;Mangelbeschreibung\n";
             logs.forEach(log => {
-                csv += `${log.zeitstempel};${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.verpackung};${log.mengeOk};${log.maengel};${log.status};${log.beschreibung}\n`;
+                csv += `${log.id};${log.created_at};${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.verpackung};${log.mengeOk};${log.maengel};${log.status};${log.beschreibung || ''}\n`;
             });
 
             const zip = new JSZip();
-            zip.file(`Log_Export_${startDatum}_bis_${endeDatum}.csv`, csv);
+            zip.file(`Datenbank_Export_${startDatum}_bis_${endeDatum}.csv`, csv);
             
-            // Hinweisband in der Datei für Bilder (da lokale Speicherung simuliert ist)
-            zip.file("HINWEIS_BILDER.txt", "In einer echten Web-App (mit Firebase oder Google Drive) würden hier die erfassten Schadensbilder des Zeitraums liegen. Da dies ein lokaler GitHub Pages Prototyp ist, werden Bilder aufgrund von Speicherlimits im Browser (LocalStorage) nicht mitgespeichert.");
-
             zip.generateAsync({type:"blob"}).then(function(content) {
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(content);
-                link.download = `Gesamtexport_Wareneingang.zip`;
+                link.download = `Gesamtexport_CheckGate_DB.zip`;
                 link.click();
             });
         }
