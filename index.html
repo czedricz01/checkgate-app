@@ -13,7 +13,8 @@
         :root { --primary-blue: #0A3654; --accent-green: #1A8257; --bg-light: #f4f7f9; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: var(--bg-light); margin: 0; }
         .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(10, 54, 84, 0.1); border-top: 5px solid var(--primary-blue); }
-        .main-title { text-align: center; color: var(--primary-blue); font-size: 2.5em; margin-top: 0; margin-bottom: 25px; font-weight: bold; }
+        .logo-container { text-align: center; margin-bottom: 25px; }
+        .logo-container img { max-width: 180px; height: auto; }
         label { display: block; margin-top: 15px; font-weight: bold; color: var(--primary-blue); }
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
         button { width: 100%; padding: 15px; background-color: var(--primary-blue); color: white; border: none; border-radius: 8px; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; }
@@ -30,7 +31,10 @@
 <body>
     <div class="container">
         <div id="formPage">
-            <h1 class="main-title">CheckGate</h1>
+            <div class="logo-container">
+                <img src="logo.jpg" alt="CheckGate Logo">
+            </div>
+            
             <label for="datum">1. Datum:</label><input type="date" id="datum">
             
             <label for="seriennummer">2. Seriennummer:</label>
@@ -50,7 +54,10 @@
         </div>
 
         <div id="resultPage" style="display:none;">
-            <h1 class="main-title">CheckGate</h1>
+            <div class="logo-container">
+                <img src="logo.jpg" alt="CheckGate Logo">
+            </div>
+            
             <div id="resultBox" class="result"></div>
             
             <div id="successActions" class="action-section" style="display:none;">
@@ -73,7 +80,6 @@
         let currentStatus = "";
         let html5QrCode;
 
-        // Scanner-Funktion
         function startScanner() {
             const readerDiv = document.getElementById('reader');
             readerDiv.style.display = "block";
@@ -86,14 +92,13 @@
             
             html5QrCode.start({ facingMode: "environment" }, config,
                 (decodedText) => {
-                    // Erfolgreicher Scan
                     document.getElementById('seriennummer').value = decodedText;
                     html5QrCode.stop().then(() => {
                         readerDiv.style.display = "none";
                     });
                 },
                 (errorMessage) => {
-                    // Ignorieren, da die Kamera kontinuierlich scannt bis sie einen Code findet
+                    // Ignorieren, da kontinuierlich gescannt wird
                 }
             ).catch((err) => {
                 alert("Fehler beim Zugriff auf die Kamera: " + err);
@@ -143,7 +148,6 @@
             formPage.style.display = 'none';
             resultPage.style.display = 'block';
             
-            // Scanner stoppen, falls er noch läuft
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop();
                 document.getElementById('reader').style.display = "none";
