@@ -37,18 +37,18 @@
             <button class="login-btn-top" onclick="zeigeSeite('loginPage')">Admin-Login</button>
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
-            <label for="datum">1. Datum:</label><input type="date" id="datum">
-            <label for="seriennummer">2. Seriennummer:</label><input type="text" id="seriennummer" placeholder="Scannen oder tippen...">
+            <label for="datum">Datum:</label><input type="date" id="datum">
+            <label for="artikelnummer">Artikelnummer:</label><input type="text" id="artikelnummer" placeholder="Scannen oder tippen...">
             <button type="button" class="camera-btn" onclick="startScanner()">Barcode scannen</button>
             <div id="reader"></div>
 
-            <label for="menge">3. Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="1">
-            <label for="preis">4. Einzelpreis Netto (€):</label><input type="number" id="preis" min="0" step="0.01" value="0.00">
-            <label for="verpackung">5. Sichtprüfung: Verpackung intakt?</label>
+            <label for="menge">Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="1">
+            <label for="preis">Einzelpreis Netto (€):</label><input type="number" id="preis" min="0" step="0.01" value="0.00">
+            <label for="verpackung">Sichtprüfung: Verpackung intakt?</label>
             <select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein (Transportschaden)</option></select>
-            <label for="mengeOk">6. Mengenprüfung: Stimmt mit Lieferschein überein?</label>
+            <label for="mengeOk">Mengenprüfung: Stimmt mit Lieferschein überein?</label>
             <select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
-            <label for="maengel">7. Detailprüfung: Defekte/fehlendes Zubehör?</label>
+            <label for="maengel">Detailprüfung: Defekte/fehlendes Zubehör?</label>
             <select id="maengel"><option value="nein">Nein (Alles in Ordnung)</option><option value="ja">Ja (Mangel festgestellt)</option></select>
             <button onclick="pruefen()">Absenden</button>
         </div>
@@ -60,13 +60,13 @@
             <div id="errorActions" class="action-section" style="display:none;">
                 <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label>
                 <textarea id="mangelBeschreibung" rows="4" placeholder="Details eingeben..."></textarea>
-                <label for="mangelBilder">Bilder hochladen (derzeit inaktiv):</label>
+                <label for="mangelBilder">Bilder hochladen (Mehrfachauswahl möglich):</label>
                 <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment">
-                <button class="camera-btn" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
+                <button id="saveBtnError" class="camera-btn" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
             </div>
             
             <div id="successActions" class="action-section" style="display:none;">
-                <button class="camera-btn" onclick="inSupabaseSpeichern(false)">In Datenbank sichern & Neue Prüfung</button>
+                <button id="saveBtnSuccess" class="camera-btn" onclick="inSupabaseSpeichern(false)">In Datenbank sichern & Neue Prüfung</button>
             </div>
         </div>
 
@@ -84,18 +84,16 @@
             <h2 style="text-align: center; color: #0A3654;">Daten-Export</h2>
             <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
             <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
-            <button class="camera-btn" onclick="exportiereVonSupabase()">Gesamtdaten (ZIP) herunterladen</button>
+            <button id="exportBtn" class="camera-btn" onclick="exportiereVonSupabase()">Gesamtdaten (ZIP) herunterladen</button>
             <button class="secondary-btn" onclick="zeigeSeite('formPage')">Logout / Zurück</button>
         </div>
 
     </div>
 
     <script>
-        // Supabase Schlüssel
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         
-        // KORREKTUR: Umbenennung in supabaseClient zur Fehlervermeidung
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         document.getElementById('datum').valueAsDate = new Date();
@@ -136,7 +134,7 @@
                 
                 html5QrCode.start({ facingMode: "environment" }, config,
                     (decodedText) => {
-                        document.getElementById('seriennummer').value = decodedText;
+                        document.getElementById('artikelnummer').value = decodedText;
                         html5QrCode.stop().then(() => { readerDiv.style.display = "none"; });
                     },
                     (errorMessage) => {}
@@ -150,14 +148,14 @@
         }
 
         function pruefen() {
-            const seriennummer = document.getElementById('seriennummer').value;
+            const artikelnummer = document.getElementById('artikelnummer').value;
             const menge = parseInt(document.getElementById('menge').value);
             const preis = parseFloat(document.getElementById('preis').value);
             const verpackung = document.getElementById('verpackung').value;
             const mengeOk = document.getElementById('mengeOk').value;
             const maengel = document.getElementById('maengel').value;
             
-            if (!seriennummer) { alert("Bitte eine Seriennummer erfassen."); return; }
+            if (!artikelnummer) { alert("Bitte eine Artikelnummer erfassen."); return; }
 
             const resultBox = document.getElementById('resultBox');
             resultBox.className = 'result'; 
@@ -195,30 +193,63 @@
         }
 
         async function inSupabaseSpeichern(isError) {
+            document.getElementById('saveBtnError').innerText = "Wird gespeichert...";
+            document.getElementById('saveBtnSuccess').innerText = "Wird gespeichert...";
+            document.getElementById('saveBtnError').disabled = true;
+            document.getElementById('saveBtnSuccess').disabled = true;
+
             const beschreibung = isError ? document.getElementById('mangelBeschreibung').value.replace(/(\r\n|\n|\r)/gm, " ") : "";
-            
-            // KORREKTUR: Aufruf über supabaseClient
+            let bilderUrls = [];
+
+            if (isError) {
+                const files = document.getElementById('mangelBilder').files;
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const fileExt = file.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    
+                    const { data, error } = await supabaseClient.storage
+                        .from('maengelbilder')
+                        .upload(fileName, file);
+
+                    if (error) {
+                        alert("Fehler beim Upload von " + file.name + ": " + error.message);
+                    } else {
+                        const { data: publicUrlData } = supabaseClient.storage.from('maengelbilder').getPublicUrl(fileName);
+                        bilderUrls.push(publicUrlData.publicUrl);
+                    }
+                }
+            }
+
+            const urlsString = bilderUrls.join(',');
+
             const { data, error } = await supabaseClient
                 .from('wareneingang')
                 .insert([
                     { 
                         datum: document.getElementById('datum').value,
-                        seriennummer: document.getElementById('seriennummer').value,
+                        seriennummer: document.getElementById('artikelnummer').value,
                         menge: parseInt(document.getElementById('menge').value),
                         preis: parseFloat(document.getElementById('preis').value),
                         verpackung: document.getElementById('verpackung').value,
                         mengeOk: document.getElementById('mengeOk').value,
                         maengel: document.getElementById('maengel').value,
                         status: currentStatus,
-                        beschreibung: beschreibung
+                        beschreibung: beschreibung,
+                        bilder_urls: urlsString
                     }
                 ]);
+
+            document.getElementById('saveBtnError').innerText = "In Datenbank sichern & Neue Prüfung";
+            document.getElementById('saveBtnSuccess').innerText = "In Datenbank sichern & Neue Prüfung";
+            document.getElementById('saveBtnError').disabled = false;
+            document.getElementById('saveBtnSuccess').disabled = false;
 
             if (error) {
                 alert("Fehler beim Speichern in der Datenbank: " + error.message);
             } else {
                 alert("Erfolgreich in der Datenbank gespeichert!");
-                document.getElementById('seriennummer').value = ''; 
+                document.getElementById('artikelnummer').value = ''; 
                 document.getElementById('mangelBeschreibung').value = '';
                 document.getElementById('mangelBilder').value = '';
                 zeigeSeite('formPage');
@@ -226,10 +257,13 @@
         }
 
         async function exportiereVonSupabase() {
+            const btn = document.getElementById('exportBtn');
+            btn.innerText = "Daten werden zusammengestellt (ZIP)...";
+            btn.disabled = true;
+
             const startDatum = document.getElementById('exportStart').value;
             const endeDatum = document.getElementById('exportEnde').value;
             
-            // KORREKTUR: Aufruf über supabaseClient
             const { data: logs, error } = await supabaseClient
                 .from('wareneingang')
                 .select('*')
@@ -238,27 +272,59 @@
 
             if (error) {
                 alert("Fehler beim Abrufen der Daten: " + error.message);
+                btn.innerText = "Gesamtdaten (ZIP) herunterladen";
+                btn.disabled = false;
                 return;
             }
             
             if(!logs || logs.length === 0) {
                 alert("Keine Einträge in diesem Zeitraum gefunden.");
+                btn.innerText = "Gesamtdaten (ZIP) herunterladen";
+                btn.disabled = false;
                 return;
             }
 
-            let csv = "ID;Zeitstempel_DB;Datum;Seriennummer;Menge;Preis_Netto;Verpackung_OK;Menge_OK;Keine_Maengel;Status;Mangelbeschreibung\n";
+            let csv = "ID;Zeitstempel_DB;Datum;Artikelnummer;Menge;Preis_Netto;Verpackung_OK;Menge_OK;Keine_Maengel;Status;Mangelbeschreibung;Bilder_Links\n";
             logs.forEach(log => {
-                csv += `${log.id};${log.created_at};${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.verpackung};${log.mengeOk};${log.maengel};${log.status};${log.beschreibung || ''}\n`;
+                csv += `${log.id};${log.created_at};${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.verpackung};${log.mengeOk};${log.maengel};${log.status};${log.beschreibung || ''};${log.bilder_urls || ''}\n`;
             });
 
             const zip = new JSZip();
             zip.file(`Datenbank_Export_${startDatum}_bis_${endeDatum}.csv`, csv);
+
+            const imagePromises = [];
             
+            logs.forEach(log => {
+                if (log.bilder_urls) {
+                    const urls = log.bilder_urls.split(',');
+                    urls.forEach((url, index) => {
+                        if (url.trim() !== '') {
+                            const extension = url.split('.').pop().split('?')[0] || 'jpg';
+                            const fileName = `Bilder/${log.datum}_${log.seriennummer}_Bild_${index + 1}.${extension}`;
+                            
+                            const promise = fetch(url)
+                                .then(res => res.blob())
+                                .then(blob => {
+                                    zip.file(fileName, blob);
+                                })
+                                .catch(err => console.error("Fehler beim Bild-Download:", url, err));
+                            
+                            imagePromises.push(promise);
+                        }
+                    });
+                }
+            });
+
+            await Promise.all(imagePromises);
+
             zip.generateAsync({type:"blob"}).then(function(content) {
                 const link = document.createElement("a");
                 link.href = URL.createObjectURL(content);
                 link.download = `Gesamtexport_CheckGate_DB.zip`;
                 link.click();
+                
+                btn.innerText = "Gesamtdaten (ZIP) herunterladen";
+                btn.disabled = false;
             });
         }
     </script>
