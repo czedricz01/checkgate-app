@@ -7,7 +7,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>CheckGate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -91,7 +91,7 @@
     </div>
 
     <script>
-        // HIER DEINE EIGENEN SCHLÜSSEL EINTRAGEN:
+        // Deine Supabase Schlüssel
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         
@@ -123,17 +123,29 @@
         }
 
         function startScanner() {
-            const readerDiv = document.getElementById('reader');
-            readerDiv.style.display = "block";
-            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            const config = { fps: 10, qrbox: { width: 250, height: 100 } };
-            html5QrCode.start({ facingMode: "environment" }, config,
-                (decodedText) => {
-                    document.getElementById('seriennummer').value = decodedText;
-                    html5QrCode.stop().then(() => { readerDiv.style.display = "none"; });
-                },
-                (errorMessage) => {}
-            ).catch((err) => { alert("Fehler Kamera: " + err); });
+            try {
+                const readerDiv = document.getElementById('reader');
+                readerDiv.style.display = "block";
+                
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode("reader");
+                }
+                
+                const config = { fps: 10, qrbox: { width: 250, height: 100 } };
+                
+                html5QrCode.start({ facingMode: "environment" }, config,
+                    (decodedText) => {
+                        document.getElementById('seriennummer').value = decodedText;
+                        html5QrCode.stop().then(() => { readerDiv.style.display = "none"; });
+                    },
+                    (errorMessage) => {}
+                ).catch((err) => { 
+                    alert("Fehler bei Kamera-Aktivierung: " + err); 
+                    readerDiv.style.display = "none";
+                });
+            } catch (e) {
+                alert("Kritischer Fehler beim Scanner-Start: " + e.message);
+            }
         }
 
         function pruefen() {
@@ -184,7 +196,6 @@
         async function inSupabaseSpeichern(isError) {
             const beschreibung = isError ? document.getElementById('mangelBeschreibung').value.replace(/(\r\n|\n|\r)/gm, " ") : "";
             
-            // Daten an Supabase senden
             const { data, error } = await supabase
                 .from('wareneingang')
                 .insert([
@@ -203,10 +214,8 @@
 
             if (error) {
                 alert("Fehler beim Speichern in der Datenbank: " + error.message);
-                console.error(error);
             } else {
                 alert("Erfolgreich in der Datenbank gespeichert!");
-                // Zurücksetzen
                 document.getElementById('seriennummer').value = ''; 
                 document.getElementById('mangelBeschreibung').value = '';
                 document.getElementById('mangelBilder').value = '';
@@ -218,7 +227,6 @@
             const startDatum = document.getElementById('exportStart').value;
             const endeDatum = document.getElementById('exportEnde').value;
             
-            // Daten aus Supabase abrufen
             const { data: logs, error } = await supabase
                 .from('wareneingang')
                 .select('*')
@@ -231,7 +239,7 @@
             }
             
             if(!logs || logs.length === 0) {
-                alert("Keine Einträge in diesem Zeitraum in der Datenbank gefunden.");
+                alert("Keine Einträge in diesem Zeitraum gefunden.");
                 return;
             }
 
