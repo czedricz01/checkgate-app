@@ -12,7 +12,7 @@
     <style>
         :root { --primary-blue: #0A3654; --accent-green: #1A8257; --bg-light: #f4f7f9; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: var(--bg-light); margin: 0; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(10, 54, 84, 0.1); border-top: 5px solid var(--primary-blue); }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(10, 54, 84, 0.1); border-top: 5px solid var(--primary-blue); position: relative; }
         .logo-container { text-align: center; margin-bottom: 25px; }
         .logo-container img { max-width: 180px; height: auto; }
         label { display: block; margin-top: 15px; font-weight: bold; color: var(--primary-blue); }
@@ -26,11 +26,14 @@
         .warning { background-color: #fff8e1; color: #f57c00; border: 2px solid #f57c00; }
         .action-section { border-top: 2px solid #eee; padding-top: 15px; margin-top: 15px; }
         #reader { width: 100%; margin-top: 15px; display: none; }
+        .login-btn-top { position: absolute; top: 10px; right: 10px; background-color: #6c757d; width: auto; padding: 8px 15px; font-size: 0.9em; margin-top: 0; }
     </style>
 </head>
 <body>
     <div class="container">
+        
         <div id="formPage">
+            <button class="login-btn-top" onclick="zeigeSeite('loginPage')">Admin-Login</button>
             <div class="logo-container">
                 <img src="logo.png" alt="CheckGate Logo">
             </div>
@@ -57,52 +60,88 @@
             <div class="logo-container">
                 <img src="logo.png" alt="CheckGate Logo">
             </div>
-            
             <div id="resultBox" class="result"></div>
-            
-            <div id="successActions" class="action-section" style="display:none;">
-                <button class="camera-btn" onclick="downloadCSV()">CSV-Protokoll herunterladen</button>
-            </div>
             
             <div id="errorActions" class="action-section" style="display:none;">
                 <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label>
                 <textarea id="mangelBeschreibung" rows="4" placeholder="Details eingeben..."></textarea>
-                <label for="mangelBilder">Bilder hochladen (Mehrfachauswahl möglich):</label>
+                <label for="mangelBilder">Bilder hochladen (Für lokalen Prototyp simuliert):</label>
                 <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment">
-                <button class="camera-btn" onclick="downloadZIP()">Bestätigen & ZIP herunterladen</button>
+                <button class="camera-btn" onclick="speichernUndZurueck(true)">Mängel sichern & Neue Prüfung</button>
             </div>
-            <button class="secondary-btn" onclick="zurueck()">Neue Prüfung starten</button>
+            
+            <div id="successActions" class="action-section" style="display:none;">
+                <button class="camera-btn" onclick="speichernUndZurueck(false)">Sichern & Neue Prüfung starten</button>
+            </div>
         </div>
+
+        <div id="loginPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <h2 style="text-align: center; color: #0A3654;">Admin Login</h2>
+            <label for="benutzername">Benutzername:</label>
+            <input type="text" id="benutzername" placeholder="Eingabe: admin">
+            <label for="passwort">Passwort:</label>
+            <input type="password" id="passwort" placeholder="Eingabe: admin">
+            <button onclick="login()">Einloggen</button>
+            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück</button>
+        </div>
+
+        <div id="adminPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <h2 style="text-align: center; color: #0A3654;">Daten-Export</h2>
+            <p style="text-align: center; font-size: 0.9em; color: #666;">Zeitraum auswählen, um alle in diesem Gerät gespeicherten Logs als ZIP herunterzuladen.</p>
+            
+            <label for="exportStart">Von Datum:</label>
+            <input type="date" id="exportStart">
+            <label for="exportEnde">Bis Datum:</label>
+            <input type="date" id="exportEnde">
+            
+            <button class="camera-btn" onclick="exportiereLogs()">Gesamtdaten (ZIP) herunterladen</button>
+            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Logout / Zurück</button>
+        </div>
+
     </div>
 
     <script>
         document.getElementById('datum').valueAsDate = new Date();
+        document.getElementById('exportStart').valueAsDate = new Date();
+        document.getElementById('exportEnde').valueAsDate = new Date();
+        
         let currentStatus = "";
         let html5QrCode;
+
+        // Hilfsfunktion zum Wechseln der Seiten
+        function zeigeSeite(seiteId) {
+            document.getElementById('formPage').style.display = 'none';
+            document.getElementById('resultPage').style.display = 'none';
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('adminPage').style.display = 'none';
+            document.getElementById(seiteId).style.display = 'block';
+        }
+
+        // Simulierter Login
+        function login() {
+            if (document.getElementById('benutzername').value === 'admin' && document.getElementById('passwort').value === 'admin') {
+                document.getElementById('benutzername').value = '';
+                document.getElementById('passwort').value = '';
+                zeigeSeite('adminPage');
+            } else {
+                alert('Falsche Zugangsdaten. (Tipp: admin / admin)');
+            }
+        }
 
         function startScanner() {
             const readerDiv = document.getElementById('reader');
             readerDiv.style.display = "block";
-            
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
-
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
             const config = { fps: 10, qrbox: { width: 250, height: 100 } };
-            
             html5QrCode.start({ facingMode: "environment" }, config,
                 (decodedText) => {
                     document.getElementById('seriennummer').value = decodedText;
-                    html5QrCode.stop().then(() => {
-                        readerDiv.style.display = "none";
-                    });
+                    html5QrCode.stop().then(() => { readerDiv.style.display = "none"; });
                 },
-                (errorMessage) => {
-                    // Ignorieren, da kontinuierlich gescannt wird
-                }
-            ).catch((err) => {
-                alert("Fehler beim Zugriff auf die Kamera: " + err);
-            });
+                (errorMessage) => {}
+            ).catch((err) => { alert("Fehler Kamera: " + err); });
         }
 
         function pruefen() {
@@ -115,10 +154,7 @@
             
             if (!seriennummer) { alert("Bitte eine Seriennummer erfassen."); return; }
 
-            const formPage = document.getElementById('formPage');
-            const resultPage = document.getElementById('resultPage');
             const resultBox = document.getElementById('resultBox');
-            
             resultBox.className = 'result'; 
             let isError = false;
             let statusHtml = "";
@@ -145,8 +181,7 @@
             resultBox.innerHTML = statusHtml;
             document.getElementById('successActions').style.display = isError ? 'none' : 'block';
             document.getElementById('errorActions').style.display = isError ? 'block' : 'none';
-            formPage.style.display = 'none';
-            resultPage.style.display = 'block';
+            zeigeSeite('resultPage');
             
             if (html5QrCode && html5QrCode.isScanning) {
                 html5QrCode.stop();
@@ -154,49 +189,64 @@
             }
         }
 
-        function generateCSVContent(includeMangelInfo) {
-            const zeitstempel = new Date().toISOString().replace('T', ' ').substring(0, 19);
-            let csv = "Zeitstempel;Datum;Seriennummer;Menge;Preis_Netto;Verpackung_OK;Menge_OK;Keine_Maengel;Status";
-            if (includeMangelInfo) csv += ";Mangelbeschreibung";
-            csv += "\n";
-            csv += `${zeitstempel};${document.getElementById('datum').value};${document.getElementById('seriennummer').value};${document.getElementById('menge').value};${document.getElementById('preis').value};${document.getElementById('verpackung').value};${document.getElementById('mengeOk').value};${document.getElementById('maengel').value};${currentStatus}`;
-            
-            if (includeMangelInfo) {
-                let beschreibung = document.getElementById('mangelBeschreibung').value.replace(/(\r\n|\n|\r)/gm, " ");
-                csv += `;${beschreibung}`;
-            }
-            return csv;
-        }
+        // Speichert die Daten lokal im Browser-Speicher
+        function speichernUndZurueck(isError) {
+            const neuerEintrag = {
+                zeitstempel: new Date().toISOString().replace('T', ' ').substring(0, 19),
+                datum: document.getElementById('datum').value,
+                seriennummer: document.getElementById('seriennummer').value,
+                menge: document.getElementById('menge').value,
+                preis: document.getElementById('preis').value,
+                verpackung: document.getElementById('verpackung').value,
+                mengeOk: document.getElementById('mengeOk').value,
+                maengel: document.getElementById('maengel').value,
+                status: currentStatus,
+                beschreibung: isError ? document.getElementById('mangelBeschreibung').value.replace(/(\r\n|\n|\r)/gm, " ") : ""
+            };
 
-        function downloadCSV() {
-            const blob = new Blob([generateCSVContent(false)], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Wareneingang_${document.getElementById('seriennummer').value}.csv`;
-            link.click();
-        }
+            let logs = JSON.parse(localStorage.getItem('wareneingangLogs') || '[]');
+            logs.push(neuerEintrag);
+            localStorage.setItem('wareneingangLogs', JSON.stringify(logs));
 
-        function downloadZIP() {
-            const zip = new JSZip();
-            zip.file("pruefprotokoll.csv", generateCSVContent(true));
-            const files = document.getElementById('mangelBilder').files;
-            for (let i = 0; i < files.length; i++) {
-                zip.file(files[i].name, files[i]);
-            }
-            zip.generateAsync({type:"blob"}).then(function(content) {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(content);
-                link.download = `Maengelbericht_${document.getElementById('seriennummer').value}.zip`;
-                link.click();
-            });
-        }
-
-        function zurueck() {
-            document.getElementById('formPage').style.display = 'block';
-            document.getElementById('resultPage').style.display = 'none';
+            // Zurücksetzen
             document.getElementById('seriennummer').value = ''; 
             document.getElementById('mangelBeschreibung').value = '';
             document.getElementById('mangelBilder').value = '';
+            zeigeSeite('formPage');
+            alert("Eintrag lokal gespeichert.");
+        }
+
+        // Exportiert alle gefilterten Logs als ZIP
+        function exportiereLogs() {
+            const startDatum = document.getElementById('exportStart').value;
+            const endeDatum = document.getElementById('exportEnde').value;
+            let logs = JSON.parse(localStorage.getItem('wareneingangLogs') || '[]');
+            
+            // Nach Datum filtern
+            logs = logs.filter(log => log.datum >= startDatum && log.datum <= endeDatum);
+            
+            if(logs.length === 0) {
+                alert("Keine Einträge in diesem Zeitraum gefunden.");
+                return;
+            }
+
+            let csv = "Zeitstempel;Datum;Seriennummer;Menge;Preis_Netto;Verpackung_OK;Menge_OK;Keine_Maengel;Status;Mangelbeschreibung\n";
+            logs.forEach(log => {
+                csv += `${log.zeitstempel};${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.verpackung};${log.mengeOk};${log.maengel};${log.status};${log.beschreibung}\n`;
+            });
+
+            const zip = new JSZip();
+            zip.file(`Log_Export_${startDatum}_bis_${endeDatum}.csv`, csv);
+            
+            // Hinweisband in der Datei für Bilder (da lokale Speicherung simuliert ist)
+            zip.file("HINWEIS_BILDER.txt", "In einer echten Web-App (mit Firebase oder Google Drive) würden hier die erfassten Schadensbilder des Zeitraums liegen. Da dies ein lokaler GitHub Pages Prototyp ist, werden Bilder aufgrund von Speicherlimits im Browser (LocalStorage) nicht mitgespeichert.");
+
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(content);
+                link.download = `Gesamtexport_Wareneingang.zip`;
+                link.click();
+            });
         }
     </script>
 </body>
