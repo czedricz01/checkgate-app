@@ -91,11 +91,12 @@
     </div>
 
     <script>
-        // Deine Supabase Schlüssel
+        // Supabase Schlüssel
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // KORREKTUR: Umbenennung in supabaseClient zur Fehlervermeidung
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         document.getElementById('datum').valueAsDate = new Date();
         document.getElementById('exportStart').valueAsDate = new Date();
@@ -196,7 +197,8 @@
         async function inSupabaseSpeichern(isError) {
             const beschreibung = isError ? document.getElementById('mangelBeschreibung').value.replace(/(\r\n|\n|\r)/gm, " ") : "";
             
-            const { data, error } = await supabase
+            // KORREKTUR: Aufruf über supabaseClient
+            const { data, error } = await supabaseClient
                 .from('wareneingang')
                 .insert([
                     { 
@@ -227,7 +229,8 @@
             const startDatum = document.getElementById('exportStart').value;
             const endeDatum = document.getElementById('exportEnde').value;
             
-            const { data: logs, error } = await supabase
+            // KORREKTUR: Aufruf über supabaseClient
+            const { data: logs, error } = await supabaseClient
                 .from('wareneingang')
                 .select('*')
                 .gte('datum', startDatum)
