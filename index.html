@@ -126,19 +126,12 @@
         function pruefen() {
             const art = document.getElementById('artikelnummer').value;
             if (!art) { alert("Artikelnummer fehlt."); return; }
-            const menge = parseInt(document.getElementById('menge').value);
-            const preis = parseFloat(document.getElementById('preis').value);
-            const v = document.getElementById('verpackung').value;
-            const mOk = document.getElementById('mengeOk').value;
-            const ma = document.getElementById('maengel').value;
-            
             const rb = document.getElementById('resultBox');
             rb.className = 'result';
-            let err = (v==='nein' || mOk==='nein' || ma==='ja');
+            let err = (document.getElementById('verpackung').value==='nein' || document.getElementById('mengeOk').value==='nein' || document.getElementById('maengel').value==='ja');
             currentStatus = err ? "Gesperrt" : "Freigegeben";
             rb.classList.add(err ? 'error' : 'success');
             rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
-            
             document.getElementById('successActions').style.display = err ? 'none' : 'block';
             document.getElementById('errorActions').style.display = err ? 'block' : 'none';
             zeigeSeite('resultPage');
@@ -147,24 +140,31 @@
 
         async function inSupabaseSpeichern(isError) {
             const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess');
-            btn.innerText = "Sichere Daten..."; btn.disabled = true;
+            btn.innerText = "Verarbeite..."; btn.disabled = true;
 
             let bilderUrls = [];
             const files = document.getElementById('mangelBilder').files;
 
-            if (isError && files.length > 0) {
-                for (let file of files) {
-                    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}_${file.name}`;
-                    // Upload in den Bucket 'maengelbilder'
-                    const { data, error } = await supabaseClient.storage
-                        .from('maengelbilder')
-                        .upload(fileName, file);
+            if (isError) {
+                if (files.length === 0) {
+                    alert("Hinweis: Keine Bilder ausgewählt. Speichere nur Textdaten.");
+                } else {
+                    for (let file of files) {
+                        const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
+                        console.log("Starte Upload für: ", fileName);
+                        
+                        const { data, error } = await supabaseClient.storage
+                            .from('maengelbilder')
+                            .upload(fileName, file);
 
-                    if (error) {
-                        alert("Upload-Fehler: " + error.message + " (Hast du die Policies erstellt?)");
-                    } else {
-                        const { data: pUrl } = supabaseClient.storage.from('maengelbilder').getPublicUrl(fileName);
-                        bilderUrls.push(pUrl.publicUrl);
+                        if (error) {
+                            alert("UPLOAD-STOPP: " + error.message);
+                            console.error(error);
+                        } else {
+                            const { data: pUrl } = supabaseClient.storage.from('maengelbilder').getPublicUrl(fileName);
+                            bilderUrls.push(pUrl.publicUrl);
+                            console.log("Upload erfolgreich: ", pUrl.publicUrl);
+                        }
                     }
                 }
             }
@@ -183,40 +183,48 @@
             }]);
 
             btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
-            if (dbErr) alert("Datenbank-Fehler: " + dbErr.message);
-            else { alert("Gespeichert!"); zeigeSeite('formPage'); }
+            if (dbErr) {
+                alert("DATENBANK-FEHLER: " + dbErr.message);
+            } else { 
+                alert("Erfolgreich gespeichert!"); 
+                zeigeSeite('formPage'); 
+                // Reset
+                document.getElementById('artikelnummer').value = "";
+                document.getElementById('mangelBeschreibung').value = "";
+                document.getElementById('mangelBilder').value = "";
+            }
         }
 
         async function exportiereVonSupabase() {
             const btn = document.getElementById('exportBtn');
-            btn.innerText = "Lade Daten..."; btn.disabled = true;
+            btn.innerText = "ZIP wird erstellt..."; btn.disabled = true;
             
             const { data: logs, error } = await supabaseClient.from('wareneingang').select('*')
                 .gte('datum', document.getElementById('exportStart').value)
                 .lte('datum', document.getElementById('exportEnde').value);
 
-            if (error || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; return; }
+            if (error || !logs.length) { alert("Keine Daten im Zeitraum."); btn.disabled = false; btn.innerText = "Gesamtdaten (ZIP) herunterladen"; return; }
 
-            let csv = "Datum;Artikelnummer;Menge;Preis;Status;Beschreibung;Bilder\n";
+            let csv = "Datum;Artikelnummer;Menge;Preis;Status;Beschreibung;Bilder_Links\n";
             const zip = new JSZip();
             const imgFolder = zip.folder("Bilder");
             const promises = [];
 
             logs.forEach(log => {
-                csv += `${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.status};${log.beschreibung};${log.bilder_urls}\n`;
+                csv += `${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.status};"${log.beschreibung}";"${log.bilder_urls}"\n`;
                 if (log.bilder_urls) {
                     log.bilder_urls.split(',').forEach((url, i) => {
-                        const p = fetch(url).then(r => r.blob()).then(b => imgFolder.file(`${log.seriennummer}_${i}.jpg`, b)).catch(()=>null);
+                        const p = fetch(url).then(r => r.blob()).then(b => imgFolder.file(`${log.seriennummer}_Bild${i+1}.jpg`, b)).catch(()=>null);
                         promises.push(p);
                     });
                 }
             });
 
             await Promise.all(promises);
-            zip.file("Export.csv", csv);
+            zip.file("Wareneingang_Export.csv", csv);
             zip.generateAsync({type:"blob"}).then(c => {
                 const a = document.createElement("a"); a.href = URL.createObjectURL(c); a.download = "CheckGate_Export.zip"; a.click();
-                btn.innerText = "Download bereit"; btn.disabled = false;
+                btn.innerText = "Gesamtdaten (ZIP) herunterladen"; btn.disabled = false;
             });
         }
     </script>
