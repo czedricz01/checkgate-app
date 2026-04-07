@@ -24,7 +24,6 @@
         .result { padding: 20px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; }
         .success { background-color: #e8f5e9; color: var(--accent-green); border: 2px solid var(--accent-green); }
         .error { background-color: #fbe9e7; color: #d32f2f; border: 2px solid #d32f2f; }
-        .warning { background-color: #fff8e1; color: #f57c00; border: 2px solid #f57c00; }
         .action-section { border-top: 2px solid #eee; padding-top: 15px; margin-top: 15px; }
         #reader { width: 100%; margin-top: 15px; display: none; }
         .login-btn-top { position: absolute; top: 10px; right: 10px; background-color: #6c757d; width: auto; padding: 8px 15px; font-size: 0.9em; margin-top: 0; }
@@ -60,7 +59,7 @@
             <div id="errorActions" class="action-section" style="display:none;">
                 <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label>
                 <textarea id="mangelBeschreibung" rows="4" placeholder="Details eingeben..."></textarea>
-                <label for="mangelBilder">Bilder hochladen (Mehrfachauswahl möglich):</label>
+                <label for="mangelBilder">Bilder hochladen:</label>
                 <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment">
                 <button id="saveBtnError" class="camera-btn" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
             </div>
@@ -93,13 +92,11 @@
     <script>
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
-        
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         document.getElementById('datum').valueAsDate = new Date();
         document.getElementById('exportStart').valueAsDate = new Date();
         document.getElementById('exportEnde').valueAsDate = new Date();
-        
         let currentStatus = "";
         let html5QrCode;
 
@@ -113,218 +110,113 @@
 
         function login() {
             if (document.getElementById('benutzername').value === 'admin' && document.getElementById('passwort').value === 'admin') {
-                document.getElementById('benutzername').value = '';
-                document.getElementById('passwort').value = '';
                 zeigeSeite('adminPage');
-            } else {
-                alert('Falsche Zugangsdaten. (Tipp: admin / admin)');
-            }
+            } else { alert('Falsche Zugangsdaten.'); }
         }
 
         function startScanner() {
-            try {
-                const readerDiv = document.getElementById('reader');
-                readerDiv.style.display = "block";
-                
-                if (!html5QrCode) {
-                    html5QrCode = new Html5Qrcode("reader");
-                }
-                
-                const config = { fps: 10, qrbox: { width: 250, height: 100 } };
-                
-                html5QrCode.start({ facingMode: "environment" }, config,
-                    (decodedText) => {
-                        document.getElementById('artikelnummer').value = decodedText;
-                        html5QrCode.stop().then(() => { readerDiv.style.display = "none"; });
-                    },
-                    (errorMessage) => {}
-                ).catch((err) => { 
-                    alert("Fehler bei Kamera-Aktivierung: " + err); 
-                    readerDiv.style.display = "none";
-                });
-            } catch (e) {
-                alert("Kritischer Fehler beim Scanner-Start: " + e.message);
-            }
+            const readerDiv = document.getElementById('reader');
+            readerDiv.style.display = "block";
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
+                (text) => { document.getElementById('artikelnummer').value = text; html5QrCode.stop().then(() => readerDiv.style.display = "none"); }
+            ).catch(err => alert("Kamerafehler: " + err));
         }
 
         function pruefen() {
-            const artikelnummer = document.getElementById('artikelnummer').value;
+            const art = document.getElementById('artikelnummer').value;
+            if (!art) { alert("Artikelnummer fehlt."); return; }
             const menge = parseInt(document.getElementById('menge').value);
             const preis = parseFloat(document.getElementById('preis').value);
-            const verpackung = document.getElementById('verpackung').value;
-            const mengeOk = document.getElementById('mengeOk').value;
-            const maengel = document.getElementById('maengel').value;
+            const v = document.getElementById('verpackung').value;
+            const mOk = document.getElementById('mengeOk').value;
+            const ma = document.getElementById('maengel').value;
             
-            if (!artikelnummer) { alert("Bitte eine Artikelnummer erfassen."); return; }
-
-            const resultBox = document.getElementById('resultBox');
-            resultBox.className = 'result'; 
-            let isError = false;
-            let statusHtml = "";
-
-            if (verpackung === 'nein' || mengeOk === 'nein') {
-                isError = true;
-                resultBox.classList.add('error');
-                statusHtml = `STATUS: GESPERRT<br><br>Grund: ${verpackung === 'nein' ? 'Transportschaden' : 'Mengenabweichung'}`;
-                currentStatus = "Gesperrt";
-            } else {
-                let pruefart = (menge > 15 && preis < 1000) ? "Stichprobenprüfung" : "100% Vollprüfung";
-                if (maengel === 'ja') {
-                    isError = true;
-                    resultBox.classList.add('error');
-                    statusHtml = 'STATUS: GESPERRT<br><br>Grund: Technische Mängel / fehlendes Zubehör.';
-                    currentStatus = "Gesperrt (Mangel)";
-                } else {
-                    resultBox.classList.add('success');
-                    statusHtml = `STATUS: FREIGEGEBEN<br><br>Durchgeführte Prüfart: ${pruefart}`;
-                    currentStatus = "Freigegeben";
-                }
-            }
-
-            resultBox.innerHTML = statusHtml;
-            document.getElementById('successActions').style.display = isError ? 'none' : 'block';
-            document.getElementById('errorActions').style.display = isError ? 'block' : 'none';
+            const rb = document.getElementById('resultBox');
+            rb.className = 'result';
+            let err = (v==='nein' || mOk==='nein' || ma==='ja');
+            currentStatus = err ? "Gesperrt" : "Freigegeben";
+            rb.classList.add(err ? 'error' : 'success');
+            rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
+            
+            document.getElementById('successActions').style.display = err ? 'none' : 'block';
+            document.getElementById('errorActions').style.display = err ? 'block' : 'none';
             zeigeSeite('resultPage');
-            
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop();
-                document.getElementById('reader').style.display = "none";
-            }
+            if (html5QrCode?.isScanning) html5QrCode.stop();
         }
 
         async function inSupabaseSpeichern(isError) {
-            document.getElementById('saveBtnError').innerText = "Wird gespeichert...";
-            document.getElementById('saveBtnSuccess').innerText = "Wird gespeichert...";
-            document.getElementById('saveBtnError').disabled = true;
-            document.getElementById('saveBtnSuccess').disabled = true;
+            const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess');
+            btn.innerText = "Sichere Daten..."; btn.disabled = true;
 
-            const beschreibung = isError ? document.getElementById('mangelBeschreibung').value.replace(/(\r\n|\n|\r)/gm, " ") : "";
             let bilderUrls = [];
+            const files = document.getElementById('mangelBilder').files;
 
-            if (isError) {
-                const files = document.getElementById('mangelBilder').files;
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
-                    
+            if (isError && files.length > 0) {
+                for (let file of files) {
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substr(2, 5)}_${file.name}`;
+                    // Upload in den Bucket 'maengelbilder'
                     const { data, error } = await supabaseClient.storage
                         .from('maengelbilder')
                         .upload(fileName, file);
 
                     if (error) {
-                        alert("Fehler beim Upload von " + file.name + ": " + error.message);
+                        alert("Upload-Fehler: " + error.message + " (Hast du die Policies erstellt?)");
                     } else {
-                        const { data: publicUrlData } = supabaseClient.storage.from('maengelbilder').getPublicUrl(fileName);
-                        bilderUrls.push(publicUrlData.publicUrl);
+                        const { data: pUrl } = supabaseClient.storage.from('maengelbilder').getPublicUrl(fileName);
+                        bilderUrls.push(pUrl.publicUrl);
                     }
                 }
             }
 
-            const urlsString = bilderUrls.join(',');
+            const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
+                datum: document.getElementById('datum').value,
+                seriennummer: document.getElementById('artikelnummer').value,
+                menge: parseInt(document.getElementById('menge').value),
+                preis: parseFloat(document.getElementById('preis').value),
+                verpackung: document.getElementById('verpackung').value,
+                mengeOk: document.getElementById('mengeOk').value,
+                maengel: document.getElementById('maengel').value,
+                status: currentStatus,
+                beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
+                bilder_urls: bilderUrls.join(',')
+            }]);
 
-            const { data, error } = await supabaseClient
-                .from('wareneingang')
-                .insert([
-                    { 
-                        datum: document.getElementById('datum').value,
-                        seriennummer: document.getElementById('artikelnummer').value,
-                        menge: parseInt(document.getElementById('menge').value),
-                        preis: parseFloat(document.getElementById('preis').value),
-                        verpackung: document.getElementById('verpackung').value,
-                        mengeOk: document.getElementById('mengeOk').value,
-                        maengel: document.getElementById('maengel').value,
-                        status: currentStatus,
-                        beschreibung: beschreibung,
-                        bilder_urls: urlsString
-                    }
-                ]);
-
-            document.getElementById('saveBtnError').innerText = "In Datenbank sichern & Neue Prüfung";
-            document.getElementById('saveBtnSuccess').innerText = "In Datenbank sichern & Neue Prüfung";
-            document.getElementById('saveBtnError').disabled = false;
-            document.getElementById('saveBtnSuccess').disabled = false;
-
-            if (error) {
-                alert("Fehler beim Speichern in der Datenbank: " + error.message);
-            } else {
-                alert("Erfolgreich in der Datenbank gespeichert!");
-                document.getElementById('artikelnummer').value = ''; 
-                document.getElementById('mangelBeschreibung').value = '';
-                document.getElementById('mangelBilder').value = '';
-                zeigeSeite('formPage');
-            }
+            btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
+            if (dbErr) alert("Datenbank-Fehler: " + dbErr.message);
+            else { alert("Gespeichert!"); zeigeSeite('formPage'); }
         }
 
         async function exportiereVonSupabase() {
             const btn = document.getElementById('exportBtn');
-            btn.innerText = "Daten werden zusammengestellt (ZIP)...";
-            btn.disabled = true;
-
-            const startDatum = document.getElementById('exportStart').value;
-            const endeDatum = document.getElementById('exportEnde').value;
+            btn.innerText = "Lade Daten..."; btn.disabled = true;
             
-            const { data: logs, error } = await supabaseClient
-                .from('wareneingang')
-                .select('*')
-                .gte('datum', startDatum)
-                .lte('datum', endeDatum);
+            const { data: logs, error } = await supabaseClient.from('wareneingang').select('*')
+                .gte('datum', document.getElementById('exportStart').value)
+                .lte('datum', document.getElementById('exportEnde').value);
 
-            if (error) {
-                alert("Fehler beim Abrufen der Daten: " + error.message);
-                btn.innerText = "Gesamtdaten (ZIP) herunterladen";
-                btn.disabled = false;
-                return;
-            }
-            
-            if(!logs || logs.length === 0) {
-                alert("Keine Einträge in diesem Zeitraum gefunden.");
-                btn.innerText = "Gesamtdaten (ZIP) herunterladen";
-                btn.disabled = false;
-                return;
-            }
+            if (error || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; return; }
 
-            let csv = "ID;Zeitstempel_DB;Datum;Artikelnummer;Menge;Preis_Netto;Verpackung_OK;Menge_OK;Keine_Maengel;Status;Mangelbeschreibung;Bilder_Links\n";
-            logs.forEach(log => {
-                csv += `${log.id};${log.created_at};${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.verpackung};${log.mengeOk};${log.maengel};${log.status};${log.beschreibung || ''};${log.bilder_urls || ''}\n`;
-            });
-
+            let csv = "Datum;Artikelnummer;Menge;Preis;Status;Beschreibung;Bilder\n";
             const zip = new JSZip();
-            zip.file(`Datenbank_Export_${startDatum}_bis_${endeDatum}.csv`, csv);
+            const imgFolder = zip.folder("Bilder");
+            const promises = [];
 
-            const imagePromises = [];
-            
             logs.forEach(log => {
+                csv += `${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.status};${log.beschreibung};${log.bilder_urls}\n`;
                 if (log.bilder_urls) {
-                    const urls = log.bilder_urls.split(',');
-                    urls.forEach((url, index) => {
-                        if (url.trim() !== '') {
-                            const extension = url.split('.').pop().split('?')[0] || 'jpg';
-                            const fileName = `Bilder/${log.datum}_${log.seriennummer}_Bild_${index + 1}.${extension}`;
-                            
-                            const promise = fetch(url)
-                                .then(res => res.blob())
-                                .then(blob => {
-                                    zip.file(fileName, blob);
-                                })
-                                .catch(err => console.error("Fehler beim Bild-Download:", url, err));
-                            
-                            imagePromises.push(promise);
-                        }
+                    log.bilder_urls.split(',').forEach((url, i) => {
+                        const p = fetch(url).then(r => r.blob()).then(b => imgFolder.file(`${log.seriennummer}_${i}.jpg`, b)).catch(()=>null);
+                        promises.push(p);
                     });
                 }
             });
 
-            await Promise.all(imagePromises);
-
-            zip.generateAsync({type:"blob"}).then(function(content) {
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(content);
-                link.download = `Gesamtexport_CheckGate_DB.zip`;
-                link.click();
-                
-                btn.innerText = "Gesamtdaten (ZIP) herunterladen";
-                btn.disabled = false;
+            await Promise.all(promises);
+            zip.file("Export.csv", csv);
+            zip.generateAsync({type:"blob"}).then(c => {
+                const a = document.createElement("a"); a.href = URL.createObjectURL(c); a.download = "CheckGate_Export.zip"; a.click();
+                btn.innerText = "Download bereit"; btn.disabled = false;
             });
         }
     </script>
