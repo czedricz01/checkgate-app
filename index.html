@@ -6,7 +6,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>CheckGate</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
@@ -88,7 +87,7 @@
             <h2 style="text-align: center; color: #0A3654;">Daten-Export</h2>
             <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
             <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
-            <button id="exportBtn" class="camera-btn" onclick="exportiereVonSupabase()">Gesamtdaten (ZIP) herunterladen</button>
+            <button id="exportBtn" class="camera-btn" onclick="exportiereVonSupabase()">Gesamtdaten (CSV) herunterladen</button>
             <button class="secondary-btn" onclick="zeigeSeite('formPage')">Logout / Zurück</button>
         </div>
 
@@ -137,7 +136,6 @@
             if (!mitarbeiter) { alert("Bitte das Mitarbeiterkürzel eintragen."); return; }
             if (!art) { alert("Bitte eine Artikelnummer erfassen."); return; }
             
-            // Exakten Zeitstempel im Moment des Absendens festhalten
             const jetzt = new Date();
             erfassungsZeitstempel = jetzt.toLocaleDateString('de-DE') + ' ' + jetzt.toLocaleTimeString('de-DE');
 
@@ -195,45 +193,45 @@
             } else { 
                 alert("Erfolgreich gespeichert!"); 
                 zeigeSeite('formPage'); 
-                // Reset
                 document.getElementById('artikelnummer').value = "";
                 document.getElementById('mangelBeschreibung').value = "";
                 document.getElementById('mangelBilder').value = "";
-                document.getElementById('mitarbeiter').value = ""; // Mitarbeiter für nächsten Vorgang leeren
+                document.getElementById('mitarbeiter').value = ""; 
             }
         }
 
         async function exportiereVonSupabase() {
             const btn = document.getElementById('exportBtn');
-            btn.innerText = "ZIP wird erstellt..."; btn.disabled = true;
+            btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
+            
+            const startDatum = document.getElementById('exportStart').value;
+            const endeDatum = document.getElementById('exportEnde').value;
             
             const { data: logs, error } = await supabaseClient.from('wareneingang').select('*')
-                .gte('datum', document.getElementById('exportStart').value)
-                .lte('datum', document.getElementById('exportEnde').value);
+                .gte('datum', startDatum)
+                .lte('datum', endeDatum);
 
-            if (error || !logs.length) { alert("Keine Daten im Zeitraum."); btn.disabled = false; btn.innerText = "Gesamtdaten (ZIP) herunterladen"; return; }
+            if (error || !logs || !logs.length) { 
+                alert("Keine Daten im Zeitraum gefunden."); 
+                btn.disabled = false; 
+                btn.innerText = "Gesamtdaten (CSV) herunterladen"; 
+                return; 
+            }
 
             let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Preis;Status;Beschreibung;Bilder_Links\n";
-            const zip = new JSZip();
-            const imgFolder = zip.folder("Bilder");
-            const promises = [];
 
             logs.forEach(log => {
-                csv += `${log.datum};${log.zeitstempel || ''};${log.mitarbeiter || ''};${log.seriennummer};${log.menge};${log.preis};${log.status};"${log.beschreibung}";"${log.bilder_urls}"\n`;
-                if (log.bilder_urls) {
-                    log.bilder_urls.split(',').forEach((url, i) => {
-                        const p = fetch(url).then(r => r.blob()).then(b => imgFolder.file(`${log.seriennummer}_Bild${i+1}.jpg`, b)).catch(()=>null);
-                        promises.push(p);
-                    });
-                }
+                csv += `${log.datum};${log.zeitstempel || ''};${log.mitarbeiter || ''};${log.seriennummer};${log.menge};${log.preis};${log.status};"${log.beschreibung || ''}";"${log.bilder_urls || ''}"\n`;
             });
 
-            await Promise.all(promises);
-            zip.file("Wareneingang_Export.csv", csv);
-            zip.generateAsync({type:"blob"}).then(c => {
-                const a = document.createElement("a"); a.href = URL.createObjectURL(c); a.download = "CheckGate_Export.zip"; a.click();
-                btn.innerText = "Gesamtdaten (ZIP) herunterladen"; btn.disabled = false;
-            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `Wareneingang_Export_${startDatum}_bis_${endeDatum}.csv`;
+            link.click();
+            
+            btn.innerText = "Gesamtdaten (CSV) herunterladen"; 
+            btn.disabled = false;
         }
     </script>
 </body>
