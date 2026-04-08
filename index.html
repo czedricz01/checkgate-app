@@ -10,50 +10,72 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        :root { --primary-blue: #0A3654; --accent-green: #1A8257; --bg-light: #f4f7f9; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: var(--bg-light); margin: 0; }
+        :root { 
+            /* Moderate, gedämpfte Farben */
+            --primary-main: #4a6572;    /* Sanftes Blaugrau */
+            --primary-dark: #344955;    /* Dunkleres Blaugrau */
+            --primary-light-bg: #eaeff2; /* Sehr helles Blaugrau */
+            --accent-main: #678e7c;     /* Sanftes Salbeigrün */
+            --accent-dark: #567868;     /* Dunkleres Salbeigrün */
+            --secondary-gray: #95a5a6;  /* Weiches Grau */
+            --secondary-dark: #7f8c8d;
+            --bg-overall: #f8f9fa;      /* Fast Weiß */
+            --bg-container: #ffffff;
+            --border-default: #ddd;
+        }
         
-        /* Container: Runde Ecken, weniger Padding oben */
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 15px 20px 30px; box-shadow: 0 10px 25px rgba(10, 54, 84, 0.08); border-top: 5px solid var(--primary-blue); position: relative; border-radius: 16px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: var(--bg-overall); margin: 0; color: #333; }
         
-        /* Logo: Weniger Abstand nach unten */
-        .logo-container { text-align: center; margin-bottom: 10px; margin-top: 5px; }
-        .logo-container img { max-width: 180px; height: auto; }
+        /* Container: Minimales Padding oben */
+        .container { max-width: 600px; margin: 0 auto; background: var(--bg-container); padding: 5px 20px 30px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); border-top: 5px solid var(--primary-main); position: relative; border-radius: 16px; }
         
-        label { display: block; margin-top: 15px; font-weight: bold; color: var(--primary-blue); font-size: 0.95em; }
+        /* Logo: Abstände entfernt, damit Content direkt folgt */
+        .logo-container { text-align: center; margin-bottom: 0; margin-top: 0; line-height: 0; }
+        .logo-container img { max-width: 180px; height: auto; vertical-align: top; }
         
-        /* Felder: Eckig, moderner Fokus-Effekt */
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; border-radius: 0; background-color: #fafafa; transition: border-color 0.2s, box-shadow 0.2s; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-blue); box-shadow: 0 0 0 3px rgba(10, 54, 84, 0.15); background-color: #fff; }
+        label { display: block; margin-top: 15px; font-weight: bold; color: var(--primary-main); font-size: 0.95em; }
         
-        /* Buttons: Eckig */
-        button { width: 100%; padding: 15px; background-color: var(--primary-blue); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; transition: opacity 0.2s; }
-        button:hover { opacity: 0.9; }
-        button.camera-btn { background-color: var(--accent-green); margin-top: 10px; }
-        button.secondary-btn { background-color: #6c757d; }
+        /* Felder: Eckig, moderater Fokus-Effekt */
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: 16px; border-radius: 0; background-color: #fbfbfb; transition: border-color 0.2s, box-shadow 0.2s; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(74, 101, 114, 0.1); background-color: #fff; }
+        
+        /* Buttons: Eckig, Moderate Farben */
+        button { width: 100%; padding: 15px; background-color: var(--primary-main); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; transition: background-color 0.2s; }
+        button:hover { background-color: var(--primary-dark); }
+        
+        button.camera-btn { background-color: var(--accent-main); margin-top: 10px; }
+        button.camera-btn:hover { background-color: var(--accent-dark); }
+        
+        button.secondary-btn { background-color: var(--secondary-gray); }
+        button.secondary-btn:hover { background-color: var(--secondary-dark); }
         
         .result { padding: 20px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; border-radius: 0; }
-        .success { background-color: #e8f5e9; color: var(--accent-green); border: 2px solid var(--accent-green); }
-        .error { background-color: #fbe9e7; color: #d32f2f; border: 2px solid #d32f2f; }
+        
+        /* Moderate Result-Farben */
+        .success { background-color: #f0f7f4; color: var(--accent-dark); border: 2px solid var(--accent-main); }
+        .error { background-color: #fff5f5; color: #b71c1c; border: 2px solid #e57373; }
+        
         .action-section { border-top: 2px solid #eee; padding-top: 15px; margin-top: 15px; }
         #reader { width: 100%; margin-top: 15px; display: none; }
         
         .top-btn-group { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
-        .top-btn { background-color: #6c757d; width: auto; padding: 6px 10px; font-size: 0.8em; margin-top: 0; border-radius: 0; }
-        .login-btn-top { position: absolute; top: 10px; right: 10px; background-color: #6c757d; width: auto; padding: 6px 10px; font-size: 0.8em; margin-top: 0; border-radius: 0; }
+        .top-btn { background-color: var(--secondary-gray); width: auto; padding: 6px 10px; font-size: 0.8em; margin-top: 0; border-radius: 0; }
+        .top-btn:hover { background-color: var(--secondary-dark); }
         
-        .instruction-box { background-color: #e3f2fd; color: #0d47a1; padding: 15px; border-left: 5px solid #0d47a1; margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; border-radius: 0; }
-        .netto-box { display: none; padding: 10px; background-color: #e8f5e9; border: 1px solid var(--accent-green); margin-top: 5px; color: var(--accent-green); font-weight: bold; border-radius: 0; }
-        .calc-box { background-color: #fff3e0; border: 1px solid #ff9800; padding: 15px; margin-bottom: 20px; border-radius: 0; }
-        .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
-        .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-blue); font-size: 0.9em; text-decoration: underline; cursor: pointer; }
+        .instruction-box { background-color: var(--primary-light-bg); color: var(--primary-main); padding: 15px; border-left: 5px solid var(--primary-main); margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; border-radius: 0; }
+        .netto-box { display: none; padding: 10px; background-color: #fdfdfe; border: 1px solid var(--accent-main); margin-top: 5px; color: var(--accent-dark); font-weight: bold; border-radius: 0; }
+        .calc-box { background-color: #fffaf5; border: 1px solid #ffcc80; padding: 15px; margin-bottom: 20px; border-radius: 0; }
         
-        .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-blue); width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; border-radius: 0; }
-        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #333; color: #fff; text-align: left; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; border-radius: 0; }
-        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
+        .privacy-hint { color: #b71c1c; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
+        .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-main); font-size: 0.9em; text-decoration: underline; cursor: pointer; }
+        
+        .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-main); width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; border-radius: 0; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #2c3e50; color: #fff; text-align: left; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; border-radius: 0; }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #2c3e50 transparent transparent transparent; }
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
         
-        h2 { margin-top: 10px; margin-bottom: 15px; }
+        h2 { margin-top: 10px; margin-bottom: 15px; color: var(--primary-main); }
+        h4 { color: var(--primary-main); }
     </style>
 </head>
 <body>
@@ -61,7 +83,7 @@
         
         <div id="loginPage">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2 style="text-align: center; color: #0A3654;">Mitarbeiter Login</h2>
+            <h2 style="text-align: center;">Mitarbeiter Login</h2>
             <label for="email">E-Mail Adresse:</label>
             <input type="email" id="email" placeholder="Eingabe: E-Mail">
             <label for="passwort">Passwort:</label>
@@ -73,7 +95,7 @@
         <div id="formPage" style="display:none;">
             <div class="top-btn-group">
                 <button class="top-btn" onclick="zeigeSeite('adminPage')">Export</button>
-                <button class="top-btn" style="background-color: #d32f2f;" onclick="logout()">Logout</button>
+                <button class="top-btn" style="background-color: #e57373;" onclick="logout()">Logout</button>
             </div>
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
@@ -114,7 +136,7 @@
                 </label>
                 <input type="number" id="erwartungswertfaktor" value="1.0" step="0.1" oninput="updateStichproben()">
                 
-                <div style="margin-top:15px; font-weight:bold; font-size:1.1em; color:#d84315;">
+                <div style="margin-top:15px; font-weight:bold; font-size:1.1em; color:var(--accent-dark);">
                     Nötige Stichproben: <span id="stichprobenErgebnis">0</span>
                 </div>
             </div>
@@ -149,7 +171,7 @@
 
         <div id="datenschutzPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2 style="color: #0A3654; text-align: center;">Datenschutzerklärung</h2>
+            <h2 style="text-align: center;">Datenschutzerklärung</h2>
             <p><strong>1. Verantwortlichkeit</strong><br>Verantwortlich für die Datenerfassung ist das ColognIT Projektteam.</p>
             <p><strong>2. Zweck der Verarbeitung</strong><br>Die Erhebung von Mitarbeiterkürzeln, Prüfdaten und Mängelfotos dient ausschließlich der internen Dokumentation und Qualitätssicherung im Wareneingang (Art. 6 Abs. 1 lit. f DSGVO, § 26 BDSG).</p>
             <p><strong>3. Datenminimierung & Fotos</strong><br>Gemäß Art. 5 DSGVO ist das Erfassen von Personen auf Mängelfotos strengstens untersagt. Es dürfen nur Sachmängel dokumentiert werden.</p>
@@ -159,7 +181,7 @@
 
         <div id="adminPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2 style="text-align: center; color: #0A3654;">Daten-Export</h2>
+            <h2 style="text-align: center;">Daten-Export</h2>
             <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
             <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
             <button id="exportBtn" class="camera-btn" onclick="exportiereVonSupabase()">Daten herunterladen</button>
