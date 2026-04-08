@@ -37,7 +37,12 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
             <label for="datum">Datum:</label><input type="date" id="datum">
-            <label for="artikelnummer">Artikelnummer:</label><input type="text" id="artikelnummer" placeholder="Scannen oder tippen...">
+            
+            <label for="mitarbeiter">Mitarbeiterkürzel:</label>
+            <input type="text" id="mitarbeiter" placeholder="z. B. AB">
+            
+            <label for="artikelnummer">Artikelnummer:</label>
+            <input type="text" id="artikelnummer" placeholder="Scannen oder tippen...">
             <button type="button" class="camera-btn" onclick="startScanner()">Barcode scannen</button>
             <div id="reader"></div>
 
@@ -97,7 +102,9 @@
         document.getElementById('datum').valueAsDate = new Date();
         document.getElementById('exportStart').valueAsDate = new Date();
         document.getElementById('exportEnde').valueAsDate = new Date();
+        
         let currentStatus = "";
+        let erfassungsZeitstempel = "";
         let html5QrCode;
 
         function zeigeSeite(seiteId) {
@@ -124,8 +131,16 @@
         }
 
         function pruefen() {
-            const art = document.getElementById('artikelnummer').value;
-            if (!art) { alert("Artikelnummer fehlt."); return; }
+            const mitarbeiter = document.getElementById('mitarbeiter').value.trim();
+            const art = document.getElementById('artikelnummer').value.trim();
+            
+            if (!mitarbeiter) { alert("Bitte das Mitarbeiterkürzel eintragen."); return; }
+            if (!art) { alert("Bitte eine Artikelnummer erfassen."); return; }
+            
+            // Exakten Zeitstempel im Moment des Absendens festhalten
+            const jetzt = new Date();
+            erfassungsZeitstempel = jetzt.toLocaleDateString('de-DE') + ' ' + jetzt.toLocaleTimeString('de-DE');
+
             const rb = document.getElementById('resultBox');
             rb.className = 'result';
             let err = (document.getElementById('verpackung').value==='nein' || document.getElementById('mengeOk').value==='nein' || document.getElementById('maengel').value==='ja');
@@ -145,32 +160,24 @@
             let bilderUrls = [];
             const files = document.getElementById('mangelBilder').files;
 
-            if (isError) {
-                if (files.length === 0) {
-                    alert("Hinweis: Keine Bilder ausgewählt. Speichere nur Textdaten.");
-                } else {
-                    for (let file of files) {
-                        const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-                        console.log("Starte Upload für: ", fileName);
-                        
-                        const { data, error } = await supabaseClient.storage
-                            .from('maengelbilder')
-                            .upload(fileName, file);
+            if (isError && files.length > 0) {
+                for (let file of files) {
+                    const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
+                    const { data, error } = await supabaseClient.storage.from('maengelbilder').upload(fileName, file);
 
-                        if (error) {
-                            alert("UPLOAD-STOPP: " + error.message);
-                            console.error(error);
-                        } else {
-                            const { data: pUrl } = supabaseClient.storage.from('maengelbilder').getPublicUrl(fileName);
-                            bilderUrls.push(pUrl.publicUrl);
-                            console.log("Upload erfolgreich: ", pUrl.publicUrl);
-                        }
+                    if (error) {
+                        alert("UPLOAD-STOPP: " + error.message);
+                    } else {
+                        const { data: pUrl } = supabaseClient.storage.from('maengelbilder').getPublicUrl(fileName);
+                        bilderUrls.push(pUrl.publicUrl);
                     }
                 }
             }
 
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
                 datum: document.getElementById('datum').value,
+                zeitstempel: erfassungsZeitstempel,
+                mitarbeiter: document.getElementById('mitarbeiter').value,
                 seriennummer: document.getElementById('artikelnummer').value,
                 menge: parseInt(document.getElementById('menge').value),
                 preis: parseFloat(document.getElementById('preis').value),
@@ -192,6 +199,7 @@
                 document.getElementById('artikelnummer').value = "";
                 document.getElementById('mangelBeschreibung').value = "";
                 document.getElementById('mangelBilder').value = "";
+                document.getElementById('mitarbeiter').value = ""; // Mitarbeiter für nächsten Vorgang leeren
             }
         }
 
@@ -205,13 +213,13 @@
 
             if (error || !logs.length) { alert("Keine Daten im Zeitraum."); btn.disabled = false; btn.innerText = "Gesamtdaten (ZIP) herunterladen"; return; }
 
-            let csv = "Datum;Artikelnummer;Menge;Preis;Status;Beschreibung;Bilder_Links\n";
+            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Preis;Status;Beschreibung;Bilder_Links\n";
             const zip = new JSZip();
             const imgFolder = zip.folder("Bilder");
             const promises = [];
 
             logs.forEach(log => {
-                csv += `${log.datum};${log.seriennummer};${log.menge};${log.preis};${log.status};"${log.beschreibung}";"${log.bilder_urls}"\n`;
+                csv += `${log.datum};${log.zeitstempel || ''};${log.mitarbeiter || ''};${log.seriennummer};${log.menge};${log.preis};${log.status};"${log.beschreibung}";"${log.bilder_urls}"\n`;
                 if (log.bilder_urls) {
                     log.bilder_urls.split(',').forEach((url, i) => {
                         const p = fetch(url).then(r => r.blob()).then(b => imgFolder.file(`${log.seriennummer}_Bild${i+1}.jpg`, b)).catch(()=>null);
