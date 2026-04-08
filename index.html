@@ -12,28 +12,28 @@
     <style>
         :root { --primary-blue: #0A3654; --accent-green: #1A8257; --bg-light: #f4f7f9; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: var(--bg-light); margin: 0; }
-        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px 20px; border-radius: 12px; box-shadow: 0 8px 16px rgba(10, 54, 84, 0.1); border-top: 5px solid var(--primary-blue); position: relative; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px 20px; box-shadow: 0 8px 16px rgba(10, 54, 84, 0.1); border-top: 5px solid var(--primary-blue); position: relative; }
         .logo-container { text-align: center; margin-bottom: 25px; }
         .logo-container img { max-width: 180px; height: auto; }
         label { display: block; margin-top: 15px; font-weight: bold; color: var(--primary-blue); }
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
-        button { width: 100%; padding: 15px; background-color: var(--primary-blue); color: white; border: none; border-radius: 8px; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid #ccc; box-sizing: border-box; font-size: 16px; border-radius: 0; }
+        button { width: 100%; padding: 15px; background-color: var(--primary-blue); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; }
         button.camera-btn { background-color: var(--accent-green); margin-top: 10px; }
         button.secondary-btn { background-color: #6c757d; }
-        .result { padding: 20px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; }
+        .result { padding: 20px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; border-radius: 0; }
         .success { background-color: #e8f5e9; color: var(--accent-green); border: 2px solid var(--accent-green); }
         .error { background-color: #fbe9e7; color: #d32f2f; border: 2px solid #d32f2f; }
         .action-section { border-top: 2px solid #eee; padding-top: 15px; margin-top: 15px; }
         #reader { width: 100%; margin-top: 15px; display: none; }
         .top-btn-group { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
-        .top-btn { background-color: #6c757d; width: auto; padding: 8px 12px; font-size: 0.85em; margin-top: 0; }
-        .instruction-box { background-color: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 8px; border-left: 5px solid #0d47a1; margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; }
-        .netto-box { display: none; padding: 10px; background-color: #e8f5e9; border: 1px solid var(--accent-green); border-radius: 8px; margin-top: 5px; color: var(--accent-green); font-weight: bold; }
-        .calc-box { background-color: #fff3e0; border: 1px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .top-btn { background-color: #6c757d; width: auto; padding: 8px 12px; font-size: 0.85em; margin-top: 0; border-radius: 0; }
+        .instruction-box { background-color: #e3f2fd; color: #0d47a1; padding: 15px; border-left: 5px solid #0d47a1; margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; border-radius: 0; }
+        .netto-box { display: none; padding: 10px; background-color: #e8f5e9; border: 1px solid var(--accent-green); margin-top: 5px; color: var(--accent-green); font-weight: bold; border-radius: 0; }
+        .calc-box { background-color: #fff3e0; border: 1px solid #ff9800; padding: 15px; margin-bottom: 20px; border-radius: 0; }
         .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
         .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-blue); font-size: 0.9em; text-decoration: underline; cursor: pointer; }
-        .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-blue); border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; }
-        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #333; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; }
+        .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-blue); width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; border-radius: 0; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #333; color: #fff; text-align: left; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; border-radius: 0; }
         .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     </style>
@@ -144,8 +144,8 @@
             <h2 style="text-align: center; color: #0A3654;">Daten-Export</h2>
             <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
             <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
-            <button id="exportBtn" class="camera-btn" onclick="exportiereVonSupabase()">Gesamtdaten (CSV) herunterladen</button>
-            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück zur Maske</button>
+            <button id="exportBtn" class="camera-btn" onclick="exportiereVonSupabase()">Daten herunterladen</button>
+            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück</button>
         </div>
     </div>
 
@@ -154,21 +154,25 @@
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
+        // Initiale Datumswerte setzen
         document.getElementById('datum').valueAsDate = new Date();
-        document.getElementById('exportStart').valueAsDate = new Date();
-        document.getElementById('exportEnde').valueAsDate = new Date();
+        
+        // Berechnung für den ersten und letzten Tag des aktuellen Monats (Export Start/Ende)
+        const heute = new Date();
+        const y = heute.getFullYear();
+        const m = String(heute.getMonth() + 1).padStart(2, '0');
+        const letzterTag = new Date(y, heute.getMonth() + 1, 0).getDate();
+        
+        document.getElementById('exportStart').value = `${y}-${m}-01`;
+        document.getElementById('exportEnde').value = `${y}-${m}-${letzterTag}`;
+
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
 
-        // AUTHENTIFIZIERUNG: Prüfen ob bereits eingeloggt
         async function checkSession() {
             const { data, error } = await supabaseClient.auth.getSession();
-            if (data.session) {
-                zeigeSeite('formPage');
-            } else {
-                zeigeSeite('loginPage');
-            }
+            if (data.session) { zeigeSeite('formPage'); } else { zeigeSeite('loginPage'); }
         }
-        checkSession(); // Wird direkt beim Laden ausgeführt
+        checkSession();
 
         function zeigeSeite(seiteId) {
             ['loginPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
@@ -178,26 +182,15 @@
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('passwort').value;
-            
             if(!email || !password) { alert("Bitte E-Mail und Passwort eingeben."); return; }
-
             const btn = document.querySelector('#loginPage button');
             btn.innerText = "Prüfe Daten..."; btn.disabled = true;
 
-            const { data, error } = await supabaseClient.auth.signInWithPassword({
-                email: email,
-                password: password
-            });
-
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
             btn.innerText = "Einloggen"; btn.disabled = false;
 
-            if (error) {
-                alert("Login fehlgeschlagen: " + error.message);
-            } else {
-                document.getElementById('email').value = "";
-                document.getElementById('passwort').value = "";
-                zeigeSeite('formPage');
-            }
+            if (error) { alert("Login fehlgeschlagen: " + error.message); } 
+            else { document.getElementById('email').value = ""; document.getElementById('passwort').value = ""; zeigeSeite('formPage'); }
         }
 
         async function logout() {
@@ -301,13 +294,13 @@
             const btn = document.getElementById('exportBtn'); btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
             const { data: logs, error } = await supabaseClient.from('wareneingang').select('*').gte('datum', document.getElementById('exportStart').value).lte('datum', document.getElementById('exportEnde').value);
 
-            if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Gesamtdaten (CSV) herunterladen"; return; }
+            if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
 
             let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz(%);Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\n";
             logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\n`);
             
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
-            btn.innerText = "Gesamtdaten (CSV) herunterladen"; btn.disabled = false;
+            btn.innerText = "Daten herunterladen"; btn.disabled = false;
         }
     </script>
 </body>
