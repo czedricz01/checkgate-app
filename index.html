@@ -26,6 +26,7 @@
         .action-section { border-top: 2px solid #eee; padding-top: 15px; margin-top: 15px; }
         #reader { width: 100%; margin-top: 15px; display: none; }
         .login-btn-top { position: absolute; top: 10px; right: 10px; background-color: #6c757d; width: auto; padding: 8px 15px; font-size: 0.9em; margin-top: 0; }
+        .instruction-box { background-color: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 8px; border-left: 5px solid #0d47a1; margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; }
     </style>
 </head>
 <body>
@@ -51,9 +52,23 @@
             <select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein (Transportschaden)</option></select>
             <label for="mengeOk">Mengenprüfung: Stimmt mit Lieferschein überein?</label>
             <select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
-            <label for="maengel">Detailprüfung: Defekte/fehlendes Zubehör?</label>
-            <select id="maengel"><option value="nein">Nein (Alles in Ordnung)</option><option value="ja">Ja (Mangel festgestellt)</option></select>
+            
+            <button onclick="geheZuPruefung()">Weiter</button>
+        </div>
+
+        <div id="pruefungPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            
+            <div id="pruefungsAnweisung" class="instruction-box"></div>
+            
+            <label for="pruefungErfolgreich">War die Prüfung erfolgreich?</label>
+            <select id="pruefungErfolgreich">
+                <option value="ja">Ja (Keine Mängel festgestellt)</option>
+                <option value="nein">Nein (Mängel oder fehlendes Zubehör)</option>
+            </select>
+            
             <button onclick="pruefen()">Absenden</button>
+            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück</button>
         </div>
 
         <div id="resultPage" style="display:none;">
@@ -104,10 +119,12 @@
         
         let currentStatus = "";
         let erfassungsZeitstempel = "";
+        let aktuellePruefart = "";
         let html5QrCode;
 
         function zeigeSeite(seiteId) {
             document.getElementById('formPage').style.display = 'none';
+            document.getElementById('pruefungPage').style.display = 'none';
             document.getElementById('resultPage').style.display = 'none';
             document.getElementById('loginPage').style.display = 'none';
             document.getElementById('adminPage').style.display = 'none';
@@ -129,26 +146,46 @@
             ).catch(err => alert("Kamerafehler: " + err));
         }
 
-        function pruefen() {
+        function geheZuPruefung() {
             const mitarbeiter = document.getElementById('mitarbeiter').value.trim();
             const art = document.getElementById('artikelnummer').value.trim();
             
             if (!mitarbeiter) { alert("Bitte das Mitarbeiterkürzel eintragen."); return; }
             if (!art) { alert("Bitte eine Artikelnummer erfassen."); return; }
             
+            const menge = parseInt(document.getElementById('menge').value) || 1;
+            const preis = parseFloat(document.getElementById('preis').value) || 0;
+            
+            aktuellePruefart = (menge > 15 && preis < 1000) ? "Stichprobenprüfung" : "100% Vollprüfung";
+            
+            document.getElementById('pruefungsAnweisung').innerText = "Bitte machen Sie eine " + aktuellePruefart + ".";
+            document.getElementById('pruefungErfolgreich').value = 'ja'; 
+            
+            if (html5QrCode?.isScanning) html5QrCode.stop();
+            zeigeSeite('pruefungPage');
+        }
+
+        function pruefen() {
             const jetzt = new Date();
             erfassungsZeitstempel = jetzt.toLocaleDateString('de-DE') + ' ' + jetzt.toLocaleTimeString('de-DE');
 
             const rb = document.getElementById('resultBox');
             rb.className = 'result';
-            let err = (document.getElementById('verpackung').value==='nein' || document.getElementById('mengeOk').value==='nein' || document.getElementById('maengel').value==='ja');
+            
+            const vFail = document.getElementById('verpackung').value === 'nein';
+            const mFail = document.getElementById('mengeOk').value === 'nein';
+            const pFail = document.getElementById('pruefungErfolgreich').value === 'nein';
+            
+            let err = (vFail || mFail || pFail);
             currentStatus = err ? "Gesperrt" : "Freigegeben";
+            
             rb.classList.add(err ? 'error' : 'success');
             rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
+            
             document.getElementById('successActions').style.display = err ? 'none' : 'block';
             document.getElementById('errorActions').style.display = err ? 'block' : 'none';
+            
             zeigeSeite('resultPage');
-            if (html5QrCode?.isScanning) html5QrCode.stop();
         }
 
         async function inSupabaseSpeichern(isError) {
@@ -171,6 +208,9 @@
                     }
                 }
             }
+            
+            // Konvertierung der Prüfungsauswahl für die DB-Kompatibilität der Spalte 'maengel'
+            const dbMaengelWert = document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja';
 
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
                 datum: document.getElementById('datum').value,
@@ -181,7 +221,8 @@
                 preis: parseFloat(document.getElementById('preis').value),
                 verpackung: document.getElementById('verpackung').value,
                 mengeOk: document.getElementById('mengeOk').value,
-                maengel: document.getElementById('maengel').value,
+                maengel: dbMaengelWert,
+                pruefart: aktuellePruefart,
                 status: currentStatus,
                 beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
                 bilder_urls: bilderUrls.join(',')
@@ -218,10 +259,10 @@
                 return; 
             }
 
-            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Preis;Status;Beschreibung;Bilder_Links\n";
+            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Preis;Prüfart;Status;Beschreibung;Bilder_Links\n";
 
             logs.forEach(log => {
-                csv += `${log.datum};${log.zeitstempel || ''};${log.mitarbeiter || ''};${log.seriennummer};${log.menge};${log.preis};${log.status};"${log.beschreibung || ''}";"${log.bilder_urls || ''}"\n`;
+                csv += `${log.datum};${log.zeitstempel || ''};${log.mitarbeiter || ''};${log.seriennummer};${log.menge};${log.preis};${log.pruefart || ''};${log.status};"${log.beschreibung || ''}";"${log.bilder_urls || ''}"\n`;
             });
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
