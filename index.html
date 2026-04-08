@@ -29,8 +29,9 @@
         .instruction-box { background-color: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 8px; border-left: 5px solid #0d47a1; margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; }
         .netto-box { display: none; padding: 10px; background-color: #e8f5e9; border: 1px solid var(--accent-green); border-radius: 8px; margin-top: 5px; color: var(--accent-green); font-weight: bold; }
         .calc-box { background-color: #fff3e0; border: 1px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
+        .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-blue); font-size: 0.9em; text-decoration: underline; cursor: pointer; }
         
-        /* Tooltip CSS */
         .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-blue); border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; }
         .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #333; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; }
         .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
@@ -64,6 +65,8 @@
             <select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
             
             <button onclick="geheZuPruefung()">Weiter</button>
+            
+            <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
         </div>
 
         <div id="pruefungPage" style="display:none;">
@@ -77,7 +80,7 @@
                 
                 <label for="erwartungswertfaktor">Erwartungswertfaktor:
                     <span class="tooltip">i
-                        <span class="tooltiptext">Dieser Faktor bestimmt die statistische Sicherheit der Überprüfung. Ein höherer Wert führt zu strengeren Kontrollen (mehr nötige Stichproben), ein niedrigerer Wert senkt die Stichprobenanzahl.</span>
+                        <span class="tooltiptext">Dieser Faktor bestimmt die statistische Sicherheit der Überprüfung. Ein höherer Wert führt zu strengeren Kontrollen (mehr nötige Stichproben).</span>
                     </span>
                 </label>
                 <input type="number" id="erwartungswertfaktor" value="1.0" step="0.1" oninput="updateStichproben()">
@@ -103,13 +106,26 @@
             <div id="errorActions" class="action-section" style="display:none;">
                 <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label>
                 <textarea id="mangelBeschreibung" rows="4" placeholder="Details eingeben..."></textarea>
+                
                 <label for="mangelBilder">Bilder hochladen:</label>
-                <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment">
+                <span class="privacy-hint">⚠️ Datenschutz: Bitte ausschließlich fehlerhafte Ware/Verpackung fotografieren. Auf den Bildern dürfen keine Personen oder Gesichter erkennbar sein!</span>
+                <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment" style="margin-top: 10px;">
+                
                 <button id="saveBtnError" class="camera-btn" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
             </div>
             <div id="successActions" class="action-section" style="display:none;">
                 <button id="saveBtnSuccess" class="camera-btn" onclick="inSupabaseSpeichern(false)">In Datenbank sichern & Neue Prüfung</button>
             </div>
+        </div>
+
+        <div id="datenschutzPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <h2 style="color: #0A3654;">Datenschutzerklärung</h2>
+            <p><strong>1. Verantwortlichkeit</strong><br>Verantwortlich für die Datenerfassung ist das ColognIT Projektteam.</p>
+            <p><strong>2. Zweck der Verarbeitung</strong><br>Die Erhebung von Mitarbeiterkürzeln, Prüfdaten und Mängelfotos dient ausschließlich der internen Dokumentation und Qualitätssicherung im Wareneingang (Art. 6 Abs. 1 lit. f DSGVO, § 26 BDSG).</p>
+            <p><strong>3. Datenminimierung & Fotos</strong><br>Gemäß Art. 5 DSGVO ist das Erfassen von Personen auf Mängelfotos strengstens untersagt. Es dürfen nur Sachmängel dokumentiert werden.</p>
+            <p><strong>4. Speicherung und Dienstleister</strong><br>Die Daten werden über den Cloud-Datenbankanbieter Supabase (Auftragsverarbeiter nach Art. 28 DSGVO) verarbeitet und gespeichert. Eine Löschung der Daten erfolgt nach Ablauf der projektbezogenen Aufbewahrungsfristen.</p>
+            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück zur Startseite</button>
         </div>
 
         <div id="loginPage" style="display:none;">
@@ -140,7 +156,7 @@
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
 
         function zeigeSeite(seiteId) {
-            ['formPage', 'pruefungPage', 'resultPage', 'loginPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
+            ['formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'loginPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
             document.getElementById(seiteId).style.display = 'block';
         }
 
@@ -170,7 +186,6 @@
 
         function updateStichproben() {
             const menge = parseInt(document.getElementById('menge').value) || 1;
-            // Prozentwert auslesen und durch 100 teilen für die Berechnung
             const faProzent = parseFloat(document.getElementById('fehlerakzeptanz').value) || 0;
             const fa = faProzent / 100;
             const ef = parseFloat(document.getElementById('erwartungswertfaktor').value) || 0;
