@@ -27,6 +27,7 @@
         #reader { width: 100%; margin-top: 15px; display: none; }
         .login-btn-top { position: absolute; top: 10px; right: 10px; background-color: #6c757d; width: auto; padding: 8px 15px; font-size: 0.9em; margin-top: 0; }
         .instruction-box { background-color: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 8px; border-left: 5px solid #0d47a1; margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; }
+        .netto-box { display: none; padding: 10px; background-color: #e8f5e9; border: 1px solid var(--accent-green); border-radius: 8px; margin-top: 5px; color: var(--accent-green); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -47,7 +48,20 @@
             <div id="reader"></div>
 
             <label for="menge">Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="1">
-            <label for="preis">Einzelpreis Netto (€):</label><input type="number" id="preis" min="0" step="0.01" value="0.00">
+            
+            <label for="preisArt">Preisart für Eingabe:</label>
+            <select id="preisArt" onchange="berechneNetto()">
+                <option value="netto">Netto</option>
+                <option value="brutto">Brutto</option>
+            </select>
+            
+            <label for="preisEingabe">Einzelpreis (€):</label>
+            <input type="number" id="preisEingabe" min="0" step="0.01" value="0.00" oninput="berechneNetto()">
+            
+            <div id="nettoAnzeige" class="netto-box">
+                Berechneter Nettopreis: <span id="nettoWert">0.00</span> €
+            </div>
+
             <label for="verpackung">Sichtprüfung: Verpackung intakt?</label>
             <select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein (Transportschaden)</option></select>
             <label for="mengeOk">Mengenprüfung: Stimmt mit Lieferschein überein?</label>
@@ -146,6 +160,27 @@
             ).catch(err => alert("Kamerafehler: " + err));
         }
 
+        function berechneNetto() {
+            const art = document.getElementById('preisArt').value;
+            const eingabe = parseFloat(document.getElementById('preisEingabe').value) || 0;
+            const anzeige = document.getElementById('nettoAnzeige');
+            const wert = document.getElementById('nettoWert');
+            
+            if (art === 'brutto') {
+                const netto = eingabe / 1.19;
+                wert.innerText = netto.toFixed(2);
+                anzeige.style.display = 'block';
+            } else {
+                anzeige.style.display = 'none';
+            }
+        }
+
+        function holeNettoPreis() {
+            const art = document.getElementById('preisArt').value;
+            const eingabe = parseFloat(document.getElementById('preisEingabe').value) || 0;
+            return art === 'brutto' ? parseFloat((eingabe / 1.19).toFixed(2)) : eingabe;
+        }
+
         function geheZuPruefung() {
             const mitarbeiter = document.getElementById('mitarbeiter').value.trim();
             const art = document.getElementById('artikelnummer').value.trim();
@@ -153,10 +188,10 @@
             if (!mitarbeiter) { alert("Bitte das Mitarbeiterkürzel eintragen."); return; }
             if (!art) { alert("Bitte eine Artikelnummer erfassen."); return; }
             
-            const menge = parseInt(document.getElementById('menge').value) || 1;
-            const preis = parseFloat(document.getElementById('preis').value) || 0;
+            const nettoPreis = holeNettoPreis();
             
-            aktuellePruefart = (menge > 15 && preis < 1000) ? "Stichprobenprüfung" : "100% Vollprüfung";
+            // Logik: Ab 750€ Netto -> Vollprüfung, darunter Stichprobe
+            aktuellePruefart = (nettoPreis >= 750) ? "100% Vollprüfung" : "Stichprobenprüfung";
             
             document.getElementById('pruefungsAnweisung').innerText = "Bitte machen Sie eine " + aktuellePruefart + ".";
             document.getElementById('pruefungErfolgreich').value = 'ja'; 
@@ -209,8 +244,8 @@
                 }
             }
             
-            // Konvertierung der Prüfungsauswahl für die DB-Kompatibilität der Spalte 'maengel'
             const dbMaengelWert = document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja';
+            const endgueltigerNettoPreis = holeNettoPreis();
 
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
                 datum: document.getElementById('datum').value,
@@ -218,7 +253,7 @@
                 mitarbeiter: document.getElementById('mitarbeiter').value,
                 seriennummer: document.getElementById('artikelnummer').value,
                 menge: parseInt(document.getElementById('menge').value),
-                preis: parseFloat(document.getElementById('preis').value),
+                preis: endgueltigerNettoPreis,
                 verpackung: document.getElementById('verpackung').value,
                 mengeOk: document.getElementById('mengeOk').value,
                 maengel: dbMaengelWert,
@@ -238,6 +273,9 @@
                 document.getElementById('mangelBeschreibung').value = "";
                 document.getElementById('mangelBilder').value = "";
                 document.getElementById('mitarbeiter').value = ""; 
+                document.getElementById('preisEingabe').value = "0.00";
+                document.getElementById('preisArt').value = "netto";
+                berechneNetto();
             }
         }
 
@@ -259,7 +297,7 @@
                 return; 
             }
 
-            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Preis;Prüfart;Status;Beschreibung;Bilder_Links\n";
+            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Netto_Preis;Prüfart;Status;Beschreibung;Bilder_Links\n";
 
             logs.forEach(log => {
                 csv += `${log.datum};${log.zeitstempel || ''};${log.mitarbeiter || ''};${log.seriennummer};${log.menge};${log.preis};${log.pruefart || ''};${log.status};"${log.beschreibung || ''}";"${log.bilder_urls || ''}"\n`;
