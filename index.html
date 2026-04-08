@@ -28,6 +28,7 @@
         .login-btn-top { position: absolute; top: 10px; right: 10px; background-color: #6c757d; width: auto; padding: 8px 15px; font-size: 0.9em; margin-top: 0; }
         .instruction-box { background-color: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 8px; border-left: 5px solid #0d47a1; margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; }
         .netto-box { display: none; padding: 10px; background-color: #e8f5e9; border: 1px solid var(--accent-green); border-radius: 8px; margin-top: 5px; color: var(--accent-green); font-weight: bold; }
+        .calc-box { background-color: #fff3e0; border: 1px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -38,29 +39,18 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
             <label for="datum">Datum:</label><input type="date" id="datum">
-            
-            <label for="mitarbeiter">Mitarbeiterkürzel:</label>
-            <input type="text" id="mitarbeiter" placeholder="z. B. AB">
-            
+            <label for="mitarbeiter">Mitarbeiterkürzel:</label><input type="text" id="mitarbeiter" placeholder="z. B. AB">
             <label for="artikelnummer">Artikelnummer:</label>
             <input type="text" id="artikelnummer" placeholder="Scannen oder tippen...">
             <button type="button" class="camera-btn" onclick="startScanner()">Barcode scannen</button>
             <div id="reader"></div>
 
-            <label for="menge">Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="1">
-            
+            <label for="menge">Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="100">
             <label for="preisArt">Preisart für Eingabe:</label>
-            <select id="preisArt" onchange="berechneNetto()">
-                <option value="netto">Netto</option>
-                <option value="brutto">Brutto</option>
-            </select>
-            
+            <select id="preisArt" onchange="berechneNetto()"><option value="netto">Netto</option><option value="brutto">Brutto</option></select>
             <label for="preisEingabe">Einzelpreis (€):</label>
             <input type="number" id="preisEingabe" min="0" step="0.01" value="0.00" oninput="berechneNetto()">
-            
-            <div id="nettoAnzeige" class="netto-box">
-                Berechneter Nettopreis: <span id="nettoWert">0.00</span> €
-            </div>
+            <div id="nettoAnzeige" class="netto-box">Berechneter Nettopreis: <span id="nettoWert">0.00</span> €</div>
 
             <label for="verpackung">Sichtprüfung: Verpackung intakt?</label>
             <select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein (Transportschaden)</option></select>
@@ -72,8 +62,18 @@
 
         <div id="pruefungPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            
             <div id="pruefungsAnweisung" class="instruction-box"></div>
+            
+            <div id="stichprobenRechner" class="calc-box" style="display:none;">
+                <h4 style="margin-top:0;">Stichprobenkalkulator</h4>
+                <label for="fehlerakzeptanz">Fehlerakzeptanz (z. B. 0.01):</label>
+                <input type="number" id="fehlerakzeptanz" value="0.01" step="0.001" oninput="updateStichproben()">
+                <label for="erwartungswertfaktor">Erwartungswertfaktor:</label>
+                <input type="number" id="erwartungswertfaktor" value="0.2" step="0.1" oninput="updateStichproben()">
+                <div style="margin-top:15px; font-weight:bold; font-size:1.1em; color:#d84315;">
+                    Nötige Stichproben: <span id="stichprobenErgebnis">0</span>
+                </div>
+            </div>
             
             <label for="pruefungErfolgreich">War die Prüfung erfolgreich?</label>
             <select id="pruefungErfolgreich">
@@ -88,7 +88,6 @@
         <div id="resultPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <div id="resultBox" class="result"></div>
-            
             <div id="errorActions" class="action-section" style="display:none;">
                 <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label>
                 <textarea id="mangelBeschreibung" rows="4" placeholder="Details eingeben..."></textarea>
@@ -96,7 +95,6 @@
                 <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment">
                 <button id="saveBtnError" class="camera-btn" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
             </div>
-            
             <div id="successActions" class="action-section" style="display:none;">
                 <button id="saveBtnSuccess" class="camera-btn" onclick="inSupabaseSpeichern(false)">In Datenbank sichern & Neue Prüfung</button>
             </div>
@@ -107,10 +105,8 @@
             <h2 style="text-align: center; color: #0A3654;">Admin Login</h2>
             <label for="benutzername">Benutzername:</label><input type="text" id="benutzername" placeholder="Eingabe: admin">
             <label for="passwort">Passwort:</label><input type="password" id="passwort" placeholder="Eingabe: admin">
-            <button onclick="login()">Einloggen</button>
-            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück</button>
+            <button onclick="login()">Einloggen</button><button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück</button>
         </div>
-
         <div id="adminPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2 style="text-align: center; color: #0A3654;">Daten-Export</h2>
@@ -119,7 +115,6 @@
             <button id="exportBtn" class="camera-btn" onclick="exportiereVonSupabase()">Gesamtdaten (CSV) herunterladen</button>
             <button class="secondary-btn" onclick="zeigeSeite('formPage')">Logout / Zurück</button>
         </div>
-
     </div>
 
     <script>
@@ -130,187 +125,121 @@
         document.getElementById('datum').valueAsDate = new Date();
         document.getElementById('exportStart').valueAsDate = new Date();
         document.getElementById('exportEnde').valueAsDate = new Date();
-        
-        let currentStatus = "";
-        let erfassungsZeitstempel = "";
-        let aktuellePruefart = "";
-        let html5QrCode;
+        let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
 
         function zeigeSeite(seiteId) {
-            document.getElementById('formPage').style.display = 'none';
-            document.getElementById('pruefungPage').style.display = 'none';
-            document.getElementById('resultPage').style.display = 'none';
-            document.getElementById('loginPage').style.display = 'none';
-            document.getElementById('adminPage').style.display = 'none';
+            ['formPage', 'pruefungPage', 'resultPage', 'loginPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
             document.getElementById(seiteId).style.display = 'block';
         }
 
         function login() {
-            if (document.getElementById('benutzername').value === 'admin' && document.getElementById('passwort').value === 'admin') {
-                zeigeSeite('adminPage');
-            } else { alert('Falsche Zugangsdaten.'); }
+            if (document.getElementById('benutzername').value === 'admin' && document.getElementById('passwort').value === 'admin') zeigeSeite('adminPage');
+            else alert('Falsche Zugangsdaten.');
         }
 
         function startScanner() {
-            const readerDiv = document.getElementById('reader');
-            readerDiv.style.display = "block";
+            const rDiv = document.getElementById('reader'); rDiv.style.display = "block";
             if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 },
-                (text) => { document.getElementById('artikelnummer').value = text; html5QrCode.stop().then(() => readerDiv.style.display = "none"); }
-            ).catch(err => alert("Kamerafehler: " + err));
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { document.getElementById('artikelnummer').value = text; html5QrCode.stop().then(() => rDiv.style.display = "none"); }).catch(e => alert(e));
         }
 
         function berechneNetto() {
-            const art = document.getElementById('preisArt').value;
-            const eingabe = parseFloat(document.getElementById('preisEingabe').value) || 0;
+            const isBrutto = document.getElementById('preisArt').value === 'brutto';
+            const val = parseFloat(document.getElementById('preisEingabe').value) || 0;
             const anzeige = document.getElementById('nettoAnzeige');
-            const wert = document.getElementById('nettoWert');
-            
-            if (art === 'brutto') {
-                const netto = eingabe / 1.19;
-                wert.innerText = netto.toFixed(2);
-                anzeige.style.display = 'block';
-            } else {
-                anzeige.style.display = 'none';
-            }
+            if (isBrutto) { document.getElementById('nettoWert').innerText = (val / 1.19).toFixed(2); anzeige.style.display = 'block'; } 
+            else anzeige.style.display = 'none';
         }
 
         function holeNettoPreis() {
-            const art = document.getElementById('preisArt').value;
-            const eingabe = parseFloat(document.getElementById('preisEingabe').value) || 0;
-            return art === 'brutto' ? parseFloat((eingabe / 1.19).toFixed(2)) : eingabe;
+            const val = parseFloat(document.getElementById('preisEingabe').value) || 0;
+            return document.getElementById('preisArt').value === 'brutto' ? parseFloat((val / 1.19).toFixed(2)) : val;
+        }
+
+        function updateStichproben() {
+            const menge = parseInt(document.getElementById('menge').value) || 1;
+            const fa = parseFloat(document.getElementById('fehlerakzeptanz').value) || 0;
+            const ef = parseFloat(document.getElementById('erwartungswertfaktor').value) || 0;
+            let maxFehler = menge * fa, sum = 0, stichproben = 0, restmenge = menge;
+            
+            /* Iterative Simulation der Ziehung ohne Zurücklegen */
+            while (sum <= ef && restmenge > 0) {
+                sum += maxFehler / restmenge;
+                stichproben++;
+                restmenge--;
+            }
+            berechneteStichproben = stichproben;
+            document.getElementById('stichprobenErgebnis').innerText = stichproben;
         }
 
         function geheZuPruefung() {
-            const mitarbeiter = document.getElementById('mitarbeiter').value.trim();
-            const art = document.getElementById('artikelnummer').value.trim();
-            
-            if (!mitarbeiter) { alert("Bitte das Mitarbeiterkürzel eintragen."); return; }
-            if (!art) { alert("Bitte eine Artikelnummer erfassen."); return; }
-            
+            if (!document.getElementById('mitarbeiter').value.trim() || !document.getElementById('artikelnummer').value.trim()) return alert("Mitarbeiter und Artikelnummer sind Pflichtfelder.");
             const nettoPreis = holeNettoPreis();
-            
-            // Logik: Ab 750€ Netto -> Vollprüfung, darunter Stichprobe
             aktuellePruefart = (nettoPreis >= 750) ? "100% Vollprüfung" : "Stichprobenprüfung";
-            
             document.getElementById('pruefungsAnweisung').innerText = "Bitte machen Sie eine " + aktuellePruefart + ".";
             document.getElementById('pruefungErfolgreich').value = 'ja'; 
+            
+            const rechnerBox = document.getElementById('stichprobenRechner');
+            if (aktuellePruefart === "Stichprobenprüfung") { rechnerBox.style.display = 'block'; updateStichproben(); } 
+            else { rechnerBox.style.display = 'none'; berechneteStichproben = 0; }
             
             if (html5QrCode?.isScanning) html5QrCode.stop();
             zeigeSeite('pruefungPage');
         }
 
         function pruefen() {
-            const jetzt = new Date();
-            erfassungsZeitstempel = jetzt.toLocaleDateString('de-DE') + ' ' + jetzt.toLocaleTimeString('de-DE');
-
-            const rb = document.getElementById('resultBox');
-            rb.className = 'result';
-            
-            const vFail = document.getElementById('verpackung').value === 'nein';
-            const mFail = document.getElementById('mengeOk').value === 'nein';
-            const pFail = document.getElementById('pruefungErfolgreich').value === 'nein';
-            
-            let err = (vFail || mFail || pFail);
+            const j = new Date(); erfassungsZeitstempel = j.toLocaleDateString('de-DE') + ' ' + j.toLocaleTimeString('de-DE');
+            const rb = document.getElementById('resultBox'); rb.className = 'result';
+            let err = (document.getElementById('verpackung').value==='nein' || document.getElementById('mengeOk').value==='nein' || document.getElementById('pruefungErfolgreich').value==='nein');
             currentStatus = err ? "Gesperrt" : "Freigegeben";
-            
-            rb.classList.add(err ? 'error' : 'success');
-            rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
-            
-            document.getElementById('successActions').style.display = err ? 'none' : 'block';
-            document.getElementById('errorActions').style.display = err ? 'block' : 'none';
-            
+            rb.classList.add(err ? 'error' : 'success'); rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
+            document.getElementById('successActions').style.display = err ? 'none' : 'block'; document.getElementById('errorActions').style.display = err ? 'block' : 'none';
             zeigeSeite('resultPage');
         }
 
         async function inSupabaseSpeichern(isError) {
             const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess');
             btn.innerText = "Verarbeite..."; btn.disabled = true;
-
-            let bilderUrls = [];
-            const files = document.getElementById('mangelBilder').files;
+            let bilderUrls = []; const files = document.getElementById('mangelBilder').files;
 
             if (isError && files.length > 0) {
                 for (let file of files) {
-                    const fileName = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-                    const { data, error } = await supabaseClient.storage.from('maengelbilder').upload(fileName, file);
-
-                    if (error) {
-                        alert("UPLOAD-STOPP: " + error.message);
-                    } else {
-                        const { data: pUrl } = supabaseClient.storage.from('maengelbilder').getPublicUrl(fileName);
-                        bilderUrls.push(pUrl.publicUrl);
-                    }
+                    const fn = `${Date.now()}_${file.name.replace(/\\s/g, '_')}`;
+                    const { error } = await supabaseClient.storage.from('maengelbilder').upload(fn, file);
+                    if (error) alert("UPLOAD-FEHLER: " + error.message);
+                    else bilderUrls.push(supabaseClient.storage.from('maengelbilder').getPublicUrl(fn).data.publicUrl);
                 }
             }
             
             const dbMaengelWert = document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja';
-            const endgueltigerNettoPreis = holeNettoPreis();
+            const dbFa = aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('fehlerakzeptanz').value) : null;
+            const dbEf = aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('erwartungswertfaktor').value) : null;
 
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
-                datum: document.getElementById('datum').value,
-                zeitstempel: erfassungsZeitstempel,
-                mitarbeiter: document.getElementById('mitarbeiter').value,
-                seriennummer: document.getElementById('artikelnummer').value,
-                menge: parseInt(document.getElementById('menge').value),
-                preis: endgueltigerNettoPreis,
-                verpackung: document.getElementById('verpackung').value,
-                mengeOk: document.getElementById('mengeOk').value,
-                maengel: dbMaengelWert,
-                pruefart: aktuellePruefart,
-                status: currentStatus,
-                beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
+                datum: document.getElementById('datum').value, zeitstempel: erfassungsZeitstempel, mitarbeiter: document.getElementById('mitarbeiter').value,
+                seriennummer: document.getElementById('artikelnummer').value, menge: parseInt(document.getElementById('menge').value),
+                preis: holeNettoPreis(), verpackung: document.getElementById('verpackung').value, mengeOk: document.getElementById('mengeOk').value,
+                maengel: dbMaengelWert, pruefart: aktuellePruefart, fehlerakzeptanz: dbFa, erwartungswertfaktor: dbEf,
+                stichproben_anzahl: berechneteStichproben || null, status: currentStatus, beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
                 bilder_urls: bilderUrls.join(',')
             }]);
 
             btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
-            if (dbErr) {
-                alert("DATENBANK-FEHLER: " + dbErr.message);
-            } else { 
-                alert("Erfolgreich gespeichert!"); 
-                zeigeSeite('formPage'); 
-                document.getElementById('artikelnummer').value = "";
-                document.getElementById('mangelBeschreibung').value = "";
-                document.getElementById('mangelBilder').value = "";
-                document.getElementById('mitarbeiter').value = ""; 
-                document.getElementById('preisEingabe').value = "0.00";
-                document.getElementById('preisArt').value = "netto";
-                berechneNetto();
-            }
+            if (dbErr) alert("DATENBANK-FEHLER: " + dbErr.message);
+            else { alert("Erfolgreich gespeichert!"); document.getElementById('artikelnummer').value = ""; document.getElementById('mitarbeiter').value = ""; zeigeSeite('formPage'); }
         }
 
         async function exportiereVonSupabase() {
-            const btn = document.getElementById('exportBtn');
-            btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
+            const btn = document.getElementById('exportBtn'); btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
+            const { data: logs, error } = await supabaseClient.from('wareneingang').select('*').gte('datum', document.getElementById('exportStart').value).lte('datum', document.getElementById('exportEnde').value);
+
+            if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Gesamtdaten (CSV) herunterladen"; return; }
+
+            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz;Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\\n";
+            logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\\n`);
             
-            const startDatum = document.getElementById('exportStart').value;
-            const endeDatum = document.getElementById('exportEnde').value;
-            
-            const { data: logs, error } = await supabaseClient.from('wareneingang').select('*')
-                .gte('datum', startDatum)
-                .lte('datum', endeDatum);
-
-            if (error || !logs || !logs.length) { 
-                alert("Keine Daten im Zeitraum gefunden."); 
-                btn.disabled = false; 
-                btn.innerText = "Gesamtdaten (CSV) herunterladen"; 
-                return; 
-            }
-
-            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Netto_Preis;Prüfart;Status;Beschreibung;Bilder_Links\n";
-
-            logs.forEach(log => {
-                csv += `${log.datum};${log.zeitstempel || ''};${log.mitarbeiter || ''};${log.seriennummer};${log.menge};${log.preis};${log.pruefart || ''};${log.status};"${log.beschreibung || ''}";"${log.bilder_urls || ''}"\n`;
-            });
-
-            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `Wareneingang_Export_${startDatum}_bis_${endeDatum}.csv`;
-            link.click();
-            
-            btn.innerText = "Gesamtdaten (CSV) herunterladen"; 
-            btn.disabled = false;
+            const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
+            btn.innerText = "Gesamtdaten (CSV) herunterladen"; btn.disabled = false;
         }
     </script>
 </body>
