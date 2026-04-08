@@ -25,13 +25,13 @@
         .error { background-color: #fbe9e7; color: #d32f2f; border: 2px solid #d32f2f; }
         .action-section { border-top: 2px solid #eee; padding-top: 15px; margin-top: 15px; }
         #reader { width: 100%; margin-top: 15px; display: none; }
-        .login-btn-top { position: absolute; top: 10px; right: 10px; background-color: #6c757d; width: auto; padding: 8px 15px; font-size: 0.9em; margin-top: 0; }
+        .top-btn-group { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
+        .top-btn { background-color: #6c757d; width: auto; padding: 8px 12px; font-size: 0.85em; margin-top: 0; }
         .instruction-box { background-color: #e3f2fd; color: #0d47a1; padding: 15px; border-radius: 8px; border-left: 5px solid #0d47a1; margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; }
         .netto-box { display: none; padding: 10px; background-color: #e8f5e9; border: 1px solid var(--accent-green); border-radius: 8px; margin-top: 5px; color: var(--accent-green); font-weight: bold; }
         .calc-box { background-color: #fff3e0; border: 1px solid #ff9800; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
         .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-blue); font-size: 0.9em; text-decoration: underline; cursor: pointer; }
-        
         .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-blue); border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; }
         .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #333; color: #fff; text-align: left; border-radius: 6px; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; }
         .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #333 transparent transparent transparent; }
@@ -41,8 +41,22 @@
 <body>
     <div class="container">
         
-        <div id="formPage">
-            <button class="login-btn-top" onclick="zeigeSeite('loginPage')">Admin-Login</button>
+        <div id="loginPage">
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <h2 style="text-align: center; color: #0A3654;">Mitarbeiter Login</h2>
+            <label for="email">E-Mail Adresse:</label>
+            <input type="email" id="email" placeholder="Eingabe: E-Mail">
+            <label for="passwort">Passwort:</label>
+            <input type="password" id="passwort" placeholder="Eingabe: Passwort">
+            <button onclick="login()">Einloggen</button>
+            <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
+        </div>
+
+        <div id="formPage" style="display:none;">
+            <div class="top-btn-group">
+                <button class="top-btn" onclick="zeigeSeite('adminPage')">Export</button>
+                <button class="top-btn" style="background-color: #d32f2f;" onclick="logout()">Logout</button>
+            </div>
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
             <label for="datum">Datum:</label><input type="date" id="datum">
@@ -65,7 +79,6 @@
             <select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
             
             <button onclick="geheZuPruefung()">Weiter</button>
-            
             <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
         </div>
 
@@ -79,9 +92,7 @@
                 <input type="number" id="fehlerakzeptanz" value="1.0" step="0.1" oninput="updateStichproben()">
                 
                 <label for="erwartungswertfaktor">Erwartungswertfaktor:
-                    <span class="tooltip">i
-                        <span class="tooltiptext">Dieser Faktor bestimmt die statistische Sicherheit der Überprüfung. Ein höherer Wert führt zu strengeren Kontrollen (mehr nötige Stichproben).</span>
-                    </span>
+                    <span class="tooltip">i<span class="tooltiptext">Dieser Faktor bestimmt die statistische Sicherheit der Überprüfung. Ein höherer Wert führt zu strengeren Kontrollen (mehr nötige Stichproben).</span></span>
                 </label>
                 <input type="number" id="erwartungswertfaktor" value="1.0" step="0.1" oninput="updateStichproben()">
                 
@@ -125,23 +136,16 @@
             <p><strong>2. Zweck der Verarbeitung</strong><br>Die Erhebung von Mitarbeiterkürzeln, Prüfdaten und Mängelfotos dient ausschließlich der internen Dokumentation und Qualitätssicherung im Wareneingang (Art. 6 Abs. 1 lit. f DSGVO, § 26 BDSG).</p>
             <p><strong>3. Datenminimierung & Fotos</strong><br>Gemäß Art. 5 DSGVO ist das Erfassen von Personen auf Mängelfotos strengstens untersagt. Es dürfen nur Sachmängel dokumentiert werden.</p>
             <p><strong>4. Speicherung und Dienstleister</strong><br>Die Daten werden über den Cloud-Datenbankanbieter Supabase (Auftragsverarbeiter nach Art. 28 DSGVO) verarbeitet und gespeichert. Eine Löschung der Daten erfolgt nach Ablauf der projektbezogenen Aufbewahrungsfristen.</p>
-            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück zur Startseite</button>
+            <button class="secondary-btn" onclick="location.reload()">Zurück</button>
         </div>
 
-        <div id="loginPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2 style="text-align: center; color: #0A3654;">Admin Login</h2>
-            <label for="benutzername">Benutzername:</label><input type="text" id="benutzername" placeholder="Eingabe: admin">
-            <label for="passwort">Passwort:</label><input type="password" id="passwort" placeholder="Eingabe: admin">
-            <button onclick="login()">Einloggen</button><button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück</button>
-        </div>
         <div id="adminPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2 style="text-align: center; color: #0A3654;">Daten-Export</h2>
             <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
             <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
             <button id="exportBtn" class="camera-btn" onclick="exportiereVonSupabase()">Gesamtdaten (CSV) herunterladen</button>
-            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Logout / Zurück</button>
+            <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück zur Maske</button>
         </div>
     </div>
 
@@ -155,14 +159,50 @@
         document.getElementById('exportEnde').valueAsDate = new Date();
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
 
+        // AUTHENTIFIZIERUNG: Prüfen ob bereits eingeloggt
+        async function checkSession() {
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (data.session) {
+                zeigeSeite('formPage');
+            } else {
+                zeigeSeite('loginPage');
+            }
+        }
+        checkSession(); // Wird direkt beim Laden ausgeführt
+
         function zeigeSeite(seiteId) {
-            ['formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'loginPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
+            ['loginPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
             document.getElementById(seiteId).style.display = 'block';
         }
 
-        function login() {
-            if (document.getElementById('benutzername').value === 'admin' && document.getElementById('passwort').value === 'admin') zeigeSeite('adminPage');
-            else alert('Falsche Zugangsdaten.');
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('passwort').value;
+            
+            if(!email || !password) { alert("Bitte E-Mail und Passwort eingeben."); return; }
+
+            const btn = document.querySelector('#loginPage button');
+            btn.innerText = "Prüfe Daten..."; btn.disabled = true;
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email: email,
+                password: password
+            });
+
+            btn.innerText = "Einloggen"; btn.disabled = false;
+
+            if (error) {
+                alert("Login fehlgeschlagen: " + error.message);
+            } else {
+                document.getElementById('email').value = "";
+                document.getElementById('passwort').value = "";
+                zeigeSeite('formPage');
+            }
+        }
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            zeigeSeite('loginPage');
         }
 
         function startScanner() {
