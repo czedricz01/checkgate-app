@@ -33,6 +33,7 @@
         
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: 16px; border-radius: 0; background-color: #fbfbfb; color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(74, 101, 114, 0.1); background-color: #fff; }
+        input[readonly] { background-color: #e9ecef; color: #6c757d; border-color: #ddd; cursor: not-allowed; }
         
         button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; transition: background-color 0.2s; }
         button:hover { background-color: var(--action-green-dark); }
@@ -102,6 +103,15 @@
             <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
         </div>
 
+        <div id="setupProfilePage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <h2>Profil einrichten</h2>
+            <p style="text-align:center; font-size:0.9em; color:#666;">Bitte lege dein Mitarbeiterkürzel fest. Dieses wird zukünftig bei allen Prüfungen automatisch hinterlegt.</p>
+            <label for="newKuerzel">Dein Mitarbeiterkürzel:</label>
+            <input type="text" id="newKuerzel" placeholder="z. B. AB">
+            <button id="saveKuerzelBtn" onclick="saveKuerzel()">Speichern & Weiter</button>
+        </div>
+
         <div id="formPage" style="display:none;">
             <div class="top-btn-group">
                 <button class="top-btn" onclick="zeigeSeite('adminPage')">Export</button>
@@ -110,7 +120,9 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
             <label for="datum">Datum:</label><input type="date" id="datum">
-            <label for="mitarbeiter">Mitarbeiterkürzel:</label><input type="text" id="mitarbeiter" placeholder="z. B. AB">
+            <label for="mitarbeiter">Mitarbeiterkürzel:</label>
+            <input type="text" id="mitarbeiter" readonly title="Wird automatisch aus deinem Profil bezogen.">
+            
             <label for="artikelnummer">Artikelnummer:</label>
             <input type="text" id="artikelnummer" placeholder="Scannen oder tippen...">
             <button type="button" class="camera-btn" onclick="startScanner()">Barcode scannen</button>
@@ -218,12 +230,22 @@
 
         async function checkSession() {
             const { data, error } = await supabaseClient.auth.getSession();
-            if (data.session) { zeigeSeite('formPage'); } else { zeigeSeite('loginPage'); }
+            if (data.session) { processUserLogin(data.session.user); } else { zeigeSeite('loginPage'); }
         }
         checkSession();
 
+        function processUserLogin(user) {
+            const userKuerzel = user.user_metadata?.kuerzel;
+            if (userKuerzel) {
+                document.getElementById('mitarbeiter').value = userKuerzel;
+                zeigeSeite('formPage');
+            } else {
+                zeigeSeite('setupProfilePage');
+            }
+        }
+
         function zeigeSeite(seiteId) {
-            ['loginPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
+            ['loginPage', 'setupProfilePage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
             document.getElementById(seiteId).style.display = 'block';
         }
 
@@ -270,7 +292,31 @@
             btn.innerText = "Einloggen"; btn.disabled = false;
 
             if (error) { alert("Login fehlgeschlagen: " + error.message); } 
-            else { document.getElementById('email').value = ""; document.getElementById('passwort').value = ""; zeigeSeite('formPage'); }
+            else { 
+                document.getElementById('email').value = ""; document.getElementById('passwort').value = ""; 
+                processUserLogin(data.user);
+            }
+        }
+
+        async function saveKuerzel() {
+            const neuesKuerzel = document.getElementById('newKuerzel').value.trim();
+            if (!neuesKuerzel) { alert("Bitte ein Mitarbeiterkürzel eingeben."); return; }
+            
+            const btn = document.getElementById('saveKuerzelBtn');
+            btn.innerText = "Wird gespeichert..."; btn.disabled = true;
+
+            const { data, error } = await supabaseClient.auth.updateUser({
+                data: { kuerzel: neuesKuerzel }
+            });
+
+            btn.innerText = "Speichern & Weiter"; btn.disabled = false;
+
+            if (error) {
+                alert("Fehler beim Speichern: " + error.message);
+            } else {
+                document.getElementById('mitarbeiter').value = neuesKuerzel;
+                zeigeSeite('formPage');
+            }
         }
 
         async function logout() {
@@ -367,7 +413,12 @@
 
             btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
             if (dbErr) alert("DATENBANK-FEHLER: " + dbErr.message);
-            else { alert("Erfolgreich gespeichert!"); document.getElementById('artikelnummer').value = ""; document.getElementById('mitarbeiter').value = ""; zeigeSeite('formPage'); }
+            else { 
+                alert("Erfolgreich gespeichert!"); 
+                document.getElementById('artikelnummer').value = ""; 
+                // Mitarbeiterkürzel wird hier absichtlich NICHT mehr zurückgesetzt.
+                zeigeSeite('formPage'); 
+            }
         }
 
         async function exportiereVonSupabase() {
