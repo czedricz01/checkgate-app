@@ -40,7 +40,7 @@
         .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background-color: #fff; border: 1px solid var(--primary-main); border-top: none; z-index: 99; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; }
         .dropdown-item:last-child { border-bottom: none; }
-        .dropdown-item:hover { background-color: var(--primary-light-bg); color: var(--primary-dark); font-weight: bold; }
+        .dropdown-item:hover, .dropdown-item.active { background-color: var(--primary-light-bg); color: var(--primary-dark); font-weight: bold; }
 
         button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; transition: background-color 0.2s; }
         button:hover { background-color: var(--action-green-dark); }
@@ -60,8 +60,10 @@
         #reader { width: 100%; margin-top: 15px; display: none; }
         
         .top-btn-group { position: absolute; top: 10px; right: 10px; display: flex; gap: 5px; }
-        .top-btn { background-color: #6c757d; color: white; width: auto; padding: 6px 10px; font-size: 0.8em; margin-top: 0; border-radius: 0; border: none; cursor: pointer; }
+        .top-btn { background-color: #6c757d; color: white; width: auto; padding: 6px 10px; font-size: 0.8em; margin-top: 0; border-radius: 0; border: none; cursor: pointer; transition: background-color 0.2s; }
         .top-btn:hover { background-color: #5a6268; }
+        .top-btn-logout { background-color: #d32f2f; }
+        .top-btn-logout:hover { background-color: #b71c1c; }
         
         .instruction-box { background-color: var(--primary-light-bg); color: var(--primary-dark); padding: 15px; border-left: 5px solid var(--primary-main); margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; border-radius: 0; }
         .netto-box { display: none; padding: 10px; background-color: #fdfdfe; border: 1px solid var(--action-green); margin-top: 5px; color: var(--action-green-dark); font-weight: bold; border-radius: 0; }
@@ -125,7 +127,7 @@
         <div id="formPage" style="display:none;">
             <div class="top-btn-group">
                 <button class="top-btn" onclick="zeigeSeite('adminPage')">Export</button>
-                <button class="top-btn" style="background-color: #d32f2f;" onclick="logout()">Logout</button>
+                <button class="top-btn top-btn-logout" onclick="logout()">Logout</button>
             </div>
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
@@ -198,7 +200,7 @@
                 <textarea id="mangelBeschreibung" rows="4" placeholder="Details eingeben..."></textarea>
                 
                 <label for="mangelBilder">Bilder hochladen:</label>
-                <span class="privacy-hint">⚠️ Datenschutz: Bitte ausschließlich fehlerhafte Ware/Verpackung fotografieren. Auf den Bildern dürfen keine Personen oder Gesichter erkennbar sein!</span>
+                <span class="privacy-hint">Datenschutz: Bitte ausschließlich fehlerhafte Ware/Verpackung fotografieren. Auf den Bildern dürfen keine Personen oder Gesichter erkennbar sein!</span>
                 <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment" style="margin-top: 10px;">
                 
                 <button id="saveBtnError" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
@@ -244,7 +246,8 @@
         document.getElementById('exportEnde').value = `${y}-${m}-${letzterTag}`;
 
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
-        let lieferantenChronologisch = []; // Speichert Lieferanten nach letzter Verwendung
+        let lieferantenChronologisch = [];
+        let currentFocus = -1;
 
         async function checkSession() {
             const { data, error } = await supabaseClient.auth.getSession();
@@ -268,7 +271,6 @@
         }
 
         async function ladeLieferanten() {
-            // Lade Lieferanten chronologisch absteigend (neueste zuerst)
             const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, id').order('id', { ascending: false });
             if (data && !error) {
                 const unique = [];
@@ -285,13 +287,13 @@
             const input = document.getElementById('lieferant').value.toLowerCase();
             const dropdown = document.getElementById('lieferantDropdown');
             dropdown.innerHTML = '';
+            currentFocus = -1;
             
             let anzeigeListe = [];
 
             if (input === "") {
-                anzeigeListe = [...lieferantenChronologisch]; // Ungefiltert = chronologisch
+                anzeigeListe = [...lieferantenChronologisch];
             } else {
-                // Gefiltert = Alphabetisch sortiert (beginnt mit Eingabe)
                 anzeigeListe = lieferantenChronologisch.filter(l => l.toLowerCase().startsWith(input));
                 anzeigeListe.sort((a, b) => a.localeCompare(b));
             }
@@ -314,7 +316,43 @@
             dropdown.style.display = 'block';
         }
 
-        // Schließt das Dropdown, wenn woanders hingeklickt wird
+        // Tastatursteuerung für Dropdown
+        document.getElementById('lieferant').addEventListener('keydown', function(e) {
+            let dropdown = document.getElementById('lieferantDropdown');
+            let items = dropdown.getElementsByClassName('dropdown-item');
+            
+            if (dropdown.style.display === 'block' && items.length > 0) {
+                if (e.key === 'ArrowDown') {
+                    currentFocus++;
+                    addActive(items);
+                    e.preventDefault();
+                } else if (e.key === 'ArrowUp') {
+                    currentFocus--;
+                    addActive(items);
+                    e.preventDefault();
+                } else if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (currentFocus > -1) items[currentFocus].click();
+                } else if (e.key === 'Tab') {
+                    if (currentFocus > -1) {
+                        items[currentFocus].click();
+                        // Tab wird nicht blockiert, springt ins nächste Feld
+                    }
+                }
+            }
+        });
+
+        function addActive(items) {
+            if (!items) return false;
+            for (let i = 0; i < items.length; i++) {
+                items[i].classList.remove('active');
+            }
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            items[currentFocus].classList.add('active');
+            items[currentFocus].scrollIntoView({block: "nearest"});
+        }
+
         document.addEventListener('click', function(e) {
             if(e.target.id !== 'lieferant') {
                 document.getElementById('lieferantDropdown').style.display = 'none';
@@ -513,7 +551,6 @@
                 alert("Erfolgreich gespeichert!"); 
                 document.getElementById('artikelnummer').value = ""; 
                 document.getElementById('lieferant').value = "";
-                // Nach jedem erfolgreichen Speichern die Liste aktualisieren
                 ladeLieferanten();
                 zeigeSeite('formPage'); 
             }
