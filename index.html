@@ -35,6 +35,13 @@
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(74, 101, 114, 0.1); background-color: #fff; }
         input[readonly] { background-color: #e9ecef; color: #6c757d; border-color: #ddd; cursor: not-allowed; }
         
+        /* Dropdown Styles für den Lieferanten */
+        .autocomplete-container { position: relative; width: 100%; }
+        .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background-color: #fff; border: 1px solid var(--primary-main); border-top: none; z-index: 99; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background-color: var(--primary-light-bg); color: var(--primary-dark); font-weight: bold; }
+
         button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; transition: background-color 0.2s; }
         button:hover { background-color: var(--action-green-dark); }
         
@@ -123,8 +130,15 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
             <label for="datum">Datum:</label><input type="date" id="datum">
+            
             <label for="mitarbeiter">Mitarbeiterkürzel:</label>
             <input type="text" id="mitarbeiter" readonly title="Wird automatisch aus deinem Profil bezogen.">
+            
+            <label for="lieferant">Lieferant:</label>
+            <div class="autocomplete-container">
+                <input type="text" id="lieferant" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterLieferanten()" onfocus="filterLieferanten()">
+                <div id="lieferantDropdown" class="dropdown-list"></div>
+            </div>
             
             <label for="artikelnummer">Artikelnummer:</label>
             <input type="text" id="artikelnummer" placeholder="Scannen oder tippen...">
@@ -230,10 +244,16 @@
         document.getElementById('exportEnde').value = `${y}-${m}-${letzterTag}`;
 
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
+        let lieferantenChronologisch = []; // Speichert Lieferanten nach letzter Verwendung
 
         async function checkSession() {
             const { data, error } = await supabaseClient.auth.getSession();
-            if (data.session) { processUserLogin(data.session.user); } else { zeigeSeite('loginPage'); }
+            if (data.session) { 
+                processUserLogin(data.session.user); 
+                ladeLieferanten(); 
+            } else { 
+                zeigeSeite('loginPage'); 
+            }
         }
         checkSession();
 
@@ -246,6 +266,60 @@
                 zeigeSeite('setupProfilePage');
             }
         }
+
+        async function ladeLieferanten() {
+            // Lade Lieferanten chronologisch absteigend (neueste zuerst)
+            const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, id').order('id', { ascending: false });
+            if (data && !error) {
+                const unique = [];
+                data.forEach(row => {
+                    if (row.lieferant && !unique.includes(row.lieferant)) {
+                        unique.push(row.lieferant);
+                    }
+                });
+                lieferantenChronologisch = unique;
+            }
+        }
+
+        function filterLieferanten() {
+            const input = document.getElementById('lieferant').value.toLowerCase();
+            const dropdown = document.getElementById('lieferantDropdown');
+            dropdown.innerHTML = '';
+            
+            let anzeigeListe = [];
+
+            if (input === "") {
+                anzeigeListe = [...lieferantenChronologisch]; // Ungefiltert = chronologisch
+            } else {
+                // Gefiltert = Alphabetisch sortiert (beginnt mit Eingabe)
+                anzeigeListe = lieferantenChronologisch.filter(l => l.toLowerCase().startsWith(input));
+                anzeigeListe.sort((a, b) => a.localeCompare(b));
+            }
+
+            if (anzeigeListe.length === 0) {
+                dropdown.style.display = 'none';
+                return;
+            }
+
+            anzeigeListe.forEach(l => {
+                let div = document.createElement('div');
+                div.className = 'dropdown-item';
+                div.innerText = l;
+                div.onclick = function() {
+                    document.getElementById('lieferant').value = l;
+                    dropdown.style.display = 'none';
+                };
+                dropdown.appendChild(div);
+            });
+            dropdown.style.display = 'block';
+        }
+
+        // Schließt das Dropdown, wenn woanders hingeklickt wird
+        document.addEventListener('click', function(e) {
+            if(e.target.id !== 'lieferant') {
+                document.getElementById('lieferantDropdown').style.display = 'none';
+            }
+        });
 
         function zeigeSeite(seiteId) {
             ['loginPage', 'setupProfilePage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
@@ -300,6 +374,7 @@
             else { 
                 document.getElementById('email').value = ""; document.getElementById('passwort').value = ""; 
                 processUserLogin(data.user);
+                ladeLieferanten();
             }
         }
 
@@ -366,6 +441,10 @@
 
         function geheZuPruefung() {
             if (!document.getElementById('mitarbeiter').value.trim() || !document.getElementById('artikelnummer').value.trim()) return alert("Mitarbeiter und Artikelnummer sind Pflichtfelder.");
+            
+            const lieferant = document.getElementById('lieferant').value.trim();
+            if (!lieferant) return alert("Bitte einen Lieferanten angeben.");
+            
             const nettoPreis = holeNettoPreis();
             aktuellePruefart = (nettoPreis >= 750) ? "100% Vollprüfung" : "Stichprobenprüfung";
             document.getElementById('pruefungsAnweisung').innerText = "Bitte machen Sie eine " + aktuellePruefart + ".";
@@ -406,13 +485,25 @@
             const dbMaengelWert = document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja';
             const dbFa = aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('fehlerakzeptanz').value) : null;
             const dbEf = aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('erwartungswertfaktor').value) : null;
+            const eingegebenerLieferant = document.getElementById('lieferant').value.trim();
 
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
-                datum: document.getElementById('datum').value, zeitstempel: erfassungsZeitstempel, mitarbeiter: document.getElementById('mitarbeiter').value,
-                seriennummer: document.getElementById('artikelnummer').value, menge: parseInt(document.getElementById('menge').value),
-                preis: holeNettoPreis(), verpackung: document.getElementById('verpackung').value, mengeOk: document.getElementById('mengeOk').value,
-                maengel: dbMaengelWert, pruefart: aktuellePruefart, fehlerakzeptanz: dbFa, erwartungswertfaktor: dbEf,
-                stichproben_anzahl: berechneteStichproben || null, status: currentStatus, beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
+                datum: document.getElementById('datum').value, 
+                zeitstempel: erfassungsZeitstempel, 
+                mitarbeiter: document.getElementById('mitarbeiter').value,
+                lieferant: eingegebenerLieferant,
+                seriennummer: document.getElementById('artikelnummer').value, 
+                menge: parseInt(document.getElementById('menge').value),
+                preis: holeNettoPreis(), 
+                verpackung: document.getElementById('verpackung').value, 
+                mengeOk: document.getElementById('mengeOk').value,
+                maengel: dbMaengelWert, 
+                pruefart: aktuellePruefart, 
+                fehlerakzeptanz: dbFa, 
+                erwartungswertfaktor: dbEf,
+                stichproben_anzahl: berechneteStichproben || null, 
+                status: currentStatus, 
+                beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
                 bilder_urls: bilderUrls.join(',')
             }]);
 
@@ -421,6 +512,9 @@
             else { 
                 alert("Erfolgreich gespeichert!"); 
                 document.getElementById('artikelnummer').value = ""; 
+                document.getElementById('lieferant').value = "";
+                // Nach jedem erfolgreichen Speichern die Liste aktualisieren
+                ladeLieferanten();
                 zeigeSeite('formPage'); 
             }
         }
@@ -431,8 +525,8 @@
 
             if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
 
-            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz(%);Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\n";
-            logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\n`);
+            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Lieferant;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz(%);Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\n";
+            logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.lieferant||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\n`);
             
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
             btn.innerText = "Daten herunterladen"; btn.disabled = false;
