@@ -14,12 +14,12 @@
             --primary-main: #4a6572;    
             --primary-dark: #2b3a42;    
             --primary-light-bg: #eaeff2; 
-            --action-green: #43a047;     /* Moderates Grün für Weiter/Absenden */
+            --action-green: #43a047;     
             --action-green-dark: #2e7d32; 
             --bg-overall: #f8f9fa;      
             --bg-container: #ffffff;
             --border-default: #bbb;
-            --text-dark: #111111;        /* Deutlich dunklere Schrift */
+            --text-dark: #111111;        
         }
         
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: var(--bg-overall); margin: 0; color: var(--text-dark); }
@@ -34,11 +34,9 @@
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: 16px; border-radius: 0; background-color: #fbfbfb; color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(74, 101, 114, 0.1); background-color: #fff; }
         
-        /* Hauptbuttons (Weiter, Absenden, Login, Sichern) -> Grün */
         button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; transition: background-color 0.2s; }
         button:hover { background-color: var(--action-green-dark); }
         
-        /* Kamera/Spezial-Buttons -> Blaugrau */
         button.camera-btn { background-color: var(--primary-main); margin-top: 10px; }
         button.camera-btn:hover { background-color: var(--primary-dark); }
         
@@ -63,13 +61,14 @@
         
         .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
         .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-dark); font-size: 0.9em; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .toggle-link { display: block; text-align: center; margin-top: 15px; color: var(--primary-main); font-size: 0.9em; cursor: pointer; }
         
         .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-main); width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; border-radius: 0; }
         .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #2c3e50; color: #fff; text-align: left; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; border-radius: 0; }
         .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #2c3e50 transparent transparent transparent; }
         .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
         
-        h2 { margin-top: 10px; margin-bottom: 15px; color: var(--text-dark); }
+        h2 { margin-top: 10px; margin-bottom: 15px; color: var(--text-dark); text-align: center; }
         h4 { color: var(--text-dark); }
     </style>
 </head>
@@ -78,12 +77,28 @@
         
         <div id="loginPage">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2 style="text-align: center;">Mitarbeiter Login</h2>
-            <label for="email">E-Mail Adresse:</label>
-            <input type="email" id="email" placeholder="Eingabe: E-Mail">
-            <label for="passwort">Passwort:</label>
-            <input type="password" id="passwort" placeholder="Eingabe: Passwort">
-            <button onclick="login()">Einloggen</button>
+            
+            <div id="loginForm">
+                <h2>Mitarbeiter Login</h2>
+                <label for="email">E-Mail Adresse:</label>
+                <input type="email" id="email" placeholder="Eingabe: E-Mail">
+                <label for="passwort">Passwort:</label>
+                <input type="password" id="passwort" placeholder="Eingabe: Passwort">
+                <button onclick="login()">Einloggen</button>
+                <a class="toggle-link" onclick="toggleAuthMode()">Kein Konto? Zugang anfragen.</a>
+            </div>
+
+            <div id="requestForm" style="display:none;">
+                <h2>Zugang anfragen</h2>
+                <p style="text-align:center; font-size:0.9em; color:#666;">Ein Administrator wird deine Anfrage prüfen und das Konto erstellen.</p>
+                <label for="reqEmail">E-Mail Adresse:</label>
+                <input type="email" id="reqEmail" placeholder="deine@email.de">
+                <label for="reqKuerzel">Dein Mitarbeiterkürzel:</label>
+                <input type="text" id="reqKuerzel" placeholder="z. B. AB">
+                <button onclick="sendeAnfrage()" class="camera-btn">Anfrage senden</button>
+                <a class="toggle-link" onclick="toggleAuthMode()">Zurück zum Login</a>
+            </div>
+
             <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
         </div>
 
@@ -166,7 +181,7 @@
 
         <div id="datenschutzPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2 style="text-align: center;">Datenschutzerklärung</h2>
+            <h2>Datenschutzerklärung</h2>
             <p><strong>1. Verantwortlichkeit</strong><br>Verantwortlich für die Datenerfassung ist das ColognIT Projektteam.</p>
             <p><strong>2. Zweck der Verarbeitung</strong><br>Die Erhebung von Mitarbeiterkürzeln, Prüfdaten und Mängelfotos dient ausschließlich der internen Dokumentation und Qualitätssicherung im Wareneingang (Art. 6 Abs. 1 lit. f DSGVO, § 26 BDSG).</p>
             <p><strong>3. Datenminimierung & Fotos</strong><br>Gemäß Art. 5 DSGVO ist das Erfassen von Personen auf Mängelfotos strengstens untersagt. Es dürfen nur Sachmängel dokumentiert werden.</p>
@@ -176,7 +191,7 @@
 
         <div id="adminPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2 style="text-align: center;">Daten-Export</h2>
+            <h2>Daten-Export</h2>
             <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
             <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
             <button id="exportBtn" onclick="exportiereVonSupabase()">Daten herunterladen</button>
@@ -212,11 +227,43 @@
             document.getElementById(seiteId).style.display = 'block';
         }
 
+        function toggleAuthMode() {
+            const login = document.getElementById('loginForm');
+            const req = document.getElementById('requestForm');
+            if (login.style.display === 'none') {
+                login.style.display = 'block';
+                req.style.display = 'none';
+            } else {
+                login.style.display = 'none';
+                req.style.display = 'block';
+            }
+        }
+
+        async function sendeAnfrage() {
+            const email = document.getElementById('reqEmail').value;
+            const kuerzel = document.getElementById('reqKuerzel').value;
+            
+            if (!email || !kuerzel) { alert("Bitte E-Mail und Kürzel angeben."); return; }
+            
+            const { error } = await supabaseClient.from('zugangsanfragen').insert([
+                { email: email, mitarbeiter: kuerzel }
+            ]);
+            
+            if (error) {
+                alert("Fehler beim Senden: " + error.message);
+            } else {
+                alert("Deine Anfrage wurde erfolgreich gesendet!");
+                document.getElementById('reqEmail').value = "";
+                document.getElementById('reqKuerzel').value = "";
+                toggleAuthMode();
+            }
+        }
+
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('passwort').value;
             if(!email || !password) { alert("Bitte E-Mail und Passwort eingeben."); return; }
-            const btn = document.querySelector('#loginPage button');
+            const btn = document.querySelector('#loginForm button');
             btn.innerText = "Prüfe Daten..."; btn.disabled = true;
 
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
