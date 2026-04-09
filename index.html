@@ -92,10 +92,13 @@
             <div id="requestForm" style="display:none;">
                 <h2>Zugang anfragen</h2>
                 <p style="text-align:center; font-size:0.9em; color:#666;">Ein Administrator wird deine Anfrage prüfen und das Konto erstellen.</p>
+                <label for="reqName">Dein vollständiger Name:</label>
+                <input type="text" id="reqName" placeholder="Max Mustermann">
                 <label for="reqEmail">E-Mail Adresse:</label>
                 <input type="email" id="reqEmail" placeholder="deine@email.de">
-                <label for="reqKuerzel">Dein Mitarbeiterkürzel:</label>
-                <input type="text" id="reqKuerzel" placeholder="z. B. AB">
+                <label for="reqAnmerkung">Anmerkung (Optional):</label>
+                <textarea id="reqAnmerkung" rows="3" placeholder="Zusätzliche Infos..."></textarea>
+                
                 <button onclick="sendeAnfrage()" class="camera-btn">Anfrage senden</button>
                 <a class="toggle-link" onclick="toggleAuthMode()">Zurück zum Login</a>
             </div>
@@ -262,21 +265,23 @@
         }
 
         async function sendeAnfrage() {
-            const email = document.getElementById('reqEmail').value;
-            const kuerzel = document.getElementById('reqKuerzel').value;
+            const name = document.getElementById('reqName').value.trim();
+            const email = document.getElementById('reqEmail').value.trim();
+            const anmerkung = document.getElementById('reqAnmerkung').value.trim();
             
-            if (!email || !kuerzel) { alert("Bitte E-Mail und Kürzel angeben."); return; }
+            if (!email || !name) { alert("Bitte Name und E-Mail angeben."); return; }
             
             const { error } = await supabaseClient.from('zugangsanfragen').insert([
-                { email: email, mitarbeiter: kuerzel }
+                { email: email, mitarbeiter: name, anmerkung: anmerkung }
             ]);
             
             if (error) {
                 alert("Fehler beim Senden: " + error.message);
             } else {
                 alert("Deine Anfrage wurde erfolgreich gesendet!");
+                document.getElementById('reqName').value = "";
                 document.getElementById('reqEmail').value = "";
-                document.getElementById('reqKuerzel').value = "";
+                document.getElementById('reqAnmerkung').value = "";
                 toggleAuthMode();
             }
         }
@@ -416,7 +421,6 @@
             else { 
                 alert("Erfolgreich gespeichert!"); 
                 document.getElementById('artikelnummer').value = ""; 
-                // Mitarbeiterkürzel wird hier absichtlich NICHT mehr zurückgesetzt.
                 zeigeSeite('formPage'); 
             }
         }
