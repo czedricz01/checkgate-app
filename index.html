@@ -34,8 +34,8 @@
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: 16px; border-radius: 0; background-color: #fbfbfb; color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(74, 101, 114, 0.1); background-color: #fff; }
         input[readonly] { background-color: #e9ecef; color: #6c757d; border-color: #ddd; cursor: not-allowed; }
+        input:disabled { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; }
         
-        /* Dropdown Styles für den Lieferanten */
         .autocomplete-container { position: relative; width: 100%; }
         .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background-color: #fff; border: 1px solid var(--primary-main); border-top: none; z-index: 99; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; }
@@ -43,13 +43,14 @@
         .dropdown-item:hover, .dropdown-item.active { background-color: var(--primary-light-bg); color: var(--primary-dark); font-weight: bold; }
 
         button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; transition: background-color 0.2s; }
-        button:hover { background-color: var(--action-green-dark); }
+        button:hover:not(:disabled) { background-color: var(--action-green-dark); }
+        button:disabled { background-color: #9e9e9e; cursor: not-allowed; }
         
         button.camera-btn { background-color: var(--primary-main); margin-top: 10px; }
-        button.camera-btn:hover { background-color: var(--primary-dark); }
+        button.camera-btn:hover:not(:disabled) { background-color: var(--primary-dark); }
         
         button.secondary-btn { background-color: #6c757d; }
-        button.secondary-btn:hover { background-color: #5a6268; }
+        button.secondary-btn:hover:not(:disabled) { background-color: #5a6268; }
         
         .result { padding: 20px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; border-radius: 0; color: var(--text-dark); }
         
@@ -94,8 +95,18 @@
                 <input type="email" id="email" placeholder="Eingabe: E-Mail">
                 <label for="passwort">Passwort:</label>
                 <input type="password" id="passwort" placeholder="Eingabe: Passwort">
-                <button onclick="login()">Einloggen</button>
-                <a class="toggle-link" onclick="toggleAuthMode()">Kein Konto? Zugang anfragen.</a>
+                <button id="loginBtn" onclick="login()">Einloggen</button>
+                <a class="toggle-link" onclick="toggleAuthMode('reset')">Passwort vergessen?</a>
+                <a class="toggle-link" onclick="toggleAuthMode('request')">Kein Konto? Zugang anfragen.</a>
+            </div>
+
+            <div id="forgotPasswordForm" style="display:none;">
+                <h2>Passwort zurücksetzen</h2>
+                <p style="text-align:center; font-size:0.9em; color:#666;">Gib deine E-Mail-Adresse ein. Du erhältst einen Link zum Zurücksetzen.</p>
+                <label for="resetEmail">E-Mail Adresse:</label>
+                <input type="email" id="resetEmail" placeholder="deine@email.de">
+                <button id="resetBtn" onclick="requestPasswordReset()" class="camera-btn">Link anfordern</button>
+                <a class="toggle-link" onclick="toggleAuthMode('login')">Zurück zum Login</a>
             </div>
 
             <div id="requestForm" style="display:none;">
@@ -107,28 +118,34 @@
                 <input type="email" id="reqEmail" placeholder="deine@email.de">
                 <label for="reqAnmerkung">Anmerkung (Optional):</label>
                 <textarea id="reqAnmerkung" rows="3" placeholder="Zusätzliche Infos..."></textarea>
-                
                 <button onclick="sendeAnfrage()" class="camera-btn">Anfrage senden</button>
-                <a class="toggle-link" onclick="toggleAuthMode()">Zurück zum Login</a>
+                <a class="toggle-link" onclick="toggleAuthMode('login')">Zurück zum Login</a>
             </div>
 
             <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
+        </div>
+
+        <div id="setNewPasswordPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <h2>Neues Passwort festlegen</h2>
+            <p style="text-align:center; font-size:0.9em; color:#666;">Bitte gib dein neues Passwort ein.</p>
+            <label for="recoveryPassword">Neues Passwort:</label>
+            <input type="password" id="recoveryPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
+            <label for="confirmRecoveryPassword">Passwort bestätigen:</label>
+            <input type="password" id="confirmRecoveryPassword" placeholder="Passwort wiederholen">
+            <button id="saveRecoveryBtn" onclick="saveNewPassword()">Passwort speichern</button>
         </div>
 
         <div id="setupProfilePage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Profil einrichten</h2>
             <p style="text-align:center; font-size:0.9em; color:#666;">Bitte lege dein Mitarbeiterkürzel sowie dein zukünftiges Passwort fest.</p>
-            
             <label for="newKuerzel">Dein Mitarbeiterkürzel:</label>
             <input type="text" id="newKuerzel" placeholder="z. B. AB">
-            
             <label for="newPassword">Neues Passwort:</label>
             <input type="password" id="newPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
-            
             <label for="confirmPassword">Passwort bestätigen:</label>
             <input type="password" id="confirmPassword" placeholder="Passwort wiederholen">
-
             <button id="saveKuerzelBtn" onclick="saveProfile()">Speichern & Weiter</button>
         </div>
 
@@ -140,10 +157,8 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             
             <label for="datum">Datum:</label><input type="date" id="datum">
-            
             <label for="mitarbeiter">Mitarbeiterkürzel:</label>
             <input type="text" id="mitarbeiter" readonly title="Wird automatisch aus deinem Profil bezogen.">
-            
             <label for="lieferant">Lieferant:</label>
             <div class="autocomplete-container">
                 <input type="text" id="lieferant" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterLieferanten()" onfocus="filterLieferanten()">
@@ -195,7 +210,6 @@
                 <option value="ja">Ja (Keine Mängel festgestellt)</option>
                 <option value="nein">Nein (Mängel oder fehlendes Zubehör)</option>
             </select>
-            
             <button onclick="pruefen()">Absenden</button>
             <button class="secondary-btn" onclick="zeigeSeite('formPage')">Zurück</button>
         </div>
@@ -244,18 +258,23 @@
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         document.getElementById('datum').valueAsDate = new Date();
-        
         const heute = new Date();
         const y = heute.getFullYear();
         const m = String(heute.getMonth() + 1).padStart(2, '0');
         const letzterTag = new Date(y, heute.getMonth() + 1, 0).getDate();
-        
         document.getElementById('exportStart').value = `${y}-${m}-01`;
         document.getElementById('exportEnde').value = `${y}-${m}-${letzterTag}`;
 
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
         let lieferantenChronologisch = [];
         let currentFocus = -1;
+
+        // Prüfung beim Laden: Wenn URL Recovery-Typ enthält, Formular anzeigen. Sonst normalen Session Check.
+        if (window.location.hash.includes('type=recovery')) {
+            zeigeSeite('setNewPasswordPage');
+        } else {
+            checkSession();
+        }
 
         async function checkSession() {
             const { data, error } = await supabaseClient.auth.getSession();
@@ -266,7 +285,6 @@
                 zeigeSeite('loginPage'); 
             }
         }
-        checkSession();
 
         function processUserLogin(user) {
             const userKuerzel = user.user_metadata?.kuerzel;
@@ -278,107 +296,94 @@
             }
         }
 
-        async function ladeLieferanten() {
-            const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, id').order('id', { ascending: false });
-            if (data && !error) {
-                const unique = [];
-                data.forEach(row => {
-                    if (row.lieferant && !unique.includes(row.lieferant)) {
-                        unique.push(row.lieferant);
-                    }
-                });
-                lieferantenChronologisch = unique;
-            }
-        }
-
-        function filterLieferanten() {
-            const input = document.getElementById('lieferant').value.toLowerCase();
-            const dropdown = document.getElementById('lieferantDropdown');
-            dropdown.innerHTML = '';
-            currentFocus = -1;
-            
-            let anzeigeListe = [];
-
-            if (input === "") {
-                anzeigeListe = [...lieferantenChronologisch];
-            } else {
-                anzeigeListe = lieferantenChronologisch.filter(l => l.toLowerCase().startsWith(input));
-                anzeigeListe.sort((a, b) => a.localeCompare(b));
-            }
-
-            if (anzeigeListe.length === 0) {
-                dropdown.style.display = 'none';
-                return;
-            }
-
-            anzeigeListe.forEach(l => {
-                let div = document.createElement('div');
-                div.className = 'dropdown-item';
-                div.innerText = l;
-                div.onclick = function() {
-                    document.getElementById('lieferant').value = l;
-                    dropdown.style.display = 'none';
-                };
-                dropdown.appendChild(div);
-            });
-            dropdown.style.display = 'block';
-        }
-
-        document.getElementById('lieferant').addEventListener('keydown', function(e) {
-            let dropdown = document.getElementById('lieferantDropdown');
-            let items = dropdown.getElementsByClassName('dropdown-item');
-            
-            if (dropdown.style.display === 'block' && items.length > 0) {
-                if (e.key === 'ArrowDown') {
-                    currentFocus++;
-                    addActive(items);
-                    e.preventDefault();
-                } else if (e.key === 'ArrowUp') {
-                    currentFocus--;
-                    addActive(items);
-                    e.preventDefault();
-                } else if (e.key === 'Enter') {
-                    e.preventDefault();
-                    if (currentFocus > -1) items[currentFocus].click();
-                } else if (e.key === 'Tab') {
-                    if (currentFocus > -1) {
-                        items[currentFocus].click();
-                    }
-                }
-            }
-        });
-
-        function addActive(items) {
-            if (!items) return false;
-            for (let i = 0; i < items.length; i++) {
-                items[i].classList.remove('active');
-            }
-            if (currentFocus >= items.length) currentFocus = 0;
-            if (currentFocus < 0) currentFocus = items.length - 1;
-            items[currentFocus].classList.add('active');
-            items[currentFocus].scrollIntoView({block: "nearest"});
-        }
-
-        document.addEventListener('click', function(e) {
-            if(e.target.id !== 'lieferant') {
-                document.getElementById('lieferantDropdown').style.display = 'none';
-            }
-        });
-
         function zeigeSeite(seiteId) {
-            ['loginPage', 'setupProfilePage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
+            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage'].forEach(id => document.getElementById(id).style.display = 'none');
             document.getElementById(seiteId).style.display = 'block';
         }
 
-        function toggleAuthMode() {
+        function toggleAuthMode(mode) {
             const login = document.getElementById('loginForm');
             const req = document.getElementById('requestForm');
-            if (login.style.display === 'none') {
-                login.style.display = 'block';
-                req.style.display = 'none';
+            const reset = document.getElementById('forgotPasswordForm');
+            login.style.display = 'none'; req.style.display = 'none'; reset.style.display = 'none';
+            if (mode === 'login') login.style.display = 'block';
+            else if (mode === 'request') req.style.display = 'block';
+            else if (mode === 'reset') reset.style.display = 'block';
+        }
+
+        // --- PASSWORD RESET FUNKTIONEN ---
+        async function requestPasswordReset() {
+            const email = document.getElementById('resetEmail').value.trim();
+            if (!email) { alert("Bitte E-Mail angeben."); return; }
+            
+            const btn = document.getElementById('resetBtn');
+            btn.innerText = "Sende..."; btn.disabled = true;
+
+            const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+                redirectTo: window.location.origin + window.location.pathname // Automatische Rückleitung auf diese Seite
+            });
+
+            btn.innerText = "Link anfordern"; btn.disabled = false;
+
+            if (error) {
+                alert("Fehler: " + error.message);
             } else {
-                login.style.display = 'none';
-                req.style.display = 'block';
+                alert("Ein Link zum Zurücksetzen wurde an deine E-Mail-Adresse gesendet.");
+                toggleAuthMode('login');
+            }
+        }
+
+        async function saveNewPassword() {
+            const pwd = document.getElementById('recoveryPassword').value;
+            const pwdConfirm = document.getElementById('confirmRecoveryPassword').value;
+
+            if (pwd.length < 8) { alert("Das Passwort muss mindestens 8 Zeichen lang sein."); return; }
+            if (!/[A-Z]/.test(pwd)) { alert("Mindestens ein Großbuchstabe erforderlich."); return; }
+            if (!/[a-z]/.test(pwd)) { alert("Mindestens ein Kleinbuchstabe erforderlich."); return; }
+            if (!/[0-9]/.test(pwd)) { alert("Mindestens eine Zahl erforderlich."); return; }
+            if (!/[^a-zA-Z0-9]/.test(pwd)) { alert("Mindestens ein Sonderzeichen erforderlich."); return; }
+            if (pwd !== pwdConfirm) { alert("Die Passwörter stimmen nicht überein."); return; }
+
+            const btn = document.getElementById('saveRecoveryBtn');
+            btn.innerText = "Speichere..."; btn.disabled = true;
+
+            const { data, error } = await supabaseClient.auth.updateUser({ password: pwd });
+
+            btn.innerText = "Passwort speichern"; btn.disabled = false;
+
+            if (error) {
+                alert("Fehler: " + error.message);
+            } else {
+                alert("Passwort erfolgreich aktualisiert!");
+                // Clean URL hash and proceed
+                window.history.replaceState(null, null, ' ');
+                checkSession();
+            }
+        }
+
+        // --- LOGIN UND ANFRAGEN ---
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('passwort').value;
+            if(!email || !password) { alert("Bitte E-Mail und Passwort eingeben."); return; }
+            const btn = document.getElementById('loginBtn');
+            btn.innerText = "Prüfe Daten..."; btn.disabled = true;
+
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
+            
+            if (error) { 
+                alert("Login fehlgeschlagen: " + error.message); 
+                btn.innerText = "Bitte 3 Sekunden warten...";
+                // 3 Sekunden Verzögerung aktivieren
+                setTimeout(() => {
+                    btn.innerText = "Einloggen";
+                    btn.disabled = false;
+                }, 3000);
+            } else { 
+                btn.innerText = "Einloggen"; btn.disabled = false;
+                document.getElementById('email').value = ""; document.getElementById('passwort').value = ""; 
+                processUserLogin(data.user);
+                ladeLieferanten();
             }
         }
 
@@ -386,39 +391,17 @@
             const name = document.getElementById('reqName').value.trim();
             const email = document.getElementById('reqEmail').value.trim();
             const anmerkung = document.getElementById('reqAnmerkung').value.trim();
-            
             if (!email || !name) { alert("Bitte Name und E-Mail angeben."); return; }
             
             const { error } = await supabaseClient.from('zugangsanfragen').insert([
                 { email: email, mitarbeiter: name, anmerkung: anmerkung }
             ]);
             
-            if (error) {
-                alert("Fehler beim Senden: " + error.message);
-            } else {
+            if (error) alert("Fehler beim Senden: " + error.message);
+            else {
                 alert("Deine Anfrage wurde erfolgreich gesendet!");
-                document.getElementById('reqName').value = "";
-                document.getElementById('reqEmail').value = "";
-                document.getElementById('reqAnmerkung').value = "";
-                toggleAuthMode();
-            }
-        }
-
-        async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('passwort').value;
-            if(!email || !password) { alert("Bitte E-Mail und Passwort eingeben."); return; }
-            const btn = document.querySelector('#loginForm button');
-            btn.innerText = "Prüfe Daten..."; btn.disabled = true;
-
-            const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
-            btn.innerText = "Einloggen"; btn.disabled = false;
-
-            if (error) { alert("Login fehlgeschlagen: " + error.message); } 
-            else { 
-                document.getElementById('email').value = ""; document.getElementById('passwort').value = ""; 
-                processUserLogin(data.user);
-                ladeLieferanten();
+                document.getElementById('reqName').value = ""; document.getElementById('reqEmail').value = ""; document.getElementById('reqAnmerkung').value = "";
+                toggleAuthMode('login');
             }
         }
 
@@ -428,37 +411,82 @@
             const pwdConfirm = document.getElementById('confirmPassword').value;
 
             if (!neuesKuerzel) { alert("Bitte ein Mitarbeiterkürzel eingeben."); return; }
-            
             if (pwd.length < 8) { alert("Das Passwort muss mindestens 8 Zeichen lang sein."); return; }
             if (!/[A-Z]/.test(pwd)) { alert("Das Passwort muss mindestens einen Großbuchstaben enthalten."); return; }
             if (!/[a-z]/.test(pwd)) { alert("Das Passwort muss mindestens einen Kleinbuchstaben enthalten."); return; }
             if (!/[0-9]/.test(pwd)) { alert("Das Passwort muss mindestens eine Zahl enthalten."); return; }
             if (!/[^a-zA-Z0-9]/.test(pwd)) { alert("Das Passwort muss mindestens ein Sonderzeichen enthalten."); return; }
-            
             if (pwd !== pwdConfirm) { alert("Die Passwörter stimmen nicht überein."); return; }
             
             const btn = document.getElementById('saveKuerzelBtn');
             btn.innerText = "Wird gespeichert..."; btn.disabled = true;
 
-            const { data, error } = await supabaseClient.auth.updateUser({
-                password: pwd,
-                data: { kuerzel: neuesKuerzel }
-            });
-
+            const { data, error } = await supabaseClient.auth.updateUser({ password: pwd, data: { kuerzel: neuesKuerzel } });
             btn.innerText = "Speichern & Weiter"; btn.disabled = false;
 
-            if (error) {
-                alert("Fehler beim Speichern: " + error.message);
-            } else {
-                document.getElementById('mitarbeiter').value = neuesKuerzel;
-                zeigeSeite('formPage');
-            }
+            if (error) alert("Fehler beim Speichern: " + error.message);
+            else { document.getElementById('mitarbeiter').value = neuesKuerzel; zeigeSeite('formPage'); }
         }
 
         async function logout() {
             await supabaseClient.auth.signOut();
             zeigeSeite('loginPage');
         }
+
+        // --- SONSTIGE FUNKTIONEN (Lieferanten, QR, etc.) ---
+        async function ladeLieferanten() {
+            const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, id').order('id', { ascending: false });
+            if (data && !error) {
+                const unique = [];
+                data.forEach(row => { if (row.lieferant && !unique.includes(row.lieferant)) unique.push(row.lieferant); });
+                lieferantenChronologisch = unique;
+            }
+        }
+
+        function filterLieferanten() {
+            const input = document.getElementById('lieferant').value.toLowerCase();
+            const dropdown = document.getElementById('lieferantDropdown');
+            dropdown.innerHTML = ''; currentFocus = -1;
+            let anzeigeListe = [];
+
+            if (input === "") anzeigeListe = [...lieferantenChronologisch];
+            else {
+                anzeigeListe = lieferantenChronologisch.filter(l => l.toLowerCase().startsWith(input));
+                anzeigeListe.sort((a, b) => a.localeCompare(b));
+            }
+
+            if (anzeigeListe.length === 0) { dropdown.style.display = 'none'; return; }
+
+            anzeigeListe.forEach(l => {
+                let div = document.createElement('div');
+                div.className = 'dropdown-item'; div.innerText = l;
+                div.onclick = function() { document.getElementById('lieferant').value = l; dropdown.style.display = 'none'; };
+                dropdown.appendChild(div);
+            });
+            dropdown.style.display = 'block';
+        }
+
+        document.getElementById('lieferant').addEventListener('keydown', function(e) {
+            let dropdown = document.getElementById('lieferantDropdown');
+            let items = dropdown.getElementsByClassName('dropdown-item');
+            if (dropdown.style.display === 'block' && items.length > 0) {
+                if (e.key === 'ArrowDown') { currentFocus++; addActive(items); e.preventDefault(); } 
+                else if (e.key === 'ArrowUp') { currentFocus--; addActive(items); e.preventDefault(); } 
+                else if (e.key === 'Enter') { e.preventDefault(); if (currentFocus > -1) items[currentFocus].click(); } 
+                else if (e.key === 'Tab') { if (currentFocus > -1) items[currentFocus].click(); }
+            }
+        });
+
+        function addActive(items) {
+            if (!items) return false;
+            for (let i = 0; i < items.length; i++) items[i].classList.remove('active');
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            items[currentFocus].classList.add('active');
+            items[currentFocus].scrollIntoView({block: "nearest"});
+        }
+
+        document.addEventListener('click', function(e) { if(e.target.id !== 'lieferant') document.getElementById('lieferantDropdown').style.display = 'none'; });
 
         function startScanner() {
             const rDiv = document.getElementById('reader'); rDiv.style.display = "block";
@@ -486,18 +514,12 @@
             const ef = parseFloat(document.getElementById('erwartungswertfaktor').value) || 0;
             let maxFehler = menge * fa, sum = 0, stichproben = 0, restmenge = menge;
             
-            while (sum <= ef && restmenge > 0) {
-                sum += maxFehler / restmenge;
-                stichproben++;
-                restmenge--;
-            }
-            berechneteStichproben = stichproben;
-            document.getElementById('stichprobenErgebnis').innerText = stichproben;
+            while (sum <= ef && restmenge > 0) { sum += maxFehler / restmenge; stichproben++; restmenge--; }
+            berechneteStichproben = stichproben; document.getElementById('stichprobenErgebnis').innerText = stichproben;
         }
 
         function geheZuPruefung() {
             if (!document.getElementById('mitarbeiter').value.trim() || !document.getElementById('artikelnummer').value.trim()) return alert("Mitarbeiter und Artikelnummer sind Pflichtfelder.");
-            
             const lieferant = document.getElementById('lieferant').value.trim();
             if (!lieferant) return alert("Bitte einen Lieferanten angeben.");
             
@@ -544,45 +566,25 @@
             const eingegebenerLieferant = document.getElementById('lieferant').value.trim();
 
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
-                datum: document.getElementById('datum').value, 
-                zeitstempel: erfassungsZeitstempel, 
-                mitarbeiter: document.getElementById('mitarbeiter').value,
-                lieferant: eingegebenerLieferant,
-                seriennummer: document.getElementById('artikelnummer').value, 
-                menge: parseInt(document.getElementById('menge').value),
-                preis: holeNettoPreis(), 
-                verpackung: document.getElementById('verpackung').value, 
-                mengeOk: document.getElementById('mengeOk').value,
-                maengel: dbMaengelWert, 
-                pruefart: aktuellePruefart, 
-                fehlerakzeptanz: dbFa, 
-                erwartungswertfaktor: dbEf,
-                stichproben_anzahl: berechneteStichproben || null, 
-                status: currentStatus, 
-                beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
+                datum: document.getElementById('datum').value, zeitstempel: erfassungsZeitstempel, mitarbeiter: document.getElementById('mitarbeiter').value, lieferant: eingegebenerLieferant,
+                seriennummer: document.getElementById('artikelnummer').value, menge: parseInt(document.getElementById('menge').value),
+                preis: holeNettoPreis(), verpackung: document.getElementById('verpackung').value, mengeOk: document.getElementById('mengeOk').value,
+                maengel: dbMaengelWert, pruefart: aktuellePruefart, fehlerakzeptanz: dbFa, erwartungswertfaktor: dbEf,
+                stichproben_anzahl: berechneteStichproben || null, status: currentStatus, beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
                 bilder_urls: bilderUrls.join(',')
             }]);
 
             btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
             if (dbErr) alert("DATENBANK-FEHLER: " + dbErr.message);
-            else { 
-                alert("Erfolgreich gespeichert!"); 
-                document.getElementById('artikelnummer').value = ""; 
-                document.getElementById('lieferant').value = "";
-                ladeLieferanten();
-                zeigeSeite('formPage'); 
-            }
+            else { alert("Erfolgreich gespeichert!"); document.getElementById('artikelnummer').value = ""; document.getElementById('lieferant').value = ""; ladeLieferanten(); zeigeSeite('formPage'); }
         }
 
         async function exportiereVonSupabase() {
             const btn = document.getElementById('exportBtn'); btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
             const { data: logs, error } = await supabaseClient.from('wareneingang').select('*').gte('datum', document.getElementById('exportStart').value).lte('datum', document.getElementById('exportEnde').value);
-
             if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
-
             let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Lieferant;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz(%);Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\n";
             logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.lieferant||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\n`);
-            
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
             btn.innerText = "Daten herunterladen"; btn.disabled = false;
         }
