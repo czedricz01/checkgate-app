@@ -8,6 +8,7 @@
     <title>CheckGate</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root { 
@@ -58,7 +59,6 @@
         .action-section { border-top: 2px solid #eee; padding-top: 15px; margin-top: 15px; }
         #reader { width: 100%; margin-top: 15px; display: none; }
         
-        /* Hauptmenü Oben Rechts */
         .main-menu-container { position: absolute; top: 10px; right: 10px; z-index: 100; display: none; }
         .menu-toggle-btn { background-color: var(--primary-main); color: white; border: none; padding: 8px 12px; font-size: 0.9em; cursor: pointer; border-radius: 0; width: auto; margin: 0; }
         .menu-toggle-btn:hover { background-color: var(--primary-dark); }
@@ -71,7 +71,6 @@
         .netto-box { display: none; padding: 10px; background-color: #fdfdfe; border: 1px solid var(--action-green); margin-top: 5px; color: var(--action-green-dark); font-weight: bold; border-radius: 0; }
         .calc-box { background-color: #fffaf5; border: 1px solid #ffcc80; padding: 15px; margin-bottom: 20px; border-radius: 0; }
         
-        /* Statistik Kacheln */
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
         .stat-card { background-color: var(--primary-light-bg); padding: 15px; text-align: center; border: 1px solid var(--primary-main); position: relative; cursor: default; }
         .stat-card h3 { margin: 0 0 5px 0; font-size: 0.9em; color: var(--primary-dark); }
@@ -79,17 +78,20 @@
         .stat-card.error-card { cursor: pointer; }
         .stat-card.error-card .stat-val { color: #d32f2f; }
         
-        /* Hover/Click Liste für Mängel */
         .error-details { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #d32f2f; padding: 10px; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: left; font-size: 0.85em; font-weight: normal; color: #333; max-height: 150px; overflow-y: auto; }
         .stat-card.error-card:hover .error-details, .stat-card.error-card.active .error-details { display: block; }
         .error-details ul { margin: 0; padding-left: 20px; }
         .error-details li { margin-bottom: 5px; }
 
-        /* Filter Toggle */
-        .filter-toggle-header { background-color: var(--primary-main); color: white; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .filter-toggle-header { background-color: var(--primary-main); color: white; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; margin-top: 10px; }
         .filter-body { display: none; background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; }
         .export-filter-body { background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; }
         
+        /* Container für Diagramme */
+        .chart-container { margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 20px; }
+        .chart-wrapper { background-color: white; padding: 10px; border: 1px solid var(--primary-main); }
+        canvas { max-width: 100%; }
+
         .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
         .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-dark); font-size: 0.9em; text-decoration: underline; cursor: pointer; font-weight: bold; }
         .toggle-link { display: block; text-align: center; margin-top: 15px; color: var(--primary-main); font-size: 0.9em; cursor: pointer; }
@@ -113,72 +115,52 @@
 
         <div id="loginPage">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            
             <div id="loginForm">
                 <h2>Mitarbeiter Login</h2>
-                <label for="email">E-Mail Adresse:</label>
-                <input type="email" id="email" placeholder="Eingabe: E-Mail">
-                <label for="passwort">Passwort:</label>
-                <input type="password" id="passwort" placeholder="Eingabe: Passwort">
+                <label for="email">E-Mail Adresse:</label><input type="email" id="email" placeholder="Eingabe: E-Mail">
+                <label for="passwort">Passwort:</label><input type="password" id="passwort" placeholder="Eingabe: Passwort">
                 <button id="loginBtn" onclick="login()">Einloggen</button>
                 <a class="toggle-link" onclick="toggleAuthMode('reset')">Passwort vergessen?</a>
                 <a class="toggle-link" onclick="toggleAuthMode('request')">Kein Konto? Zugang anfragen.</a>
             </div>
-
             <div id="forgotPasswordForm" style="display:none;">
                 <h2>Passwort zurücksetzen</h2>
-                <p style="text-align:center; font-size:0.9em; color:#666;">Gib deine E-Mail-Adresse ein. Du erhältst einen Link zum Zurücksetzen.</p>
-                <label for="resetEmail">E-Mail Adresse:</label>
-                <input type="email" id="resetEmail" placeholder="deine@email.de">
+                <label for="resetEmail">E-Mail Adresse:</label><input type="email" id="resetEmail" placeholder="deine@email.de">
                 <button id="resetBtn" onclick="requestPasswordReset()" class="camera-btn">Link anfordern</button>
                 <a class="toggle-link" onclick="toggleAuthMode('login')">Zurück zum Login</a>
             </div>
-
             <div id="requestForm" style="display:none;">
                 <h2>Zugang anfragen</h2>
-                <p style="text-align:center; font-size:0.9em; color:#666;">Ein Administrator wird deine Anfrage prüfen und das Konto erstellen.</p>
-                <label for="reqName">Dein vollständiger Name:</label>
-                <input type="text" id="reqName" placeholder="Max Mustermann">
-                <label for="reqEmail">E-Mail Adresse:</label>
-                <input type="email" id="reqEmail" placeholder="deine@email.de">
-                <label for="reqAnmerkung">Anmerkung (Optional):</label>
-                <textarea id="reqAnmerkung" rows="3" placeholder="Zusätzliche Infos..."></textarea>
+                <label for="reqName">Vollständiger Name:</label><input type="text" id="reqName" placeholder="Max Mustermann">
+                <label for="reqEmail">E-Mail Adresse:</label><input type="email" id="reqEmail" placeholder="deine@email.de">
+                <label for="reqAnmerkung">Anmerkung (Optional):</label><textarea id="reqAnmerkung" rows="3"></textarea>
                 <button onclick="sendeAnfrage()" class="camera-btn">Anfrage senden</button>
                 <a class="toggle-link" onclick="toggleAuthMode('login')">Zurück zum Login</a>
             </div>
-
             <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
         </div>
 
         <div id="setNewPasswordPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Neues Passwort festlegen</h2>
-            <label for="recoveryPassword">Neues Passwort:</label>
-            <input type="password" id="recoveryPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
-            <label for="confirmRecoveryPassword">Passwort bestätigen:</label>
-            <input type="password" id="confirmRecoveryPassword" placeholder="Passwort wiederholen">
+            <label for="recoveryPassword">Neues Passwort:</label><input type="password" id="recoveryPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
+            <label for="confirmRecoveryPassword">Passwort bestätigen:</label><input type="password" id="confirmRecoveryPassword">
             <button id="saveRecoveryBtn" onclick="saveNewPassword()">Passwort speichern</button>
         </div>
 
         <div id="setupProfilePage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Profil einrichten</h2>
-            <p style="text-align:center; font-size:0.9em; color:#666;">Bitte lege dein Mitarbeiterkürzel sowie dein zukünftiges Passwort fest.</p>
-            <label for="newKuerzel">Dein Mitarbeiterkürzel:</label>
-            <input type="text" id="newKuerzel" placeholder="z. B. AB">
-            <label for="newPassword">Neues Passwort:</label>
-            <input type="password" id="newPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
-            <label for="confirmPassword">Passwort bestätigen:</label>
-            <input type="password" id="confirmPassword" placeholder="Passwort wiederholen">
+            <label for="newKuerzel">Dein Mitarbeiterkürzel:</label><input type="text" id="newKuerzel" placeholder="z. B. AB">
+            <label for="newPassword">Neues Passwort:</label><input type="password" id="newPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
+            <label for="confirmPassword">Passwort bestätigen:</label><input type="password" id="confirmPassword">
             <button id="saveKuerzelBtn" onclick="saveProfile()">Speichern & Weiter</button>
         </div>
 
         <div id="formPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            
             <label for="datum">Datum:</label><input type="date" id="datum">
-            <label for="mitarbeiter">Mitarbeiterkürzel:</label>
-            <input type="text" id="mitarbeiter" readonly title="Wird automatisch aus deinem Profil bezogen.">
+            <label for="mitarbeiter">Mitarbeiterkürzel:</label><input type="text" id="mitarbeiter" readonly>
             
             <label for="lieferant">Lieferant:</label>
             <div class="autocomplete-container">
@@ -198,16 +180,12 @@
             <div id="reader"></div>
 
             <label for="menge">Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="100">
-            <label for="preisArt">Preisart für Eingabe:</label>
-            <select id="preisArt" onchange="berechneNetto()"><option value="netto">Netto</option><option value="brutto">Brutto</option></select>
-            <label for="preisEingabe">Einzelpreis (€):</label>
-            <input type="number" id="preisEingabe" min="0" step="0.01" value="0.00" oninput="berechneNetto()">
+            <label for="preisArt">Preisart für Eingabe:</label><select id="preisArt" onchange="berechneNetto()"><option value="netto">Netto</option><option value="brutto">Brutto</option></select>
+            <label for="preisEingabe">Einzelpreis (€):</label><input type="number" id="preisEingabe" min="0" step="0.01" value="0.00" oninput="berechneNetto()">
             <div id="nettoAnzeige" class="netto-box">Berechneter Nettopreis: <span id="nettoWert">0.00</span> €</div>
 
-            <label for="verpackung">Sichtprüfung: Verpackung intakt?</label>
-            <select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein (Transportschaden)</option></select>
-            <label for="mengeOk">Mengenprüfung: Stimmt mit Lieferschein überein?</label>
-            <select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
+            <label for="verpackung">Sichtprüfung: Verpackung intakt?</label><select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein (Transportschaden)</option></select>
+            <label for="mengeOk">Mengenprüfung: Stimmt mit Lieferschein überein?</label><select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
             
             <button onclick="geheZuPruefung()">Weiter</button>
             <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
@@ -216,25 +194,13 @@
         <div id="pruefungPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <div id="pruefungsAnweisung" class="instruction-box"></div>
-            
             <div id="stichprobenRechner" class="calc-box" style="display:none;">
                 <h4 style="margin-top:0;">Stichprobenkalkulator</h4>
-                <label for="fehlerakzeptanz">Fehlerakzeptanz (%):</label>
-                <input type="number" id="fehlerakzeptanz" value="1.0" step="0.1" oninput="updateStichproben()">
-                
-                <label for="erwartungswertfaktor">Erwartungswertfaktor:</label>
-                <input type="number" id="erwartungswertfaktor" value="1.0" step="0.1" oninput="updateStichproben()">
-                
-                <div style="margin-top:15px; font-weight:bold; font-size:1.1em; color:var(--action-green-dark);">
-                    Nötige Stichproben: <span id="stichprobenErgebnis">0</span>
-                </div>
+                <label for="fehlerakzeptanz">Fehlerakzeptanz (%):</label><input type="number" id="fehlerakzeptanz" value="1.0" step="0.1" oninput="updateStichproben()">
+                <label for="erwartungswertfaktor">Erwartungswertfaktor:</label><input type="number" id="erwartungswertfaktor" value="1.0" step="0.1" oninput="updateStichproben()">
+                <div style="margin-top:15px; font-weight:bold; font-size:1.1em; color:var(--action-green-dark);">Nötige Stichproben: <span id="stichprobenErgebnis">0</span></div>
             </div>
-            
-            <label for="pruefungErfolgreich">War die Prüfung erfolgreich?</label>
-            <select id="pruefungErfolgreich">
-                <option value="ja">Ja (Keine Mängel festgestellt)</option>
-                <option value="nein">Nein (Mängel oder fehlendes Zubehör)</option>
-            </select>
+            <label for="pruefungErfolgreich">War die Prüfung erfolgreich?</label><select id="pruefungErfolgreich"><option value="ja">Ja (Keine Mängel festgestellt)</option><option value="nein">Nein (Mängel oder fehlendes Zubehör)</option></select>
             <button onclick="pruefen()">Absenden</button>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
@@ -243,13 +209,8 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <div id="resultBox" class="result"></div>
             <div id="errorActions" class="action-section" style="display:none;">
-                <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label>
-                <textarea id="mangelBeschreibung" rows="4" placeholder="Details eingeben..."></textarea>
-                
-                <label for="mangelBilder">Bilder hochladen:</label>
-                <span class="privacy-hint">Datenschutz: Bitte ausschließlich fehlerhafte Ware/Verpackung fotografieren. Auf den Bildern dürfen keine Personen oder Gesichter erkennbar sein!</span>
-                <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment" style="margin-top: 10px;">
-                
+                <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label><textarea id="mangelBeschreibung" rows="4"></textarea>
+                <label for="mangelBilder">Bilder hochladen:</label><input type="file" id="mangelBilder" accept="image/*" multiple capture="environment" style="margin-top: 10px;">
                 <button id="saveBtnError" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
             </div>
             <div id="successActions" class="action-section" style="display:none;">
@@ -260,29 +221,19 @@
         <div id="datenschutzPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Datenschutzerklärung</h2>
-            <p><strong>1. Verantwortlichkeit</strong><br>Verantwortlich für die Datenerfassung ist das ColognIT Projektteam.</p>
-            <p><strong>2. Zweck der Verarbeitung</strong><br>Die Erhebung von Mitarbeiterkürzeln, Prüfdaten und Mängelfotos dient ausschließlich der internen Dokumentation und Qualitätssicherung im Wareneingang (Art. 6 Abs. 1 lit. f DSGVO, § 26 BDSG).</p>
-            <p><strong>3. Datenminimierung & Fotos</strong><br>Gemäß Art. 5 DSGVO ist das Erfassen von Personen auf Mängelfotos strengstens untersagt. Es dürfen nur Sachmängel dokumentiert werden.</p>
-            <p><strong>4. Speicherung und Dienstleister</strong><br>Die Daten werden über den Cloud-Datenbankanbieter Supabase (Auftragsverarbeiter nach Art. 28 DSGVO) verarbeitet und gespeichert. Eine Löschung der Daten erfolgt nach Ablauf der projektbezogenen Aufbewahrungsfristen.</p>
             <button class="secondary-btn" onclick="location.reload()">Zurück</button>
         </div>
 
         <div id="adminPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Daten-Export</h2>
-            
             <div class="export-filter-body">
-                <h4 style="margin-top:0;">Export Filter</h4>
                 <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
                 <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
-                <label for="exportLieferantFilter">Lieferant:</label>
-                <select id="exportLieferantFilter"><option value="">Alle Lieferanten</option></select>
-                <label for="exportSpediteurFilter">Spediteur:</label>
-                <select id="exportSpediteurFilter"><option value="">Alle Spediteure</option></select>
-                <label for="exportMitarbeiterFilter">Mitarbeiter:</label>
-                <select id="exportMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
+                <label for="exportLieferantFilter">Lieferant:</label><select id="exportLieferantFilter"><option value="">Alle Lieferanten</option></select>
+                <label for="exportSpediteurFilter">Spediteur:</label><select id="exportSpediteurFilter"><option value="">Alle Spediteure</option></select>
+                <label for="exportMitarbeiterFilter">Mitarbeiter:</label><select id="exportMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
             </div>
-
             <button id="exportBtn" onclick="exportiereVonSupabase()">Daten herunterladen</button>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
@@ -291,19 +242,14 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Statistik</h2>
             
-            <div class="filter-toggle-header" onclick="toggleStatsFilter()">
-                Filter einstellen <span id="filterArrow">▼</span>
-            </div>
+            <div class="filter-toggle-header" onclick="toggleStatsFilter()">Filter einstellen <span id="filterArrow">▼</span></div>
             <div id="statsFilterBody" class="filter-body">
                 <label for="statStart">Von:</label><input type="date" id="statStart">
                 <label for="statEnde">Bis:</label><input type="date" id="statEnde">
-                <label for="statLieferantFilter">Lieferant:</label>
-                <select id="statLieferantFilter"><option value="">Alle Lieferanten</option></select>
-                <label for="statSpediteurFilter">Spediteur:</label>
-                <select id="statSpediteurFilter"><option value="">Alle Spediteure</option></select>
-                <label for="statMitarbeiterFilter">Mitarbeiter:</label>
-                <select id="statMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
-                <button class="camera-btn" onclick="ladeStatistiken()">Statistik aktualisieren</button>
+                <label for="statLieferantFilter">Lieferant:</label><select id="statLieferantFilter"><option value="">Alle Lieferanten</option></select>
+                <label for="statSpediteurFilter">Spediteur:</label><select id="statSpediteurFilter"><option value="">Alle Spediteure</option></select>
+                <label for="statMitarbeiterFilter">Mitarbeiter:</label><select id="statMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
+                <button class="camera-btn" onclick="ladeStatistiken()">Aktualisieren</button>
             </div>
 
             <div class="stat-grid">
@@ -315,26 +261,23 @@
                     <h3>Mängelquote</h3>
                     <div id="statErrorRate" class="stat-val">0%</div>
                     <div class="error-details">
-                        <strong>Erfasste Mängel:</strong>
+                        <strong>Mängelarten:</strong>
                         <ul id="errorDetailsList"><li>Keine Mängel erfasst.</li></ul>
                     </div>
                 </div>
                 <div class="stat-card">
-                    <h3>Gesamtvolumen (Stk)</h3>
+                    <h3>Volumen (Stk)</h3>
                     <div id="statVolume" class="stat-val">0</div>
                 </div>
                 <div class="stat-card">
-                    <h3>Gesamtwert (€)</h3>
+                    <h3>Wert (€)</h3>
                     <div id="statValue" class="stat-val">0</div>
                 </div>
-                <div class="stat-card" style="grid-column: span 2;">
-                    <h3>Häufigster Lieferant</h3>
-                    <div id="statTopLieferant" class="stat-val" style="font-size: 1.2em;">-</div>
-                </div>
-                <div class="stat-card" style="grid-column: span 2;">
-                    <h3>Häufigster Spediteur</h3>
-                    <div id="statTopSpediteur" class="stat-val" style="font-size: 1.2em;">-</div>
-                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-wrapper"><canvas id="chartDefectTypes"></canvas></div>
+                <div class="chart-wrapper"><canvas id="chartTopLief"></canvas></div>
             </div>
         </div>
     </div>
@@ -356,10 +299,9 @@
         document.getElementById('statEnde').value = `${y}-${m}-${letzterTag}`;
 
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
-        let lieferantenChronologisch = [];
-        let spediteureChronologisch = [];
-        let currentFocusLieferant = -1;
-        let currentFocusSpediteur = -1;
+        let lieferantenChronologisch = [], spediteureChronologisch = [];
+        let currentFocusLieferant = -1, currentFocusSpediteur = -1;
+        let chartInstances = {}; // Speichert die Graphen, um sie beim Update zurückzusetzen
 
         if (window.location.hash.includes('type=recovery')) {
             zeigeSeite('setNewPasswordPage');
@@ -369,22 +311,12 @@
 
         async function checkSession() {
             const { data, error } = await supabaseClient.auth.getSession();
-            if (data.session) { 
-                processUserLogin(data.session.user); 
-                ladeDropdownDaten(); 
-            } else { 
-                zeigeSeite('loginPage'); 
-            }
+            if (data.session) { processUserLogin(data.session.user); ladeDropdownDaten(); } else zeigeSeite('loginPage');
         }
 
         function processUserLogin(user) {
-            const userKuerzel = user.user_metadata?.kuerzel;
-            if (userKuerzel) {
-                document.getElementById('mitarbeiter').value = userKuerzel;
-                navigiereZu('formPage');
-            } else {
-                zeigeSeite('setupProfilePage');
-            }
+            if (user.user_metadata?.kuerzel) { document.getElementById('mitarbeiter').value = user.user_metadata.kuerzel; navigiereZu('formPage'); } 
+            else zeigeSeite('setupProfilePage');
         }
 
         function zeigeSeite(seiteId) {
@@ -395,15 +327,10 @@
         function navigiereZu(seiteId) {
             zeigeSeite(seiteId);
             const menuBtn = document.getElementById('mainMenuContainer');
-            if (['formPage', 'adminPage', 'statistikPage'].includes(seiteId)) {
-                menuBtn.style.display = 'block';
-            } else {
-                menuBtn.style.display = 'none';
-            }
+            menuBtn.style.display = (['formPage', 'adminPage', 'statistikPage'].includes(seiteId)) ? 'block' : 'none';
             if (seiteId === 'statistikPage') ladeStatistiken();
         }
 
-        // --- MENÜ & UI TOGGLES ---
         function toggleMenu() {
             const dropdown = document.getElementById('menuDropdown');
             dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
@@ -412,60 +339,46 @@
         function toggleStatsFilter() {
             const body = document.getElementById('statsFilterBody');
             const arrow = document.getElementById('filterArrow');
-            if (body.style.display === 'block') {
-                body.style.display = 'none';
-                arrow.innerText = '▼';
-            } else {
-                body.style.display = 'block';
-                arrow.innerText = '▲';
-            }
+            if (body.style.display === 'block') { body.style.display = 'none'; arrow.innerText = '▼'; } 
+            else { body.style.display = 'block'; arrow.innerText = '▲'; }
         }
 
         document.addEventListener('click', function(e) {
             const menuBtn = document.querySelector('.menu-toggle-btn');
             const dropdown = document.getElementById('menuDropdown');
-            if (e.target !== menuBtn && !dropdown.contains(e.target) && !menuBtn.contains(e.target)) {
-                dropdown.style.display = 'none';
-            }
+            if (e.target !== menuBtn && !dropdown.contains(e.target) && !menuBtn.contains(e.target)) dropdown.style.display = 'none';
             if(e.target.id !== 'lieferant') document.getElementById('lieferantDropdown').style.display = 'none'; 
             if(e.target.id !== 'spediteur') document.getElementById('spediteurDropdown').style.display = 'none'; 
         });
 
         function toggleAuthMode(mode) {
-            const login = document.getElementById('loginForm');
-            const req = document.getElementById('requestForm');
-            const reset = document.getElementById('forgotPasswordForm');
-            login.style.display = 'none'; req.style.display = 'none'; reset.style.display = 'none';
-            if (mode === 'login') login.style.display = 'block';
-            else if (mode === 'request') req.style.display = 'block';
-            else if (mode === 'reset') reset.style.display = 'block';
+            document.getElementById('loginForm').style.display = mode === 'login' ? 'block' : 'none';
+            document.getElementById('requestForm').style.display = mode === 'request' ? 'block' : 'none';
+            document.getElementById('forgotPasswordForm').style.display = mode === 'reset' ? 'block' : 'none';
         }
 
-        // --- AUTH ---
         async function requestPasswordReset() {
             const email = document.getElementById('resetEmail').value.trim();
-            if (!email) { alert("Bitte E-Mail angeben."); return; }
+            if (!email) return alert("Bitte E-Mail angeben.");
             const btn = document.getElementById('resetBtn'); btn.innerText = "Sende..."; btn.disabled = true;
-            const { data, error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+            const { error } = await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
             btn.innerText = "Link anfordern"; btn.disabled = false;
             if (error) alert("Fehler: " + error.message); else { alert("Link gesendet."); toggleAuthMode('login'); }
         }
 
         async function saveNewPassword() {
-            const pwd = document.getElementById('recoveryPassword').value;
-            const pwdConfirm = document.getElementById('confirmRecoveryPassword').value;
-            if (pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[^a-zA-Z0-9]/.test(pwd)) { alert("Passwort entspricht nicht den Kriterien."); return; }
-            if (pwd !== pwdConfirm) { alert("Die Passwörter stimmen nicht überein."); return; }
+            const pwd = document.getElementById('recoveryPassword').value; const pwdConfirm = document.getElementById('confirmRecoveryPassword').value;
+            if (pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[^a-zA-Z0-9]/.test(pwd)) return alert("Passwort entspricht nicht den Kriterien.");
+            if (pwd !== pwdConfirm) return alert("Die Passwörter stimmen nicht überein.");
             const btn = document.getElementById('saveRecoveryBtn'); btn.innerText = "Speichere..."; btn.disabled = true;
-            const { data, error } = await supabaseClient.auth.updateUser({ password: pwd });
+            const { error } = await supabaseClient.auth.updateUser({ password: pwd });
             btn.innerText = "Passwort speichern"; btn.disabled = false;
             if (error) alert("Fehler: " + error.message); else { alert("Passwort aktualisiert!"); window.history.replaceState(null, null, ' '); checkSession(); }
         }
 
         async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('passwort').value;
-            if(!email || !password) { alert("Bitte E-Mail und Passwort eingeben."); return; }
+            const email = document.getElementById('email').value; const password = document.getElementById('passwort').value;
+            if(!email || !password) return alert("Bitte E-Mail und Passwort eingeben.");
             const btn = document.getElementById('loginBtn'); btn.innerText = "Prüfe Daten..."; btn.disabled = true;
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: email, password: password });
             if (error) { 
@@ -480,26 +393,23 @@
 
         async function sendeAnfrage() {
             const name = document.getElementById('reqName').value.trim(); const email = document.getElementById('reqEmail').value.trim(); const anmerkung = document.getElementById('reqAnmerkung').value.trim();
-            if (!email || !name) { alert("Bitte Name und E-Mail angeben."); return; }
+            if (!email || !name) return alert("Bitte Name und E-Mail angeben.");
             const { error } = await supabaseClient.from('zugangsanfragen').insert([{ email: email, mitarbeiter: name, anmerkung: anmerkung }]);
             if (error) alert("Fehler: " + error.message); else { alert("Anfrage gesendet!"); document.getElementById('reqName').value = ""; document.getElementById('reqEmail').value = ""; document.getElementById('reqAnmerkung').value = ""; toggleAuthMode('login'); }
         }
 
         async function saveProfile() {
-            const neuesKuerzel = document.getElementById('newKuerzel').value.trim();
-            const pwd = document.getElementById('newPassword').value; const pwdConfirm = document.getElementById('confirmPassword').value;
-            if (!neuesKuerzel) { alert("Bitte Kürzel eingeben."); return; }
-            if (pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[^a-zA-Z0-9]/.test(pwd)) { alert("Passwort entspricht nicht den Kriterien."); return; }
-            if (pwd !== pwdConfirm) { alert("Die Passwörter stimmen nicht überein."); return; }
+            const neuesKuerzel = document.getElementById('newKuerzel').value.trim(); const pwd = document.getElementById('newPassword').value; const pwdConfirm = document.getElementById('confirmPassword').value;
+            if (!neuesKuerzel || pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[^a-zA-Z0-9]/.test(pwd)) return alert("Eingaben fehlerhaft.");
+            if (pwd !== pwdConfirm) return alert("Passwörter stimmen nicht überein.");
             const btn = document.getElementById('saveKuerzelBtn'); btn.innerText = "Speichert..."; btn.disabled = true;
-            const { data, error } = await supabaseClient.auth.updateUser({ password: pwd, data: { kuerzel: neuesKuerzel } });
+            const { error } = await supabaseClient.auth.updateUser({ password: pwd, data: { kuerzel: neuesKuerzel } });
             btn.innerText = "Speichern & Weiter"; btn.disabled = false;
             if (error) alert("Fehler: " + error.message); else { document.getElementById('mitarbeiter').value = neuesKuerzel; navigiereZu('formPage'); }
         }
 
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('mainMenuContainer').style.display = 'none'; zeigeSeite('loginPage'); }
 
-        // --- DATENLADEN & STATISTIK ---
         async function ladeDropdownDaten() {
             const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, spediteur, mitarbeiter, id').order('id', { ascending: false });
             if (data && !error) {
@@ -527,11 +437,8 @@
         }
 
         async function ladeStatistiken() {
-            const start = document.getElementById('statStart').value;
-            const ende = document.getElementById('statEnde').value;
-            const filterLief = document.getElementById('statLieferantFilter').value;
-            const filterSped = document.getElementById('statSpediteurFilter').value;
-            const filterMit = document.getElementById('statMitarbeiterFilter').value;
+            const start = document.getElementById('statStart').value; const ende = document.getElementById('statEnde').value;
+            const filterLief = document.getElementById('statLieferantFilter').value; const filterSped = document.getElementById('statSpediteurFilter').value; const filterMit = document.getElementById('statMitarbeiterFilter').value;
 
             let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
             if (filterLief) query = query.eq('lieferant', filterLief);
@@ -542,235 +449,137 @@
             if (error) { console.error("Fehler beim Laden:", error); return; }
 
             document.getElementById('statTotal').innerText = data.length;
-            
-            // Initial reset
             document.getElementById('statErrorRate').innerText = "0%";
             document.getElementById('errorDetailsList').innerHTML = "<li>Keine Mängel erfasst.</li>";
-            document.getElementById('statVolume').innerText = "0";
-            document.getElementById('statValue').innerText = "0";
-            document.getElementById('statTopLieferant').innerText = "-";
-            document.getElementById('statTopSpediteur').innerText = "-";
+            document.getElementById('statVolume').innerText = "0"; document.getElementById('statValue').innerText = "0";
+
+            if(chartInstances['defectTypes']) chartInstances['defectTypes'].destroy();
+            if(chartInstances['topLief']) chartInstances['topLief'].destroy();
 
             if (data.length === 0) return;
 
-            // Volumen & Wert (Reduce = aggregieren von Werten aus dem Array)
             const totalVolume = data.reduce((sum, item) => sum + (parseInt(item.menge) || 0), 0);
             const totalValue = data.reduce((sum, item) => sum + ((parseFloat(item.preis) || 0) * (parseInt(item.menge) || 0)), 0);
-            
             document.getElementById('statVolume').innerText = totalVolume.toLocaleString('de-DE');
             document.getElementById('statValue').innerText = totalValue.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-            // Mängelquote & Details
-            const errors = data.filter(d => d.maengel === 'ja');
+            // Mängel auswerten nach Art
+            const errors = data.filter(d => d.maengel === 'ja' || d.verpackung === 'nein' || d.mengeOk === 'nein');
             document.getElementById('statErrorRate').innerText = ((errors.length / data.length) * 100).toFixed(1) + "%";
             
+            let countVerp = 0, countMeng = 0, countQuali = 0;
+
             if (errors.length > 0) {
                 let errorHtml = "";
-                errors.slice(0, 10).forEach(e => {
-                    const desc = e.beschreibung ? e.beschreibung.substring(0, 50) + (e.beschreibung.length > 50 ? '...' : '') : 'Keine Beschreibung';
-                    errorHtml += `<li>${e.datum} (${e.artikelnummer || 'Unbekannt'}): ${desc}</li>`;
+                errors.slice(0, 15).forEach(e => {
+                    let types = [];
+                    if (e.verpackung === 'nein') { types.push("Verpackung"); countVerp++; }
+                    if (e.mengeOk === 'nein') { types.push("Menge"); countMeng++; }
+                    if (e.maengel === 'ja') { types.push("Qualität"); countQuali++; }
+                    errorHtml += `<li><strong>${e.artikelnummer || 'Unbekannt'}</strong>: ${types.join(', ')}</li>`;
                 });
-                if (errors.length > 10) errorHtml += `<li>... und ${errors.length - 10} weitere.</li>`;
+                if (errors.length > 15) errorHtml += `<li>... und weitere</li>`;
                 document.getElementById('errorDetailsList').innerHTML = errorHtml;
             }
 
-            // Frequenz-Analysen
-            const countFreq = (arr, key) => {
-                const count = {};
-                arr.forEach(d => { if (d[key]) count[d[key]] = (count[d[key]] || 0) + 1; });
-                return Object.keys(count).sort((a,b) => count[b] - count[a])[0];
-            };
-            
-            const topLief = countFreq(data, 'lieferant');
-            document.getElementById('statTopLieferant').innerText = topLief ? topLief : "-";
-            
-            const topSped = countFreq(data, 'spediteur');
-            document.getElementById('statTopSpediteur').innerText = topSped ? topSped : "-";
+            // Graphen zeichnen (Chart.js)
+            chartInstances['defectTypes'] = new Chart(document.getElementById('chartDefectTypes'), {
+                type: 'doughnut',
+                data: { labels: ['Verpackung', 'Menge', 'Qualität'], datasets: [{ data: [countVerp, countMeng, countQuali], backgroundColor: ['#d32f2f', '#ff9800', '#1976d2'] }] },
+                options: { plugins: { title: { display: true, text: 'Verteilung der Mängelarten' } } }
+            });
+
+            const liefCount = {}; data.forEach(d => { if (d.lieferant) liefCount[d.lieferant] = (liefCount[d.lieferant] || 0) + 1; });
+            const topLiefLabels = Object.keys(liefCount).sort((a,b) => liefCount[b] - liefCount[a]).slice(0, 5);
+            const topLiefData = topLiefLabels.map(l => liefCount[l]);
+
+            chartInstances['topLief'] = new Chart(document.getElementById('chartTopLief'), {
+                type: 'bar',
+                data: { labels: topLiefLabels, datasets: [{ label: 'Anzahl Prüfungen', data: topLiefData, backgroundColor: '#4a6572' }] },
+                options: { plugins: { title: { display: true, text: 'Top Lieferanten (Volumen)' } } }
+            });
         }
 
-        // --- FILTER, AUTOCOMPLETE & FUNKTIONEN ---
+        // Standard Filter/Autocomplete Code (unverändert)
         function filterLieferanten() {
-            const input = document.getElementById('lieferant').value.toLowerCase();
-            const dropdown = document.getElementById('lieferantDropdown');
-            dropdown.innerHTML = ''; currentFocusLieferant = -1;
+            const input = document.getElementById('lieferant').value.toLowerCase(); const dropdown = document.getElementById('lieferantDropdown'); dropdown.innerHTML = ''; currentFocusLieferant = -1;
             let anzeigeListe = input === "" ? [...lieferantenChronologisch] : lieferantenChronologisch.filter(l => l.toLowerCase().startsWith(input)).sort((a, b) => a.localeCompare(b));
             if (anzeigeListe.length === 0) { dropdown.style.display = 'none'; return; }
-            anzeigeListe.forEach(l => {
-                let div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = l;
-                div.onclick = function() { document.getElementById('lieferant').value = l; dropdown.style.display = 'none'; };
-                dropdown.appendChild(div);
-            });
+            anzeigeListe.forEach(l => { let div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = l; div.onclick = function() { document.getElementById('lieferant').value = l; dropdown.style.display = 'none'; }; dropdown.appendChild(div); });
             dropdown.style.display = 'block';
         }
-
         function filterSpediteure() {
-            const input = document.getElementById('spediteur').value.toLowerCase();
-            const dropdown = document.getElementById('spediteurDropdown');
-            dropdown.innerHTML = ''; currentFocusSpediteur = -1;
+            const input = document.getElementById('spediteur').value.toLowerCase(); const dropdown = document.getElementById('spediteurDropdown'); dropdown.innerHTML = ''; currentFocusSpediteur = -1;
             let anzeigeListe = input === "" ? [...spediteureChronologisch] : spediteureChronologisch.filter(s => s.toLowerCase().startsWith(input)).sort((a, b) => a.localeCompare(b));
             if (anzeigeListe.length === 0) { dropdown.style.display = 'none'; return; }
-            anzeigeListe.forEach(s => {
-                let div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = s;
-                div.onclick = function() { document.getElementById('spediteur').value = s; dropdown.style.display = 'none'; };
-                dropdown.appendChild(div);
-            });
+            anzeigeListe.forEach(s => { let div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = s; div.onclick = function() { document.getElementById('spediteur').value = s; dropdown.style.display = 'none'; }; dropdown.appendChild(div); });
             dropdown.style.display = 'block';
         }
-
-        document.getElementById('lieferant').addEventListener('keydown', function(e) {
-            let items = document.getElementById('lieferantDropdown').getElementsByClassName('dropdown-item');
-            if (items.length > 0) {
-                if (e.key === 'ArrowDown') { currentFocusLieferant++; addActiveLieferant(items); e.preventDefault(); } 
-                else if (e.key === 'ArrowUp') { currentFocusLieferant--; addActiveLieferant(items); e.preventDefault(); } 
-                else if (e.key === 'Enter') { e.preventDefault(); if (currentFocusLieferant > -1) items[currentFocusLieferant].click(); } 
-                else if (e.key === 'Tab') { if (currentFocusLieferant > -1) items[currentFocusLieferant].click(); }
-            }
-        });
-
-        document.getElementById('spediteur').addEventListener('keydown', function(e) {
-            let items = document.getElementById('spediteurDropdown').getElementsByClassName('dropdown-item');
-            if (items.length > 0) {
-                if (e.key === 'ArrowDown') { currentFocusSpediteur++; addActiveSpediteur(items); e.preventDefault(); } 
-                else if (e.key === 'ArrowUp') { currentFocusSpediteur--; addActiveSpediteur(items); e.preventDefault(); } 
-                else if (e.key === 'Enter') { e.preventDefault(); if (currentFocusSpediteur > -1) items[currentFocusSpediteur].click(); } 
-                else if (e.key === 'Tab') { if (currentFocusSpediteur > -1) items[currentFocusSpediteur].click(); }
-            }
-        });
-
-        function addActiveLieferant(items) {
-            if (!items) return false;
+        document.getElementById('lieferant').addEventListener('keydown', function(e) { let items = document.getElementById('lieferantDropdown').getElementsByClassName('dropdown-item'); if (items.length > 0) { if (e.key === 'ArrowDown') { currentFocusLieferant++; addActive(items, 'lief'); e.preventDefault(); } else if (e.key === 'ArrowUp') { currentFocusLieferant--; addActive(items, 'lief'); e.preventDefault(); } else if (e.key === 'Enter') { e.preventDefault(); if (currentFocusLieferant > -1) items[currentFocusLieferant].click(); } else if (e.key === 'Tab') { if (currentFocusLieferant > -1) items[currentFocusLieferant].click(); } } });
+        document.getElementById('spediteur').addEventListener('keydown', function(e) { let items = document.getElementById('spediteurDropdown').getElementsByClassName('dropdown-item'); if (items.length > 0) { if (e.key === 'ArrowDown') { currentFocusSpediteur++; addActive(items, 'sped'); e.preventDefault(); } else if (e.key === 'ArrowUp') { currentFocusSpediteur--; addActive(items, 'sped'); e.preventDefault(); } else if (e.key === 'Enter') { e.preventDefault(); if (currentFocusSpediteur > -1) items[currentFocusSpediteur].click(); } else if (e.key === 'Tab') { if (currentFocusSpediteur > -1) items[currentFocusSpediteur].click(); } } });
+        function addActive(items, typ) {
             for (let i = 0; i < items.length; i++) items[i].classList.remove('active');
-            if (currentFocusLieferant >= items.length) currentFocusLieferant = 0;
-            if (currentFocusLieferant < 0) currentFocusLieferant = items.length - 1;
-            items[currentFocusLieferant].classList.add('active'); items[currentFocusLieferant].scrollIntoView({block: "nearest"});
+            if(typ==='lief') { if (currentFocusLieferant >= items.length) currentFocusLieferant = 0; if (currentFocusLieferant < 0) currentFocusLieferant = items.length - 1; items[currentFocusLieferant].classList.add('active'); items[currentFocusLieferant].scrollIntoView({block: "nearest"}); }
+            else { if (currentFocusSpediteur >= items.length) currentFocusSpediteur = 0; if (currentFocusSpediteur < 0) currentFocusSpediteur = items.length - 1; items[currentFocusSpediteur].classList.add('active'); items[currentFocusSpediteur].scrollIntoView({block: "nearest"}); }
         }
 
-        function addActiveSpediteur(items) {
-            if (!items) return false;
-            for (let i = 0; i < items.length; i++) items[i].classList.remove('active');
-            if (currentFocusSpediteur >= items.length) currentFocusSpediteur = 0;
-            if (currentFocusSpediteur < 0) currentFocusSpediteur = items.length - 1;
-            items[currentFocusSpediteur].classList.add('active'); items[currentFocusSpediteur].scrollIntoView({block: "nearest"});
-        }
-
-        function startScanner() {
-            const rDiv = document.getElementById('reader'); rDiv.style.display = "block";
-            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { document.getElementById('artikelnummer').value = text; html5QrCode.stop().then(() => rDiv.style.display = "none"); }).catch(e => alert(e));
-        }
-
-        function berechneNetto() {
-            const isBrutto = document.getElementById('preisArt').value === 'brutto';
-            const val = parseFloat(document.getElementById('preisEingabe').value) || 0;
-            const anzeige = document.getElementById('nettoAnzeige');
-            if (isBrutto) { document.getElementById('nettoWert').innerText = (val / 1.19).toFixed(2); anzeige.style.display = 'block'; } 
-            else anzeige.style.display = 'none';
-        }
-
-        function holeNettoPreis() {
-            const val = parseFloat(document.getElementById('preisEingabe').value) || 0;
-            return document.getElementById('preisArt').value === 'brutto' ? parseFloat((val / 1.19).toFixed(2)) : val;
-        }
-
-        function updateStichproben() {
-            const menge = parseInt(document.getElementById('menge').value) || 1;
-            const faProzent = parseFloat(document.getElementById('fehlerakzeptanz').value) || 0;
-            const fa = faProzent / 100;
-            const ef = parseFloat(document.getElementById('erwartungswertfaktor').value) || 0;
-            let maxFehler = menge * fa, sum = 0, stichproben = 0, restmenge = menge;
-            while (sum <= ef && restmenge > 0) { sum += maxFehler / restmenge; stichproben++; restmenge--; }
-            berechneteStichproben = stichproben; document.getElementById('stichprobenErgebnis').innerText = stichproben;
-        }
-
+        function startScanner() { const rDiv = document.getElementById('reader'); rDiv.style.display = "block"; if (!html5QrCode) html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { document.getElementById('artikelnummer').value = text; html5QrCode.stop().then(() => rDiv.style.display = "none"); }).catch(e => alert(e)); }
+        function berechneNetto() { const isBrutto = document.getElementById('preisArt').value === 'brutto'; const val = parseFloat(document.getElementById('preisEingabe').value) || 0; const anzeige = document.getElementById('nettoAnzeige'); if (isBrutto) { document.getElementById('nettoWert').innerText = (val / 1.19).toFixed(2); anzeige.style.display = 'block'; } else anzeige.style.display = 'none'; }
+        function holeNettoPreis() { const val = parseFloat(document.getElementById('preisEingabe').value) || 0; return document.getElementById('preisArt').value === 'brutto' ? parseFloat((val / 1.19).toFixed(2)) : val; }
+        function updateStichproben() { const menge = parseInt(document.getElementById('menge').value) || 1; const fa = (parseFloat(document.getElementById('fehlerakzeptanz').value) || 0) / 100; const ef = parseFloat(document.getElementById('erwartungswertfaktor').value) || 0; let maxFehler = menge * fa, sum = 0, stichproben = 0, restmenge = menge; while (sum <= ef && restmenge > 0) { sum += maxFehler / restmenge; stichproben++; restmenge--; } berechneteStichproben = stichproben; document.getElementById('stichprobenErgebnis').innerText = stichproben; }
+        
         function geheZuPruefung() {
-            if (!document.getElementById('mitarbeiter').value.trim() || !document.getElementById('artikelnummer').value.trim()) return alert("Mitarbeiter und Artikelnummer sind Pflichtfelder.");
-            const lieferant = document.getElementById('lieferant').value.trim();
-            if (!lieferant) return alert("Bitte einen Lieferanten angeben.");
-            const spediteur = document.getElementById('spediteur').value.trim();
-            if (!spediteur) return alert("Bitte einen Spediteur angeben.");
-            
-            const nettoPreis = holeNettoPreis();
-            aktuellePruefart = (nettoPreis >= 750) ? "100% Vollprüfung" : "Stichprobenprüfung";
+            if (!document.getElementById('mitarbeiter').value.trim() || !document.getElementById('artikelnummer').value.trim() || !document.getElementById('lieferant').value.trim() || !document.getElementById('spediteur').value.trim()) return alert("Alle Felder (Mitarbeiter, Artikel, Lieferant, Spediteur) sind Pflichtfelder.");
+            aktuellePruefart = (holeNettoPreis() >= 750) ? "100% Vollprüfung" : "Stichprobenprüfung";
             document.getElementById('pruefungsAnweisung').innerText = "Bitte machen Sie eine " + aktuellePruefart + ".";
             document.getElementById('pruefungErfolgreich').value = 'ja'; 
-            
-            const rechnerBox = document.getElementById('stichprobenRechner');
-            if (aktuellePruefart === "Stichprobenprüfung") { rechnerBox.style.display = 'block'; updateStichproben(); } 
-            else { rechnerBox.style.display = 'none'; berechneteStichproben = 0; }
-            if (html5QrCode?.isScanning) html5QrCode.stop();
-            navigiereZu('pruefungPage');
+            document.getElementById('stichprobenRechner').style.display = (aktuellePruefart === "Stichprobenprüfung") ? 'block' : 'none';
+            if(aktuellePruefart === "Stichprobenprüfung") updateStichproben(); else berechneteStichproben = 0;
+            if (html5QrCode?.isScanning) html5QrCode.stop(); navigiereZu('pruefungPage');
         }
 
         function pruefen() {
             const j = new Date(); erfassungsZeitstempel = j.toLocaleDateString('de-DE') + ' ' + j.toLocaleTimeString('de-DE');
-            const rb = document.getElementById('resultBox'); rb.className = 'result';
             let err = (document.getElementById('verpackung').value==='nein' || document.getElementById('mengeOk').value==='nein' || document.getElementById('pruefungErfolgreich').value==='nein');
             currentStatus = err ? "Gesperrt" : "Freigegeben";
-            rb.classList.add(err ? 'error' : 'success'); rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
+            const rb = document.getElementById('resultBox'); rb.className = 'result'; rb.classList.add(err ? 'error' : 'success'); rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
             document.getElementById('successActions').style.display = err ? 'none' : 'block'; document.getElementById('errorActions').style.display = err ? 'block' : 'none';
             navigiereZu('resultPage');
         }
 
         async function inSupabaseSpeichern(isError) {
-            const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess');
-            btn.innerText = "Verarbeite..."; btn.disabled = true;
+            const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess'); btn.innerText = "Verarbeite..."; btn.disabled = true;
             let bilderUrls = []; const files = document.getElementById('mangelBilder').files;
-
             if (isError && files.length > 0) {
                 for (let file of files) {
                     const fn = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
                     const { error } = await supabaseClient.storage.from('maengelbilder').upload(fn, file);
-                    if (error) alert("UPLOAD-FEHLER: " + error.message);
-                    else bilderUrls.push(supabaseClient.storage.from('maengelbilder').getPublicUrl(fn).data.publicUrl);
+                    if (!error) bilderUrls.push(supabaseClient.storage.from('maengelbilder').getPublicUrl(fn).data.publicUrl);
                 }
             }
-            
-            const dbMaengelWert = document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja';
-            const dbFa = aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('fehlerakzeptanz').value) : null;
-            const dbEf = aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('erwartungswertfaktor').value) : null;
-            const eingegebenerLieferant = document.getElementById('lieferant').value.trim();
-            const eingegebenerSpediteur = document.getElementById('spediteur').value.trim();
-
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
                 datum: document.getElementById('datum').value, zeitstempel: erfassungsZeitstempel, mitarbeiter: document.getElementById('mitarbeiter').value, 
-                lieferant: eingegebenerLieferant, spediteur: eingegebenerSpediteur,
+                lieferant: document.getElementById('lieferant').value.trim(), spediteur: document.getElementById('spediteur').value.trim(),
                 seriennummer: document.getElementById('artikelnummer').value, menge: parseInt(document.getElementById('menge').value),
                 preis: holeNettoPreis(), verpackung: document.getElementById('verpackung').value, mengeOk: document.getElementById('mengeOk').value,
-                maengel: dbMaengelWert, pruefart: aktuellePruefart, fehlerakzeptanz: dbFa, erwartungswertfaktor: dbEf,
+                maengel: document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja', pruefart: aktuellePruefart, fehlerakzeptanz: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('fehlerakzeptanz').value) : null, erwartungswertfaktor: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('erwartungswertfaktor').value) : null,
                 stichproben_anzahl: berechneteStichproben || null, status: currentStatus, beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
                 bilder_urls: bilderUrls.join(',')
             }]);
-
             btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
-            if (dbErr) alert("DATENBANK-FEHLER: " + dbErr.message);
-            else { 
-                alert("Erfolgreich gespeichert!"); 
-                document.getElementById('artikelnummer').value = ""; document.getElementById('lieferant').value = ""; document.getElementById('spediteur').value = "";
-                ladeDropdownDaten(); navigiereZu('formPage'); 
-            }
+            if (dbErr) alert("DATENBANK-FEHLER: " + dbErr.message); else { document.getElementById('artikelnummer').value = ""; document.getElementById('lieferant').value = ""; document.getElementById('spediteur').value = ""; ladeDropdownDaten(); navigiereZu('formPage'); }
         }
 
         async function exportiereVonSupabase() {
             const btn = document.getElementById('exportBtn'); btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
-            
-            const start = document.getElementById('exportStart').value;
-            const ende = document.getElementById('exportEnde').value;
-            const filterLief = document.getElementById('exportLieferantFilter').value;
-            const filterSped = document.getElementById('exportSpediteurFilter').value;
-            const filterMit = document.getElementById('exportMitarbeiterFilter').value;
-
-            let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
-            if (filterLief) query = query.eq('lieferant', filterLief);
-            if (filterSped) query = query.eq('spediteur', filterSped);
-            if (filterMit) query = query.eq('mitarbeiter', filterMit);
-
+            let query = supabaseClient.from('wareneingang').select('*').gte('datum', document.getElementById('exportStart').value).lte('datum', document.getElementById('exportEnde').value);
+            if (document.getElementById('exportLieferantFilter').value) query = query.eq('lieferant', document.getElementById('exportLieferantFilter').value);
+            if (document.getElementById('exportSpediteurFilter').value) query = query.eq('spediteur', document.getElementById('exportSpediteurFilter').value);
+            if (document.getElementById('exportMitarbeiterFilter').value) query = query.eq('mitarbeiter', document.getElementById('exportMitarbeiterFilter').value);
             const { data: logs, error } = await query;
-
             if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
-            
             let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Lieferant;Spediteur;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz(%);Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\n";
             logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.lieferant||''};${l.spediteur||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\n`);
-            
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
             btn.innerText = "Daten herunterladen"; btn.disabled = false;
         }
