@@ -44,6 +44,9 @@
         .logo-container { text-align: center; margin-bottom: 0; margin-top: 15px; line-height: 0; }
         .logo-container img { max-width: 180px; height: auto; vertical-align: top; }
         
+        /* Option 1: Automatisches Einfärben des Logos im Dark Mode zu Weiß */
+        body.dark-mode .logo-container img { filter: brightness(0) invert(1); }
+        
         label { display: block; margin-top: 15px; font-weight: bold; color: var(--text-dark); font-size: 0.95em; }
         
         input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: var(--base-font-size); border-radius: 0; background-color: var(--input-bg); color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s; }
@@ -120,7 +123,6 @@
         h2 { margin-top: 10px; margin-bottom: 15px; color: var(--text-dark); text-align: center; }
         h4 { color: var(--text-dark); }
 
-        /* Font Size Settings Buttons */
         .font-btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .font-btn-group button { margin-top: 0; padding: 10px; }
     </style>
@@ -368,23 +370,26 @@
         let currentFocusLieferant = -1, currentFocusSpediteur = -1, currentFocusKategorie = -1, currentFocusProdukt = -1;
         let chartInstances = {};
 
-        // Settings Initialisierung (wird direkt ausgeführt)
         function initSettings() {
             if (localStorage.getItem('checkgate_darkmode') === 'true') {
                 document.body.classList.add('dark-mode');
+                // Option 2 (Alternative Bilddatei): 
+                // document.querySelectorAll('.logo-container img').forEach(l => l.src = 'logo-dark.png');
             }
             const savedSize = localStorage.getItem('checkgate_fontsize');
             if (savedSize) document.documentElement.style.setProperty('--base-font-size', savedSize + 'px');
         }
         initSettings();
 
-        // Einstellungen Logik
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('checkgate_darkmode', isDark);
             document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
             
-            // Charts ggf. updaten für Kontrastanpassung (erfordert Neuladen der Diagramme)
+            // Option 2 (Alternative Bilddatei):
+            // const logos = document.querySelectorAll('.logo-container img');
+            // logos.forEach(logo => logo.src = isDark ? 'logo-dark.png' : 'logo.png');
+
             if(document.getElementById('statistikPage').style.display === 'block') ladeStatistiken();
         }
 
@@ -393,7 +398,6 @@
             localStorage.setItem('checkgate_fontsize', size);
         }
 
-        // Service Worker registrieren
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.error('SW Registrierung fehlgeschlagen:', err));
         }
@@ -439,7 +443,6 @@
             ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage'].forEach(id => document.getElementById(id).style.display = 'none');
             document.getElementById(seiteId).style.display = 'block';
             
-            // Dark Mode Button Text aktualisieren, falls Settings geöffnet werden
             if (seiteId === 'settingsPage') {
                 const isDark = document.body.classList.contains('dark-mode');
                 document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
@@ -634,7 +637,6 @@
             const sortedKats = Object.keys(katData).sort((a,b) => katData[b].total - katData[a].total).slice(0, 10);
             const sortedLiefs = Object.keys(liefData).sort((a,b) => liefData[b].total - liefData[a].total).slice(0, 10);
 
-            // Farbanpassung für Graphen im Dark Mode
             const isDark = document.body.classList.contains('dark-mode');
             const colorText = isDark ? '#e0e0e0' : '#111';
 
