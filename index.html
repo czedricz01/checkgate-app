@@ -143,7 +143,7 @@
         /* History List */
         .history-item { background: var(--primary-light-bg); border: 1px solid var(--border-default); padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; font-size: 0.9em; }
         
-        /* Neu: Role Management Styling */
+        /* Role Management Styling */
         .role-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .role-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-container); border: 1px solid var(--border-default); padding: 12px 15px; border-radius: 6px; }
         .role-info { display: flex; flex-direction: column; gap: 4px; }
@@ -504,22 +504,15 @@
             if (user.user_metadata?.kuerzel) { 
                 const kuerzel = user.user_metadata.kuerzel.toLowerCase();
                 document.getElementById('mitarbeiter').value = kuerzel; 
-                
-                console.log("DEBUG: Suche Rolle für Kürzel:", kuerzel);
 
                 let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
                 
-                if (error) console.error("DEBUG: Fehler beim Rollen-Abruf:", error.message);
-
-                if (!data) {
-                    console.log("DEBUG: Kein Rollen-Eintrag, erstelle Standard-User.");
+                if (error || !data) {
                     await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
                     currentUserRole = 'user';
                 } else {
                     currentUserRole = data.role;
                 }
-
-                console.log("DEBUG: Aktive Rolle erkannt:", currentUserRole);
 
                 const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
                 document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
@@ -903,12 +896,18 @@
 
         function geheZuPruefung() {
             if (!document.getElementById('mitarbeiter').value.trim() || !document.getElementById('artikelnummer').value.trim() || !document.getElementById('lieferant').value.trim() || !document.getElementById('spediteur').value.trim()) return alert("Alle Felder (Mitarbeiter, Artikel, Lieferant, Spediteur) sind Pflichtfelder.");
+            
             const p = holeNettoPreis();
-            aktuellePruefart = p >= 750 ? "100% Vollprüfung" : "Stichprobenprüfung";
+            const m = parseInt(document.getElementById('menge').value) || 1;
+            
+            aktuellePruefart = (p >= 750 || m < 15) ? "100% Vollprüfung" : "Stichprobenprüfung";
+            
             document.getElementById('pruefungsAnweisung').innerText = "Bitte machen Sie eine " + aktuellePruefart + ".";
             document.getElementById('pruefungErfolgreich').value = 'ja';
-            document.getElementById('stichprobenRechner').style.display = p >= 750 ? 'none' : 'block';
-            if (p < 750) updateStichproben(); else berechneteStichproben = 0;
+            document.getElementById('stichprobenRechner').style.display = (aktuellePruefart === "100% Vollprüfung") ? 'none' : 'block';
+            
+            if (aktuellePruefart === "Stichprobenprüfung") updateStichproben(); else berechneteStichproben = 0;
+            
             if (html5QrCode?.isScanning) html5QrCode.stop();
             navigiereZu('pruefungPage');
         }
