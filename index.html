@@ -142,6 +142,25 @@
 
         /* History List */
         .history-item { background: var(--primary-light-bg); border: 1px solid var(--border-default); padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; font-size: 0.9em; }
+        
+        /* Neu: Role Management Styling */
+        .role-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+        .role-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-container); border: 1px solid var(--border-default); padding: 12px 15px; border-radius: 6px; }
+        .role-info { display: flex; flex-direction: column; gap: 4px; }
+        .role-name { font-weight: bold; font-size: 1.1em; color: var(--primary-main); }
+        .role-badge { font-size: 0.75em; font-weight: bold; text-transform: uppercase; padding: 3px 8px; border-radius: 12px; display: inline-block; width: fit-content; }
+        
+        /* Badge Colors */
+        .badge-user { background-color: #e0f2f1; color: #00695c; }
+        .badge-admin { background-color: #e8eaf6; color: #4a148c; }
+        .badge-owner { background-color: #fff8e1; color: #f57f17; }
+        
+        body.dark-mode .role-item { background: var(--primary-light-bg); }
+        body.dark-mode .badge-user { background-color: #004d40; color: #80cbc4; }
+        body.dark-mode .badge-admin { background-color: #311b92; color: #b39ddb; }
+        body.dark-mode .badge-owner { background-color: #ff6f00; color: #ffe082; }
+        
+        .role-select-wrapper select { width: 100%; min-width: 110px; padding: 8px; margin: 0; font-size: 0.9em; border-radius: 4px; }
     </style>
 </head>
 <body>
@@ -198,6 +217,7 @@
 
             <div class="action-section">
                 <h4>Offline-Speicher</h4>
+                <p style="font-size:0.9em;">Einträge ohne Internetverbindung werden hier gesichert.</p>
                 <div style="font-weight:bold; color:var(--primary-main); text-align:center; padding: 10px; background:var(--primary-light-bg); border-radius:4px; margin-bottom: 10px;">
                     Status: <span id="offlineCountBadge">0</span> Einträge im Cache
                 </div>
@@ -206,7 +226,8 @@
             </div>
 
             <div id="ownerSection" class="action-section" style="display:none; border: 2px solid var(--action-green); padding: 15px; border-radius: 4px;">
-                <h4 style="color:var(--action-green-dark);">Benutzerverwaltung (Owner)</h4>
+                <h4 style="color:var(--action-green-dark); margin-top: 0;">Benutzerverwaltung</h4>
+                <p style="font-size:0.9em;">Rollenvergabe für registrierte Mitarbeiter.</p>
                 <div id="userRoleList">Lade Benutzer...</div>
             </div>
 
@@ -516,23 +537,34 @@
             const { data, error } = await supabaseClient.from('benutzer_rollen').select('*').order('kuerzel');
             const list = document.getElementById('userRoleList');
             if (error) return list.innerText = "Fehler beim Laden der Rollen.";
-            list.innerHTML = '';
+            list.innerHTML = '<div class="role-list"></div>';
+            const listContainer = list.querySelector('.role-list');
+            
             data.forEach(user => {
-                list.innerHTML += `
-                    <div class="setting-row">
-                        <label style="margin:0;">${user.kuerzel}</label>
-                        <select onchange="updateRolle('${user.kuerzel}', this.value)" style="width:auto; padding:8px; margin:0;">
-                            <option value="user" ${user.role==='user'?'selected':''}>User</option>
-                            <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
-                            <option value="owner" ${user.role==='owner'?'selected':''}>Owner</option>
-                        </select>
+                let badgeClass = 'badge-user';
+                if (user.role === 'admin') badgeClass = 'badge-admin';
+                if (user.role === 'owner') badgeClass = 'badge-owner';
+                
+                listContainer.innerHTML += `
+                    <div class="role-item">
+                        <div class="role-info">
+                            <span class="role-name">${user.kuerzel.toUpperCase()}</span>
+                            <span class="role-badge ${badgeClass}">${user.role}</span>
+                        </div>
+                        <div class="role-select-wrapper">
+                            <select onchange="updateRolle('${user.kuerzel}', this.value)">
+                                <option value="user" ${user.role==='user'?'selected':''}>User</option>
+                                <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
+                                <option value="owner" ${user.role==='owner'?'selected':''}>Owner</option>
+                            </select>
+                        </div>
                     </div>`;
             });
         }
 
         async function updateRolle(k, r) {
             const { error } = await supabaseClient.from('benutzer_rollen').update({ role: r }).eq('kuerzel', k);
-            if (error) showMessage("Fehler: " + error.message, true); else showMessage("Rolle aktualisiert.");
+            if (error) showMessage("Fehler: " + error.message, true); else { showMessage("Rolle aktualisiert."); ladeBenutzerRollen(); }
         }
 
         // DATEN FÜR FILTER LADEN
