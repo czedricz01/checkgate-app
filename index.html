@@ -243,6 +243,7 @@
             <div class="export-filter-body">
                 <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
                 <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
+                <label for="exportKategorieFilter">Kategorie:</label><select id="exportKategorieFilter"><option value="">Alle Kategorien</option></select>
                 <label for="exportLieferantFilter">Lieferant:</label><select id="exportLieferantFilter"><option value="">Alle Lieferanten</option></select>
                 <label for="exportSpediteurFilter">Spediteur:</label><select id="exportSpediteurFilter"><option value="">Alle Spediteure</option></select>
                 <label for="exportMitarbeiterFilter">Mitarbeiter:</label><select id="exportMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
@@ -259,6 +260,7 @@
             <div id="statsFilterBody" class="filter-body">
                 <label for="statStart">Von:</label><input type="date" id="statStart">
                 <label for="statEnde">Bis:</label><input type="date" id="statEnde">
+                <label for="statKategorieFilter">Kategorie:</label><select id="statKategorieFilter"><option value="">Alle Kategorien</option></select>
                 <label for="statLieferantFilter">Lieferant:</label><select id="statLieferantFilter"><option value="">Alle Lieferanten</option></select>
                 <label for="statSpediteurFilter">Spediteur:</label><select id="statSpediteurFilter"><option value="">Alle Spediteure</option></select>
                 <label for="statMitarbeiterFilter">Mitarbeiter:</label><select id="statMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
@@ -309,8 +311,8 @@
         document.getElementById('datum').valueAsDate = new Date();
         document.getElementById('exportStart').value = `${y}-${m}-01`;
         document.getElementById('exportEnde').value = `${y}-${m}-${letzterTag}`;
-        document.getElementById('statStart').value = `${y}-${m}-01`;
-        document.getElementById('statEnde').value = `${y}-${m}-${letzterTag}`;
+        document.getElementById('statStart').value = `${y}-01-01`;
+        document.getElementById('statEnde').value = `${y}-12-31`;
 
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
         let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [];
@@ -444,9 +446,12 @@
                 lieferantenChronologisch = uniqueLief; spediteureChronologisch = uniqueSped;
                 kategorienChronologisch = uniqueKat; produkteNachKategorie = prodMap; alleProdukte = allProds;
                 
+                populateSelect('statKategorieFilter', uniqueKat, 'Alle Kategorien');
                 populateSelect('statLieferantFilter', uniqueLief, 'Alle Lieferanten');
                 populateSelect('statSpediteurFilter', uniqueSped, 'Alle Spediteure');
                 populateSelect('statMitarbeiterFilter', uniqueMit, 'Alle Mitarbeiter');
+                
+                populateSelect('exportKategorieFilter', uniqueKat, 'Alle Kategorien');
                 populateSelect('exportLieferantFilter', uniqueLief, 'Alle Lieferanten');
                 populateSelect('exportSpediteurFilter', uniqueSped, 'Alle Spediteure');
                 populateSelect('exportMitarbeiterFilter', uniqueMit, 'Alle Mitarbeiter');
@@ -461,9 +466,13 @@
 
         async function ladeStatistiken() {
             const start = document.getElementById('statStart').value; const ende = document.getElementById('statEnde').value;
-            const filterLief = document.getElementById('statLieferantFilter').value; const filterSped = document.getElementById('statSpediteurFilter').value; const filterMit = document.getElementById('statMitarbeiterFilter').value;
+            const filterKat = document.getElementById('statKategorieFilter').value;
+            const filterLief = document.getElementById('statLieferantFilter').value; 
+            const filterSped = document.getElementById('statSpediteurFilter').value; 
+            const filterMit = document.getElementById('statMitarbeiterFilter').value;
 
             let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
+            if (filterKat) query = query.eq('produktkategorie', filterKat);
             if (filterLief) query = query.eq('lieferant', filterLief);
             if (filterSped) query = query.eq('spediteur', filterSped);
             if (filterMit) query = query.eq('mitarbeiter', filterMit);
@@ -540,7 +549,6 @@
             });
         }
 
-        // AUTOCOMPLETE HELPER
         function doFilter(inputId, dropdownId, baseList, focusVarName) {
             const input = document.getElementById(inputId).value.toLowerCase();
             const dropdown = document.getElementById(dropdownId);
@@ -636,10 +644,20 @@
 
         async function exportiereVonSupabase() {
             const btn = document.getElementById('exportBtn'); btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
-            let query = supabaseClient.from('wareneingang').select('*').gte('datum', document.getElementById('exportStart').value).lte('datum', document.getElementById('exportEnde').value);
-            if (document.getElementById('exportLieferantFilter').value) query = query.eq('lieferant', document.getElementById('exportLieferantFilter').value);
-            if (document.getElementById('exportSpediteurFilter').value) query = query.eq('spediteur', document.getElementById('exportSpediteurFilter').value);
-            if (document.getElementById('exportMitarbeiterFilter').value) query = query.eq('mitarbeiter', document.getElementById('exportMitarbeiterFilter').value);
+            
+            const start = document.getElementById('exportStart').value;
+            const ende = document.getElementById('exportEnde').value;
+            const filterKat = document.getElementById('exportKategorieFilter').value;
+            const filterLief = document.getElementById('exportLieferantFilter').value;
+            const filterSped = document.getElementById('exportSpediteurFilter').value;
+            const filterMit = document.getElementById('exportMitarbeiterFilter').value;
+
+            let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
+            if (filterKat) query = query.eq('produktkategorie', filterKat);
+            if (filterLief) query = query.eq('lieferant', filterLief);
+            if (filterSped) query = query.eq('spediteur', filterSped);
+            if (filterMit) query = query.eq('mitarbeiter', filterMit);
+
             const { data: logs, error } = await query;
             if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
             
