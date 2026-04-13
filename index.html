@@ -321,6 +321,38 @@
         let currentFocusLieferant = -1, currentFocusSpediteur = -1, currentFocusKategorie = -1, currentFocusProdukt = -1;
         let chartInstances = {};
 
+        // Service Worker registrieren (für Offline-Modus)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => console.error('SW Registrierung fehlgeschlagen:', err));
+        }
+
+        // Event-Listener für Re-Connect
+        window.addEventListener('online', syncOfflineDaten);
+
+        async function syncOfflineDaten() {
+            let offlineData = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
+            if (offlineData.length === 0) return;
+
+            alert(`Internetverbindung wiederhergestellt. ${offlineData.length} Offline-Einträge werden synchronisiert...`);
+
+            let verbleibend = [];
+            for (let eintrag of offlineData) {
+                const { error } = await supabaseClient.from('wareneingang').insert([eintrag]);
+                if (error) {
+                    console.error("Fehler beim Sync:", error);
+                    verbleibend.push(eintrag);
+                }
+            }
+            
+            localStorage.setItem('offlineWareneingang', JSON.stringify(verbleibend));
+            if (verbleibend.length === 0) {
+                alert("Alle Offline-Einträge erfolgreich synchronisiert!");
+                if (document.getElementById('statistikPage').style.display === 'block') {
+                    ladeStatistiken();
+                }
+            }
+        }
+
         if (window.location.hash.includes('type=recovery')) zeigeSeite('setNewPasswordPage');
         else checkSession();
 
@@ -620,27 +652,63 @@
         }
 
         async function inSupabaseSpeichern(isError) {
-            const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess'); btn.innerText = "Verarbeite..."; btn.disabled = true;
-            let bilderUrls = []; const files = document.getElementById('mangelBilder').files;
-            if (isError && files.length > 0) {
+            const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess'); 
+            btn.innerText = "Verarbeite..."; btn.disabled = true;
+            
+            let bilderUrls = []; 
+            const files = document.getElementById('mangelBilder').files;
+            
+            if (isError && files.length > 0 && navigator.onLine) {
                 for (let file of files) {
                     const fn = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
                     const { error } = await supabaseClient.storage.from('maengelbilder').upload(fn, file);
                     if (!error) bilderUrls.push(supabaseClient.storage.from('maengelbilder').getPublicUrl(fn).data.publicUrl);
                 }
             }
-            const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
-                datum: document.getElementById('datum').value, zeitstempel: erfassungsZeitstempel, mitarbeiter: document.getElementById('mitarbeiter').value, 
-                produktkategorie: document.getElementById('produktkategorie').value.trim(), produkt: document.getElementById('produkt').value.trim(),
-                lieferant: document.getElementById('lieferant').value.trim(), spediteur: document.getElementById('spediteur').value.trim(),
-                seriennummer: document.getElementById('artikelnummer').value, menge: parseInt(document.getElementById('menge').value),
-                preis: holeNettoPreis(), verpackung: document.getElementById('verpackung').value, mengeOk: document.getElementById('mengeOk').value,
-                maengel: document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja', pruefart: aktuellePruefart, fehlerakzeptanz: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('fehlerakzeptanz').value) : null, erwartungswertfaktor: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('erwartungswertfaktor').value) : null,
-                stichproben_anzahl: berechneteStichproben || null, status: currentStatus, beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
+
+            const payload = { 
+                datum: document.getElementById('datum').value, 
+                zeitstempel: erfassungsZeitstempel, 
+                mitarbeiter: document.getElementById('mitarbeiter').value, 
+                produktkategorie: document.getElementById('produktkategorie').value.trim(), 
+                produkt: document.getElementById('produkt').value.trim(),
+                lieferant: document.getElementById('lieferant').value.trim(), 
+                spediteur: document.getElementById('spediteur').value.trim(),
+                seriennummer: document.getElementById('artikelnummer').value, 
+                menge: parseInt(document.getElementById('menge').value),
+                preis: holeNettoPreis(), 
+                verpackung: document.getElementById('verpackung').value, 
+                mengeOk: document.getElementById('mengeOk').value,
+                maengel: document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja', 
+                pruefart: aktuellePruefart, 
+                fehlerakzeptanz: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('fehlerakzeptanz').value) : null, 
+                erwartungswertfaktor: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('erwartungswertfaktor').value) : null,
+                stichproben_anzahl: berechneteStichproben || null, 
+                status: currentStatus, 
+                beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
                 bilder_urls: bilderUrls.join(',')
-            }]);
+            };
+
+            if (!navigator.onLine) {
+                let offlineData = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
+                offlineData.push(payload);
+                localStorage.setItem('offlineWareneingang', JSON.stringify(offlineData));
+                alert("Offline-Modus aktiv: Eintrag wurde lokal zwischengespeichert und wird bei der nächsten Verbindung synchronisiert.");
+                btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
+                document.getElementById('artikelnummer').value = ""; document.getElementById('lieferant').value = ""; document.getElementById('spediteur').value = ""; 
+                navigiereZu('formPage');
+                return;
+            }
+
+            const { error: dbErr } = await supabaseClient.from('wareneingang').insert([payload]);
             btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
-            if (dbErr) alert("DATENBANK-FEHLER: " + dbErr.message); else { document.getElementById('artikelnummer').value = ""; document.getElementById('lieferant').value = ""; document.getElementById('spediteur').value = ""; ladeDropdownDaten(); navigiereZu('formPage'); }
+            
+            if (dbErr) alert("DATENBANK-FEHLER: " + dbErr.message); 
+            else { 
+                alert("Erfolgreich gespeichert!"); 
+                document.getElementById('artikelnummer').value = ""; document.getElementById('lieferant').value = ""; document.getElementById('spediteur').value = ""; 
+                ladeDropdownDaten(); navigiereZu('formPage'); 
+            }
         }
 
         async function exportiereVonSupabase() {
