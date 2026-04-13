@@ -159,7 +159,6 @@
         <div id="formPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <label for="datum">Datum:</label><input type="date" id="datum">
-            
             <label for="mitarbeiter">Mitarbeiterkürzel:</label><input type="text" id="mitarbeiter" readonly>
             
             <label for="produktkategorie">Produktkategorie:</label>
@@ -291,6 +290,7 @@
 
             <div class="chart-container">
                 <div class="chart-wrapper"><canvas id="chartMonths"></canvas></div>
+                <div class="chart-wrapper"><canvas id="chartKategorien"></canvas></div>
                 <div class="chart-wrapper"><canvas id="chartLiefs"></canvas></div>
             </div>
         </div>
@@ -477,6 +477,7 @@
             document.getElementById('statVolume').innerText = "0"; document.getElementById('statValue').innerText = "0";
 
             if(chartInstances['months']) chartInstances['months'].destroy();
+            if(chartInstances['kategorien']) chartInstances['kategorien'].destroy();
             if(chartInstances['liefs']) chartInstances['liefs'].destroy();
 
             if (data.length === 0) return;
@@ -487,28 +488,33 @@
             document.getElementById('statValue').innerText = totalValue.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
             let countVerp = 0, countMeng = 0, countQuali = 0, countErrorItems = 0;
-            const monthData = {}; const liefData = {};
+            const monthData = {}; const liefData = {}; const katData = {};
 
             data.forEach(d => {
                 const month = d.datum ? d.datum.substring(0, 7) : 'Unbekannt';
                 const lief = d.lieferant || 'Unbekannt';
+                const kat = d.produktkategorie || 'Unbekannt';
                 
                 if (!monthData[month]) monthData[month] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
                 if (!liefData[lief]) liefData[lief] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
+                if (!katData[kat]) katData[kat] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
 
                 let isError = false;
-                if (d.verpackung === 'nein') { countVerp++; monthData[month].verp++; liefData[lief].verp++; isError = true; }
-                if (d.mengeOk === 'nein') { countMeng++; monthData[month].meng++; liefData[lief].meng++; isError = true; }
-                if (d.maengel === 'ja') { countQuali++; monthData[month].qual++; liefData[lief].qual++; isError = true; }
+                if (d.verpackung === 'nein') { countVerp++; monthData[month].verp++; liefData[lief].verp++; katData[kat].verp++; isError = true; }
+                if (d.mengeOk === 'nein') { countMeng++; monthData[month].meng++; liefData[lief].meng++; katData[kat].meng++; isError = true; }
+                if (d.maengel === 'ja') { countQuali++; monthData[month].qual++; liefData[lief].qual++; katData[kat].qual++; isError = true; }
 
-                if (isError) countErrorItems++; else { monthData[month].ok++; liefData[lief].ok++; }
-                monthData[month].total++; liefData[lief].total++;
+                if (isError) countErrorItems++; 
+                else { monthData[month].ok++; liefData[lief].ok++; katData[kat].ok++; }
+                
+                monthData[month].total++; liefData[lief].total++; katData[kat].total++;
             });
 
             document.getElementById('statErrorRate').innerText = ((countErrorItems / data.length) * 100).toFixed(1) + "%";
             document.getElementById('errorDetailsList').innerHTML = `<li>Verpackung: ${countVerp}x</li><li>Menge: ${countMeng}x</li><li>Qualität: ${countQuali}x</li>`;
 
             const sortedMonths = Object.keys(monthData).sort();
+            const sortedKats = Object.keys(katData).sort((a,b) => katData[b].total - katData[a].total).slice(0, 10);
             const sortedLiefs = Object.keys(liefData).sort((a,b) => liefData[b].total - liefData[a].total).slice(0, 10);
 
             const createDatasets = (keys, dataObj) => [
@@ -521,6 +527,11 @@
             chartInstances['months'] = new Chart(document.getElementById('chartMonths'), {
                 type: 'bar', data: { labels: sortedMonths, datasets: createDatasets(sortedMonths, monthData) },
                 options: { scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { title: { display: true, text: 'Übersicht nach Monaten' } } }
+            });
+
+            chartInstances['kategorien'] = new Chart(document.getElementById('chartKategorien'), {
+                type: 'bar', data: { labels: sortedKats, datasets: createDatasets(sortedKats, katData) },
+                options: { scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { title: { display: true, text: 'Top Produktkategorien (Gesamtprüfungen)' } } }
             });
 
             chartInstances['liefs'] = new Chart(document.getElementById('chartLiefs'), {
