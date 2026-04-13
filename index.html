@@ -206,12 +206,10 @@
                 <button onclick="clearOfflineCache()" class="danger-btn">Cache löschen</button>
             </div>
 
-            <div class="action-section">
-                <h4>Entwickler / Rechte</h4>
-                <div class="setting-row">
-                    <label>Admin-Rechte (Für Testzwecke)<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Schaltet Statistik und Export frei</span></label>
-                    <label class="switch"><input type="checkbox" id="settingAdmin" onchange="toggleAdminRole(this.checked)"><span class="slider"></span></label>
-                </div>
+            <div id="ownerSection" class="action-section" style="display:none;">
+                <h4 style="color:var(--action-green-dark);">Benutzerverwaltung (Owner)</h4>
+                <p style="font-size:0.9em;">Rollenvergabe für registrierte Mitarbeiter.</p>
+                <div id="userRoleList"></div>
             </div>
 
             <button class="secondary-btn" style="margin-top: 40px;" onclick="navigiereZu('formPage')">Zurück</button>
@@ -219,7 +217,7 @@
 
         <div id="historyPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2>Meine heutigen Einträge</h2>
+            <h2>Einträge der letzten 14 Tage</h2>
             <div id="historyList"></div>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
@@ -475,19 +473,6 @@
             localStorage.setItem('checkgate_fontsize', size);
         }
 
-        async function toggleAdminRole(isAdmin) {
-            const newRole = isAdmin ? 'admin' : 'user';
-            const { error } = await supabaseClient.auth.updateUser({ data: { role: newRole } });
-            if (!error) {
-                currentUserRole = newRole;
-                checkSession(); // UI aktualisieren
-                showMessage(`Rechte auf ${newRole.toUpperCase()} geändert.`);
-            } else {
-                showMessage("Fehler: " + error.message, true);
-                document.getElementById('settingAdmin').checked = !isAdmin; // Zurücksetzen
-            }
-        }
-
         // Offline / Cache Logik
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.error('SW Registrierung fehlgeschlagen:', err));
@@ -550,26 +535,67 @@
             if (data.session) { processUserLogin(data.session.user); ladeDropdownDaten(); } else zeigeSeite('loginPage');
         }
 
-        function processUserLogin(user) {
-            // Rolle prüfen
-            currentUserRole = user.user_metadata?.role || 'user';
-            document.getElementById('settingAdmin').checked = currentUserRole === 'admin';
-            
-            document.getElementById('menuStatistik').style.display = currentUserRole === 'admin' ? 'block' : 'none';
-            document.getElementById('menuExport').style.display = currentUserRole === 'admin' ? 'block' : 'none';
-
+        async function processUserLogin(user) {
             if (user.user_metadata?.kuerzel) { 
-                document.getElementById('mitarbeiter').value = user.user_metadata.kuerzel; 
+                const kuerzel = user.user_metadata.kuerzel;
+                document.getElementById('mitarbeiter').value = kuerzel; 
+                
+                // Rolle aus eigener Tabelle abrufen
+                let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
+                
+                if (!data) {
+                    await supabaseClient.from('benutzer_rollen').insert([{ kuerzel: kuerzel, role: 'user' }]);
+                    currentUserRole = 'user';
+                } else {
+                    currentUserRole = data.role;
+                }
+
+                document.getElementById('menuStatistik').style.display = (currentUserRole === 'admin' || currentUserRole === 'owner') ? 'block' : 'none';
+                document.getElementById('menuExport').style.display = (currentUserRole === 'admin' || currentUserRole === 'owner') ? 'block' : 'none';
+                document.getElementById('ownerSection').style.display = currentUserRole === 'owner' ? 'block' : 'none';
+
+                if (currentUserRole === 'owner') { ladeBenutzerRollen(); }
+
                 navigiereZu('formPage'); 
             } 
             else zeigeSeite('setupProfilePage');
+        }
+
+        // Owner Logik
+        async function ladeBenutzerRollen() {
+            const { data, error } = await supabaseClient.from('benutzer_rollen').select('*').order('kuerzel');
+            if (error) return console.error(error);
+            const list = document.getElementById('userRoleList');
+            list.innerHTML = '';
+            data.forEach(user => {
+                list.innerHTML += `
+                    <div class="setting-row">
+                        <label style="margin:0;">Kürzel: ${user.kuerzel}</label>
+                        <select onchange="updateRolle('${user.kuerzel}', this.value)" style="width:auto; padding: 8px; margin:0;">
+                            <option value="user" ${user.role === 'user' ? 'selected' : ''}>User</option>
+                            <option value="admin" ${user.role === 'admin' ? 'selected' : ''}>Admin</option>
+                            <option value="owner" ${user.role === 'owner' ? 'selected' : ''}>Owner</option>
+                        </select>
+                    </div>
+                `;
+            });
+        }
+
+        async function updateRolle(kuerzel, newRole) {
+            const { error } = await supabaseClient.from('benutzer_rollen').update({ role: newRole }).eq('kuerzel', kuerzel);
+            if (error) showMessage("Fehler: " + error.message, true);
+            else showMessage(`Rolle für ${kuerzel} geändert.`);
         }
 
         function zeigeSeite(seiteId) {
             ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(id => document.getElementById(id).style.display = 'none');
             document.getElementById(seiteId).style.display = 'block';
             
-            if (seiteId === 'settingsPage') updateOfflineStatus();
+            if (seiteId === 'settingsPage') {
+                const isDark = document.body.classList.contains('dark-mode');
+                document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
+                updateOfflineStatus();
+            }
         }
 
         function navigiereZu(seiteId) {
@@ -654,7 +680,7 @@
             if (!neuesKuerzel || pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[^a-zA-Z0-9]/.test(pwd)) return alert("Eingaben fehlerhaft.");
             if (pwd !== pwdConfirm) return alert("Passwörter stimmen nicht überein.");
             const btn = document.getElementById('saveKuerzelBtn'); btn.innerText = "Speichert..."; btn.disabled = true;
-            const { error } = await supabaseClient.auth.updateUser({ password: pwd, data: { kuerzel: neuesKuerzel, role: 'user' } });
+            const { error } = await supabaseClient.auth.updateUser({ password: pwd, data: { kuerzel: neuesKuerzel } });
             btn.innerText = "Speichern & Weiter"; btn.disabled = false;
             if (error) alert("Fehler: " + error.message); else { document.getElementById('mitarbeiter').value = neuesKuerzel; navigiereZu('formPage'); }
         }
@@ -800,18 +826,23 @@
 
         async function ladeHistorie() {
             const kuerzel = document.getElementById('mitarbeiter').value;
-            const heuteStr = new Date().toISOString().split('T')[0];
+            
+            // Datum vor 14 Tagen berechnen
+            const pastDate = new Date();
+            pastDate.setDate(pastDate.getDate() - 14);
+            const pastDateStr = pastDate.toISOString().split('T')[0];
+
             const { data, error } = await supabaseClient.from('wareneingang')
                 .select('*')
                 .eq('mitarbeiter', kuerzel)
-                .gte('datum', heuteStr)
+                .gte('datum', pastDateStr)
                 .order('id', { ascending: false })
-                .limit(20);
+                .limit(50);
             
             const list = document.getElementById('historyList');
             list.innerHTML = '';
             if(error || !data || data.length === 0) {
-                list.innerHTML = '<p>Keine Einträge für heute gefunden.</p>';
+                list.innerHTML = '<p>Keine Einträge für diesen Zeitraum gefunden.</p>';
                 return;
             }
             
