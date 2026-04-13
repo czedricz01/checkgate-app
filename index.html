@@ -95,11 +95,6 @@
         .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-dark); font-size: 0.9em; text-decoration: underline; cursor: pointer; font-weight: bold; }
         .toggle-link { display: block; text-align: center; margin-top: 15px; color: var(--primary-main); font-size: 0.9em; cursor: pointer; }
         
-        .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-main); width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; border-radius: 0; }
-        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #2c3e50; color: #fff; text-align: left; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; border-radius: 0; }
-        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #2c3e50 transparent transparent transparent; }
-        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
-        
         h2 { margin-top: 10px; margin-bottom: 15px; color: var(--text-dark); text-align: center; }
         h4 { color: var(--text-dark); }
     </style>
@@ -110,7 +105,7 @@
         <div id="mainMenuContainer" class="main-menu-container">
             <button class="menu-toggle-btn" onclick="toggleMenu()">☰ Menü</button>
             <div id="menuDropdown" class="menu-dropdown-content">
-                <a onclick="navigiereZu('formPage')">Prüfung erfassen</a>
+                <a onclick="navigiereZu('formPage')">Eingang erfassen</a>
                 <a onclick="navigiereZu('statistikPage')">Statistik</a>
                 <a onclick="navigiereZu('adminPage')">Export</a>
                 <a onclick="logout()">Logout</a>
@@ -164,8 +159,21 @@
         <div id="formPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <label for="datum">Datum:</label><input type="date" id="datum">
+            
             <label for="mitarbeiter">Mitarbeiterkürzel:</label><input type="text" id="mitarbeiter" readonly>
             
+            <label for="produktkategorie">Produktkategorie:</label>
+            <div class="autocomplete-container">
+                <input type="text" id="produktkategorie" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterKategorien()" onfocus="filterKategorien()">
+                <div id="kategorieDropdown" class="dropdown-list"></div>
+            </div>
+
+            <label for="produkt">Produkt:</label>
+            <div class="autocomplete-container">
+                <input type="text" id="produkt" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterProdukte()" onfocus="filterProdukte()">
+                <div id="produktDropdown" class="dropdown-list"></div>
+            </div>
+
             <label for="lieferant">Lieferant:</label>
             <div class="autocomplete-container">
                 <input type="text" id="lieferant" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterLieferanten()" onfocus="filterLieferanten()">
@@ -268,7 +276,7 @@
                     <div id="statErrorRate" class="stat-val">0%</div>
                     <div class="error-details">
                         <strong>Mängel nach Kategorie:</strong>
-                        <ul id="errorDetailsList"><li>Keine Mängel.</li></ul>
+                        <ul id="errorDetailsList"><li>Keine Mängel erfasst.</li></ul>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -305,8 +313,9 @@
         document.getElementById('statEnde').value = `${y}-${m}-${letzterTag}`;
 
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
-        let lieferantenChronologisch = [], spediteureChronologisch = [];
-        let currentFocusLieferant = -1, currentFocusSpediteur = -1;
+        let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [];
+        let produkteNachKategorie = {};
+        let currentFocusLieferant = -1, currentFocusSpediteur = -1, currentFocusKategorie = -1, currentFocusProdukt = -1;
         let chartInstances = {};
 
         if (window.location.hash.includes('type=recovery')) zeigeSeite('setNewPasswordPage');
@@ -352,6 +361,8 @@
             if (e.target !== menuBtn && !dropdown.contains(e.target) && !menuBtn.contains(e.target)) dropdown.style.display = 'none';
             if(e.target.id !== 'lieferant') document.getElementById('lieferantDropdown').style.display = 'none'; 
             if(e.target.id !== 'spediteur') document.getElementById('spediteurDropdown').style.display = 'none'; 
+            if(e.target.id !== 'produktkategorie') document.getElementById('kategorieDropdown').style.display = 'none'; 
+            if(e.target.id !== 'produkt') document.getElementById('produktDropdown').style.display = 'none'; 
         });
 
         function toggleAuthMode(mode) {
@@ -414,15 +425,24 @@
         async function logout() { await supabaseClient.auth.signOut(); document.getElementById('mainMenuContainer').style.display = 'none'; zeigeSeite('loginPage'); }
 
         async function ladeDropdownDaten() {
-            const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, spediteur, mitarbeiter, id').order('id', { ascending: false });
+            const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, spediteur, mitarbeiter, produktkategorie, produkt, id').order('id', { ascending: false });
             if (data && !error) {
-                const uniqueLief = []; const uniqueSped = []; const uniqueMit = [];
+                const uniqueLief = [], uniqueSped = [], uniqueMit = [], uniqueKat = [], prodMap = {}, allProds = [];
                 data.forEach(row => { 
                     if (row.lieferant && !uniqueLief.includes(row.lieferant)) uniqueLief.push(row.lieferant); 
                     if (row.spediteur && !uniqueSped.includes(row.spediteur)) uniqueSped.push(row.spediteur); 
                     if (row.mitarbeiter && !uniqueMit.includes(row.mitarbeiter)) uniqueMit.push(row.mitarbeiter); 
+                    if (row.produktkategorie && !uniqueKat.includes(row.produktkategorie)) uniqueKat.push(row.produktkategorie);
+                    if (row.produkt) {
+                        if (!allProds.includes(row.produkt)) allProds.push(row.produkt);
+                        if (row.produktkategorie) {
+                            if (!prodMap[row.produktkategorie]) prodMap[row.produktkategorie] = [];
+                            if (!prodMap[row.produktkategorie].includes(row.produkt)) prodMap[row.produktkategorie].push(row.produkt);
+                        }
+                    }
                 });
                 lieferantenChronologisch = uniqueLief; spediteureChronologisch = uniqueSped;
+                kategorienChronologisch = uniqueKat; produkteNachKategorie = prodMap; alleProdukte = allProds;
                 
                 populateSelect('statLieferantFilter', uniqueLief, 'Alle Lieferanten');
                 populateSelect('statSpediteurFilter', uniqueSped, 'Alle Spediteure');
@@ -449,7 +469,7 @@
             if (filterMit) query = query.eq('mitarbeiter', filterMit);
 
             const { data, error } = await query;
-            if (error) { console.error("Fehler beim Laden:", error); return; }
+            if (error) return console.error("Fehler beim Laden:", error);
 
             document.getElementById('statTotal').innerText = data.length;
             document.getElementById('statErrorRate').innerText = "0%";
@@ -466,10 +486,8 @@
             document.getElementById('statVolume').innerText = totalVolume.toLocaleString('de-DE');
             document.getElementById('statValue').innerText = totalValue.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-            // Mängel Hover Analyse
             let countVerp = 0, countMeng = 0, countQuali = 0, countErrorItems = 0;
-            const monthData = {};
-            const liefData = {};
+            const monthData = {}; const liefData = {};
 
             data.forEach(d => {
                 const month = d.datum ? d.datum.substring(0, 7) : 'Unbekannt';
@@ -483,21 +501,13 @@
                 if (d.mengeOk === 'nein') { countMeng++; monthData[month].meng++; liefData[lief].meng++; isError = true; }
                 if (d.maengel === 'ja') { countQuali++; monthData[month].qual++; liefData[lief].qual++; isError = true; }
 
-                if (isError) countErrorItems++;
-                else { monthData[month].ok++; liefData[lief].ok++; }
-                
-                monthData[month].total++;
-                liefData[lief].total++;
+                if (isError) countErrorItems++; else { monthData[month].ok++; liefData[lief].ok++; }
+                monthData[month].total++; liefData[lief].total++;
             });
 
             document.getElementById('statErrorRate').innerText = ((countErrorItems / data.length) * 100).toFixed(1) + "%";
-            document.getElementById('errorDetailsList').innerHTML = `
-                <li>Verpackung: ${countVerp}x</li>
-                <li>Menge: ${countMeng}x</li>
-                <li>Qualität: ${countQuali}x</li>
-            `;
+            document.getElementById('errorDetailsList').innerHTML = `<li>Verpackung: ${countVerp}x</li><li>Menge: ${countMeng}x</li><li>Qualität: ${countQuali}x</li>`;
 
-            // Charts
             const sortedMonths = Object.keys(monthData).sort();
             const sortedLiefs = Object.keys(liefData).sort((a,b) => liefData[b].total - liefData[a].total).slice(0, 10);
 
@@ -509,39 +519,61 @@
             ];
 
             chartInstances['months'] = new Chart(document.getElementById('chartMonths'), {
-                type: 'bar',
-                data: { labels: sortedMonths, datasets: createDatasets(sortedMonths, monthData) },
+                type: 'bar', data: { labels: sortedMonths, datasets: createDatasets(sortedMonths, monthData) },
                 options: { scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { title: { display: true, text: 'Übersicht nach Monaten' } } }
             });
 
             chartInstances['liefs'] = new Chart(document.getElementById('chartLiefs'), {
-                type: 'bar',
-                data: { labels: sortedLiefs, datasets: createDatasets(sortedLiefs, liefData) },
+                type: 'bar', data: { labels: sortedLiefs, datasets: createDatasets(sortedLiefs, liefData) },
                 options: { scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { title: { display: true, text: 'Top Lieferanten (Gesamtprüfungen)' } } }
             });
         }
 
-        function filterLieferanten() {
-            const input = document.getElementById('lieferant').value.toLowerCase(); const dropdown = document.getElementById('lieferantDropdown'); dropdown.innerHTML = ''; currentFocusLieferant = -1;
-            let anzeigeListe = input === "" ? [...lieferantenChronologisch] : lieferantenChronologisch.filter(l => l.toLowerCase().startsWith(input)).sort((a, b) => a.localeCompare(b));
+        // AUTOCOMPLETE HELPER
+        function doFilter(inputId, dropdownId, baseList, focusVarName) {
+            const input = document.getElementById(inputId).value.toLowerCase();
+            const dropdown = document.getElementById(dropdownId);
+            dropdown.innerHTML = ''; window[focusVarName] = -1;
+            let anzeigeListe = input === "" ? [...baseList] : baseList.filter(i => i.toLowerCase().startsWith(input)).sort((a, b) => a.localeCompare(b));
             if (anzeigeListe.length === 0) { dropdown.style.display = 'none'; return; }
-            anzeigeListe.forEach(l => { let div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = l; div.onclick = function() { document.getElementById('lieferant').value = l; dropdown.style.display = 'none'; }; dropdown.appendChild(div); });
+            anzeigeListe.forEach(item => {
+                let div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = item;
+                div.onclick = function() { document.getElementById(inputId).value = item; dropdown.style.display = 'none'; };
+                dropdown.appendChild(div);
+            });
             dropdown.style.display = 'block';
         }
-        function filterSpediteure() {
-            const input = document.getElementById('spediteur').value.toLowerCase(); const dropdown = document.getElementById('spediteurDropdown'); dropdown.innerHTML = ''; currentFocusSpediteur = -1;
-            let anzeigeListe = input === "" ? [...spediteureChronologisch] : spediteureChronologisch.filter(s => s.toLowerCase().startsWith(input)).sort((a, b) => a.localeCompare(b));
-            if (anzeigeListe.length === 0) { dropdown.style.display = 'none'; return; }
-            anzeigeListe.forEach(s => { let div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = s; div.onclick = function() { document.getElementById('spediteur').value = s; dropdown.style.display = 'none'; }; dropdown.appendChild(div); });
-            dropdown.style.display = 'block';
+
+        function handleKeydown(e, dropdownId, inputId, focusVarName) {
+            let items = document.getElementById(dropdownId).getElementsByClassName('dropdown-item');
+            if (items.length > 0 && document.getElementById(dropdownId).style.display === 'block') {
+                if (e.key === 'ArrowDown') { window[focusVarName]++; setDropdownActive(items, focusVarName); e.preventDefault(); } 
+                else if (e.key === 'ArrowUp') { window[focusVarName]--; setDropdownActive(items, focusVarName); e.preventDefault(); } 
+                else if (e.key === 'Enter') { e.preventDefault(); if (window[focusVarName] > -1) items[window[focusVarName]].click(); } 
+                else if (e.key === 'Tab') { if (window[focusVarName] > -1) items[window[focusVarName]].click(); }
+            }
         }
-        document.getElementById('lieferant').addEventListener('keydown', function(e) { let items = document.getElementById('lieferantDropdown').getElementsByClassName('dropdown-item'); if (items.length > 0) { if (e.key === 'ArrowDown') { currentFocusLieferant++; addActive(items, 'lief'); e.preventDefault(); } else if (e.key === 'ArrowUp') { currentFocusLieferant--; addActive(items, 'lief'); e.preventDefault(); } else if (e.key === 'Enter') { e.preventDefault(); if (currentFocusLieferant > -1) items[currentFocusLieferant].click(); } else if (e.key === 'Tab') { if (currentFocusLieferant > -1) items[currentFocusLieferant].click(); } } });
-        document.getElementById('spediteur').addEventListener('keydown', function(e) { let items = document.getElementById('spediteurDropdown').getElementsByClassName('dropdown-item'); if (items.length > 0) { if (e.key === 'ArrowDown') { currentFocusSpediteur++; addActive(items, 'sped'); e.preventDefault(); } else if (e.key === 'ArrowUp') { currentFocusSpediteur--; addActive(items, 'sped'); e.preventDefault(); } else if (e.key === 'Enter') { e.preventDefault(); if (currentFocusSpediteur > -1) items[currentFocusSpediteur].click(); } else if (e.key === 'Tab') { if (currentFocusSpediteur > -1) items[currentFocusSpediteur].click(); } } });
-        function addActive(items, typ) {
+
+        function setDropdownActive(items, focusVarName) {
             for (let i = 0; i < items.length; i++) items[i].classList.remove('active');
-            if(typ==='lief') { if (currentFocusLieferant >= items.length) currentFocusLieferant = 0; if (currentFocusLieferant < 0) currentFocusLieferant = items.length - 1; items[currentFocusLieferant].classList.add('active'); items[currentFocusLieferant].scrollIntoView({block: "nearest"}); }
-            else { if (currentFocusSpediteur >= items.length) currentFocusSpediteur = 0; if (currentFocusSpediteur < 0) currentFocusSpediteur = items.length - 1; items[currentFocusSpediteur].classList.add('active'); items[currentFocusSpediteur].scrollIntoView({block: "nearest"}); }
+            if (window[focusVarName] >= items.length) window[focusVarName] = 0;
+            if (window[focusVarName] < 0) window[focusVarName] = items.length - 1;
+            items[window[focusVarName]].classList.add('active'); items[window[focusVarName]].scrollIntoView({block: "nearest"});
         }
+
+        function filterLieferanten() { doFilter('lieferant', 'lieferantDropdown', lieferantenChronologisch, 'currentFocusLieferant'); }
+        function filterSpediteure() { doFilter('spediteur', 'spediteurDropdown', spediteureChronologisch, 'currentFocusSpediteur'); }
+        function filterKategorien() { doFilter('produktkategorie', 'kategorieDropdown', kategorienChronologisch, 'currentFocusKategorie'); }
+        function filterProdukte() { 
+            const gewaehlteKat = document.getElementById('produktkategorie').value.trim();
+            const listToUse = (gewaehlteKat && produkteNachKategorie[gewaehlteKat]) ? produkteNachKategorie[gewaehlteKat] : alleProdukte;
+            doFilter('produkt', 'produktDropdown', listToUse, 'currentFocusProdukt'); 
+        }
+
+        document.getElementById('lieferant').addEventListener('keydown', e => handleKeydown(e, 'lieferantDropdown', 'lieferant', 'currentFocusLieferant'));
+        document.getElementById('spediteur').addEventListener('keydown', e => handleKeydown(e, 'spediteurDropdown', 'spediteur', 'currentFocusSpediteur'));
+        document.getElementById('produktkategorie').addEventListener('keydown', e => handleKeydown(e, 'kategorieDropdown', 'produktkategorie', 'currentFocusKategorie'));
+        document.getElementById('produkt').addEventListener('keydown', e => handleKeydown(e, 'produktDropdown', 'produkt', 'currentFocusProdukt'));
 
         function startScanner() { const rDiv = document.getElementById('reader'); rDiv.style.display = "block"; if (!html5QrCode) html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { document.getElementById('artikelnummer').value = text; html5QrCode.stop().then(() => rDiv.style.display = "none"); }).catch(e => alert(e)); }
         function berechneNetto() { const isBrutto = document.getElementById('preisArt').value === 'brutto'; const val = parseFloat(document.getElementById('preisEingabe').value) || 0; const anzeige = document.getElementById('nettoAnzeige'); if (isBrutto) { document.getElementById('nettoWert').innerText = (val / 1.19).toFixed(2); anzeige.style.display = 'block'; } else anzeige.style.display = 'none'; }
@@ -579,6 +611,7 @@
             }
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([{ 
                 datum: document.getElementById('datum').value, zeitstempel: erfassungsZeitstempel, mitarbeiter: document.getElementById('mitarbeiter').value, 
+                produktkategorie: document.getElementById('produktkategorie').value.trim(), produkt: document.getElementById('produkt').value.trim(),
                 lieferant: document.getElementById('lieferant').value.trim(), spediteur: document.getElementById('spediteur').value.trim(),
                 seriennummer: document.getElementById('artikelnummer').value, menge: parseInt(document.getElementById('menge').value),
                 preis: holeNettoPreis(), verpackung: document.getElementById('verpackung').value, mengeOk: document.getElementById('mengeOk').value,
@@ -598,8 +631,10 @@
             if (document.getElementById('exportMitarbeiterFilter').value) query = query.eq('mitarbeiter', document.getElementById('exportMitarbeiterFilter').value);
             const { data: logs, error } = await query;
             if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
-            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Lieferant;Spediteur;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz(%);Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\n";
-            logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.lieferant||''};${l.spediteur||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\n`);
+            
+            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Kategorie;Produkt;Lieferant;Spediteur;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz(%);Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\n";
+            logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.produktkategorie||''};${l.produkt||''};${l.lieferant||''};${l.spediteur||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\n`);
+            
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
             btn.innerText = "Daten herunterladen"; btn.disabled = false;
         }
