@@ -46,7 +46,7 @@
         
         label { display: block; margin-top: 15px; font-weight: bold; color: var(--text-dark); font-size: 0.95em; }
         
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: var(--base-font-size); border-radius: 0; background-color: var(--input-bg); color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s; }
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: var(--base-font-size); border-radius: 4px; background-color: var(--input-bg); color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s; }
         input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(74, 101, 114, 0.1); background-color: var(--bg-container); }
         input[readonly], input:disabled { background-color: #e9ecef; color: #6c757d; border-color: #ddd; cursor: not-allowed; }
         body.dark-mode input[readonly], body.dark-mode input:disabled { background-color: #333; color: #888; border-color: #555; }
@@ -82,7 +82,7 @@
         .main-menu-container { position: absolute; top: 10px; right: 10px; z-index: 100; display: none; }
         .menu-toggle-btn { background-color: var(--primary-main); color: white; border: none; padding: 8px 12px; font-size: 0.9em; cursor: pointer; border-radius: 4px; width: auto; margin: 0; }
         .menu-toggle-btn:hover { background-color: var(--primary-dark); }
-        .menu-dropdown-content { display: none; position: absolute; right: 0; top: 100%; background-color: var(--bg-container); min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); border: 1px solid var(--border-default); border-top: none; }
+        .menu-dropdown-content { display: none; position: absolute; right: 0; top: 100%; background-color: var(--bg-container); min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); border: 1px solid var(--border-default); border-top: none; z-index: 1000; }
         .menu-dropdown-content a { color: var(--text-dark); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.9em; font-weight: bold; border-bottom: 1px solid var(--border-default); cursor: pointer; }
         .menu-dropdown-content a:last-child { border-bottom: none; color: #d32f2f; }
         .menu-dropdown-content a:hover { background-color: var(--primary-light-bg); }
@@ -205,7 +205,7 @@
                 <button onclick="clearOfflineCache()" class="danger-btn">Cache löschen</button>
             </div>
 
-            <div id="ownerSection" class="action-section" style="display:none; border: 2px solid var(--action-green);">
+            <div id="ownerSection" class="action-section" style="display:none; border: 2px solid var(--action-green); padding: 15px; border-radius: 4px;">
                 <h4 style="color:var(--action-green-dark);">Benutzerverwaltung (Owner)</h4>
                 <div id="userRoleList">Lade Benutzer...</div>
             </div>
@@ -271,25 +271,25 @@
             
             <label for="produktkategorie">Produktkategorie:</label>
             <div class="autocomplete-container">
-                <input type="text" id="produktkategorie" placeholder="Tippen für Vorschläge..." oninput="filterKategorien()" onfocus="filterKategorien()">
+                <input type="text" id="produktkategorie" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterKategorien()" onfocus="filterKategorien()">
                 <div id="kategorieDropdown" class="dropdown-list"></div>
             </div>
 
             <label for="produkt">Produkt:</label>
             <div class="autocomplete-container">
-                <input type="text" id="produkt" placeholder="Tippen für Vorschläge..." oninput="filterProdukte()" onfocus="filterProdukte()">
+                <input type="text" id="produkt" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterProdukte()" onfocus="filterProdukte()">
                 <div id="produktDropdown" class="dropdown-list"></div>
             </div>
 
             <label for="lieferant">Lieferant:</label>
             <div class="autocomplete-container">
-                <input type="text" id="lieferant" placeholder="Tippen für Vorschläge..." oninput="filterLieferanten()" onfocus="filterLieferanten()">
+                <input type="text" id="lieferant" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterLieferanten()" onfocus="filterLieferanten()">
                 <div id="lieferantDropdown" class="dropdown-list"></div>
             </div>
             
             <label for="spediteur">Spediteur:</label>
             <div class="autocomplete-container">
-                <input type="text" id="spediteur" placeholder="Tippen für Vorschläge..." oninput="filterSpediteure()" onfocus="filterSpediteure()">
+                <input type="text" id="spediteur" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterSpediteure()" onfocus="filterSpediteure()">
                 <div id="spediteurDropdown" class="dropdown-list"></div>
             </div>
             
@@ -299,12 +299,12 @@
             <div id="reader"></div>
 
             <label for="menge">Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="100">
-            <label for="preisArt">Preisart:</label><select id="preisArt" onchange="berechneNetto()"><option value="netto">Netto</option><option value="brutto">Brutto</option></select>
+            <label for="preisArt">Preisart für Eingabe:</label><select id="preisArt" onchange="berechneNetto()"><option value="netto">Netto</option><option value="brutto">Brutto</option></select>
             <label for="preisEingabe">Einzelpreis (€):</label><input type="number" id="preisEingabe" min="0" step="0.01" value="0.00" oninput="berechneNetto()">
             <div id="nettoAnzeige" class="netto-box">Berechneter Nettopreis: <span id="nettoWert">0.00</span> €</div>
 
-            <label for="verpackung">Sichtprüfung: Verpackung intakt?</label><select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein</option></select>
-            <label for="mengeOk">Mengenprüfung: Korrekt?</label><select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
+            <label for="verpackung">Sichtprüfung: Verpackung intakt?</label><select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein (Transportschaden)</option></select>
+            <label for="mengeOk">Mengenprüfung: Stimmt mit Lieferschein überein?</label><select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
             
             <button onclick="geheZuPruefung()">Weiter</button>
             <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
@@ -321,7 +321,7 @@
                 <div style="margin-top:15px; font-weight:bold; font-size:1.1em; color:var(--action-green-dark);">Nötige Stichproben: <span id="stichprobenErgebnis">0</span></div>
             </div>
             
-            <label for="pruefungErfolgreich">Prüfung erfolgreich?</label><select id="pruefungErfolgreich"><option value="ja">Ja</option><option value="nein">Nein</option></select>
+            <label for="pruefungErfolgreich">War die Prüfung erfolgreich?</label><select id="pruefungErfolgreich"><option value="ja">Ja (Keine Mängel festgestellt)</option><option value="nein">Nein (Mängel oder fehlendes Zubehör)</option></select>
             <button onclick="pruefen()">Absenden</button>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
@@ -330,12 +330,12 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <div id="resultBox" class="result"></div>
             <div id="errorActions" class="action-section" style="display:none;">
-                <label for="mangelBeschreibung">Beschreibung:</label><textarea id="mangelBeschreibung" rows="4"></textarea>
-                <label for="mangelBilder">Bilder hochladen:</label><input type="file" id="mangelBilder" accept="image/*" multiple capture="environment">
-                <button id="saveBtnError" onclick="inSupabaseSpeichern(true)">Speichern & Neu</button>
+                <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label><textarea id="mangelBeschreibung" rows="4"></textarea>
+                <label for="mangelBilder">Bilder hochladen:</label><input type="file" id="mangelBilder" accept="image/*" multiple capture="environment" style="margin-top: 10px;">
+                <button id="saveBtnError" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
             </div>
             <div id="successActions" class="action-section" style="display:none;">
-                <button id="saveBtnSuccess" onclick="inSupabaseSpeichern(false)">Speichern & Neu</button>
+                <button id="saveBtnSuccess" onclick="inSupabaseSpeichern(false)">In Datenbank sichern & Neue Prüfung</button>
             </div>
         </div>
 
@@ -346,26 +346,70 @@
 
         <div id="adminPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" id="logoImgAdmin" alt="CheckGate Logo"></div>
-            <h2>Export</h2>
+            <h2>Daten-Export</h2>
             <div class="export-filter-body">
-                <label for="exportStart">Von:</label><input type="date" id="exportStart">
-                <label for="exportEnde">Bis:</label><input type="date" id="exportEnde">
-                <label for="exportSeparator">Separator:</label>
-                <select id="exportSeparator"><option value=";">Semikolon (Excel)</option><option value=",">Komma (SQL)</option></select>
+                <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
+                <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
+                <label for="exportKategorieFilter">Kategorie:</label><select id="exportKategorieFilter"><option value="">Alle Kategorien</option></select>
+                <label for="exportLieferantFilter">Lieferant:</label><select id="exportLieferantFilter"><option value="">Alle Lieferanten</option></select>
+                <label for="exportSpediteurFilter">Spediteur:</label><select id="exportSpediteurFilter"><option value="">Alle Spediteure</option></select>
+                <label for="exportMitarbeiterFilter">Mitarbeiter:</label><select id="exportMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
+                
+                <div style="border-top: 1px solid var(--border-default); margin-top: 15px; padding-top: 15px;">
+                    <label for="exportSeparator">CSV-Trennzeichen:</label>
+                    <select id="exportSeparator">
+                        <option value=";">Semikolon ( ; ) - Standard Excel</option>
+                        <option value=",">Komma ( , ) - Standard Supabase</option>
+                    </select>
+                </div>
             </div>
-            <button id="exportBtn" onclick="exportiereVonSupabase()">Download CSV</button>
+            <button id="exportBtn" onclick="exportiereVonSupabase()">Daten herunterladen</button>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
 
         <div id="statistikPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" id="logoImgStat" alt="CheckGate Logo"></div>
             <h2>Statistik</h2>
-            <div class="stat-grid">
-                <div class="stat-card"><h3>Gesamt</h3><div id="statTotal" class="stat-val">0</div></div>
-                <div class="stat-card error-card"><h3>Mängel</h3><div id="statErrorRate" class="stat-val">0%</div></div>
+            
+            <div class="filter-toggle-header" onclick="toggleStatsFilter()">Filter einstellen <span id="filterArrow">▼</span></div>
+            <div id="statsFilterBody" class="filter-body">
+                <label for="statStart">Von:</label><input type="date" id="statStart">
+                <label for="statEnde">Bis:</label><input type="date" id="statEnde">
+                <label for="statKategorieFilter">Kategorie:</label><select id="statKategorieFilter"><option value="">Alle Kategorien</option></select>
+                <label for="statLieferantFilter">Lieferant:</label><select id="statLieferantFilter"><option value="">Alle Lieferanten</option></select>
+                <label for="statSpediteurFilter">Spediteur:</label><select id="statSpediteurFilter"><option value="">Alle Spediteure</option></select>
+                <label for="statMitarbeiterFilter">Mitarbeiter:</label><select id="statMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
+                <button class="camera-btn" onclick="ladeStatistiken()">Aktualisieren</button>
             </div>
-            <div class="chart-container"><div class="chart-wrapper"><canvas id="chartMonths"></canvas></div></div>
-            <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
+
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <h3>Gesamtprüfungen</h3>
+                    <div id="statTotal" class="stat-val">0</div>
+                </div>
+                <div class="stat-card error-card" onclick="this.classList.toggle('active')">
+                    <h3>Mängelquote</h3>
+                    <div id="statErrorRate" class="stat-val">0%</div>
+                    <div class="error-details">
+                        <strong>Mängel nach Kategorie:</strong>
+                        <ul id="errorDetailsList"><li>Keine Mängel erfasst.</li></ul>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <h3>Volumen (Stk)</h3>
+                    <div id="statVolume" class="stat-val">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Wert (€)</h3>
+                    <div id="statValue" class="stat-val">0</div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <div class="chart-wrapper"><canvas id="chartMonths"></canvas></div>
+                <div class="chart-wrapper"><canvas id="chartKategorien"></canvas></div>
+                <div class="chart-wrapper"><canvas id="chartLiefs"></canvas></div>
+            </div>
         </div>
     </div>
 
@@ -376,9 +420,24 @@
 
         let currentUserRole = 'user';
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
-        let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [], produkteNachKategorie = {}, chartInstances = {};
+        let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [], uniqueMit = [];
+        let produkteNachKategorie = {}, chartInstances = {};
 
-        // INITIALISIERUNG
+        // DATUMS-INITIALISIERUNG
+        function initDates() {
+            const heute = new Date();
+            const y = heute.getFullYear();
+            const m = String(heute.getMonth() + 1).padStart(2, '0');
+            const letzterTag = new Date(y, heute.getMonth() + 1, 0).getDate();
+            
+            document.getElementById('datum').valueAsDate = heute;
+            document.getElementById('exportStart').value = `${y}-${m}-01`;
+            document.getElementById('exportEnde').value = `${y}-${m}-${letzterTag}`;
+            document.getElementById('statStart').value = `${y}-01-01`;
+            document.getElementById('statEnde').value = `${y}-12-31`;
+        }
+
+        // INITIALISIERUNG SETTINGS
         function initSettings() {
             const isDark = localStorage.getItem('checkgate_darkmode') === 'true';
             if (isDark) document.body.classList.add('dark-mode');
@@ -404,6 +463,7 @@
             localStorage.setItem('checkgate_darkmode', isDark);
             document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
             updateLogoSource(isDark);
+            if(document.getElementById('statistikPage').style.display === 'block') ladeStatistiken();
         }
 
         function setFontSize(size) {
@@ -428,7 +488,9 @@
 
                 let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
                 
-                if (error || !data) {
+                if (error) console.error("DEBUG: Fehler beim Rollen-Abruf:", error.message);
+
+                if (!data) {
                     console.log("DEBUG: Kein Rollen-Eintrag, erstelle Standard-User.");
                     await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
                     currentUserRole = 'user';
@@ -458,8 +520,8 @@
             data.forEach(user => {
                 list.innerHTML += `
                     <div class="setting-row">
-                        <label>${user.kuerzel}</label>
-                        <select onchange="updateRolle('${user.kuerzel}', this.value)" style="width:auto;">
+                        <label style="margin:0;">${user.kuerzel}</label>
+                        <select onchange="updateRolle('${user.kuerzel}', this.value)" style="width:auto; padding:8px; margin:0;">
                             <option value="user" ${user.role==='user'?'selected':''}>User</option>
                             <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
                             <option value="owner" ${user.role==='owner'?'selected':''}>Owner</option>
@@ -471,6 +533,178 @@
         async function updateRolle(k, r) {
             const { error } = await supabaseClient.from('benutzer_rollen').update({ role: r }).eq('kuerzel', k);
             if (error) showMessage("Fehler: " + error.message, true); else showMessage("Rolle aktualisiert.");
+        }
+
+        // DATEN FÜR FILTER LADEN
+        async function ladeDropdownDaten() {
+            const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, spediteur, mitarbeiter, produktkategorie, produkt').limit(2000);
+            if (data && !error) {
+                const uniqueLief = [], uniqueSped = [], uniqueKat = [], prodMap = {}, allProds = [];
+                uniqueMit = [];
+
+                data.forEach(row => { 
+                    if (row.lieferant && !uniqueLief.includes(row.lieferant)) uniqueLief.push(row.lieferant); 
+                    if (row.spediteur && !uniqueSped.includes(row.spediteur)) uniqueSped.push(row.spediteur); 
+                    if (row.mitarbeiter && !uniqueMit.includes(row.mitarbeiter)) uniqueMit.push(row.mitarbeiter); 
+                    if (row.produktkategorie && !uniqueKat.includes(row.produktkategorie)) uniqueKat.push(row.produktkategorie);
+                    if (row.produkt) {
+                        if (!allProds.includes(row.produkt)) allProds.push(row.produkt);
+                        if (row.produktkategorie) {
+                            if (!prodMap[row.produktkategorie]) prodMap[row.produktkategorie] = [];
+                            if (!prodMap[row.produktkategorie].includes(row.produkt)) prodMap[row.produktkategorie].push(row.produkt);
+                        }
+                    }
+                });
+                
+                lieferantenChronologisch = uniqueLief; spediteureChronologisch = uniqueSped;
+                kategorienChronologisch = uniqueKat; produkteNachKategorie = prodMap; alleProdukte = allProds;
+                
+                populateSelect('statKategorieFilter', uniqueKat, 'Alle Kategorien');
+                populateSelect('statLieferantFilter', uniqueLief, 'Alle Lieferanten');
+                populateSelect('statSpediteurFilter', uniqueSped, 'Alle Spediteure');
+                populateSelect('statMitarbeiterFilter', uniqueMit, 'Alle Mitarbeiter');
+                
+                populateSelect('exportKategorieFilter', uniqueKat, 'Alle Kategorien');
+                populateSelect('exportLieferantFilter', uniqueLief, 'Alle Lieferanten');
+                populateSelect('exportSpediteurFilter', uniqueSped, 'Alle Spediteure');
+                populateSelect('exportMitarbeiterFilter', uniqueMit, 'Alle Mitarbeiter');
+            }
+        }
+
+        function populateSelect(elementId, items, defaultText) {
+            const select = document.getElementById(elementId);
+            select.innerHTML = `<option value="">${defaultText}</option>`;
+            items.sort().forEach(item => select.add(new Option(item, item)));
+        }
+
+        // STATISTIKEN BERECHNEN & ANZEIGEN
+        async function ladeStatistiken() {
+            const start = document.getElementById('statStart').value; 
+            const ende = document.getElementById('statEnde').value;
+            const filterKat = document.getElementById('statKategorieFilter').value;
+            const filterLief = document.getElementById('statLieferantFilter').value; 
+            const filterSped = document.getElementById('statSpediteurFilter').value; 
+            const filterMit = document.getElementById('statMitarbeiterFilter').value;
+
+            let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
+            if (filterKat) query = query.eq('produktkategorie', filterKat);
+            if (filterLief) query = query.eq('lieferant', filterLief);
+            if (filterSped) query = query.eq('spediteur', filterSped);
+            if (filterMit) query = query.eq('mitarbeiter', filterMit);
+
+            const { data, error } = await query;
+            if (error) return console.error("Fehler beim Laden der Statistik:", error);
+
+            document.getElementById('statTotal').innerText = data.length;
+            document.getElementById('statErrorRate').innerText = "0%";
+            document.getElementById('errorDetailsList').innerHTML = "<li>Keine Mängel erfasst.</li>";
+            document.getElementById('statVolume').innerText = "0"; document.getElementById('statValue').innerText = "0";
+
+            if(chartInstances['months']) chartInstances['months'].destroy();
+            if(chartInstances['kategorien']) chartInstances['kategorien'].destroy();
+            if(chartInstances['liefs']) chartInstances['liefs'].destroy();
+
+            if (data.length === 0) return;
+
+            const totalVolume = data.reduce((sum, item) => sum + (parseInt(item.menge) || 0), 0);
+            const totalValue = data.reduce((sum, item) => sum + ((parseFloat(item.preis) || 0) * (parseInt(item.menge) || 0)), 0);
+            document.getElementById('statVolume').innerText = totalVolume.toLocaleString('de-DE');
+            document.getElementById('statValue').innerText = totalValue.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            let countVerp = 0, countMeng = 0, countQuali = 0, countErrorItems = 0;
+            const monthData = {}; const liefData = {}; const katData = {};
+
+            data.forEach(d => {
+                const month = d.datum ? d.datum.substring(0, 7) : 'Unbekannt';
+                const lief = d.lieferant || 'Unbekannt';
+                const kat = d.produktkategorie || 'Unbekannt';
+                
+                if (!monthData[month]) monthData[month] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
+                if (!liefData[lief]) liefData[lief] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
+                if (!katData[kat]) katData[kat] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
+
+                let isError = false;
+                if (d.verpackung === 'nein') { countVerp++; monthData[month].verp++; liefData[lief].verp++; katData[kat].verp++; isError = true; }
+                if (d.mengeOk === 'nein') { countMeng++; monthData[month].meng++; liefData[lief].meng++; katData[kat].meng++; isError = true; }
+                if (d.maengel === 'ja') { countQuali++; monthData[month].qual++; liefData[lief].qual++; katData[kat].qual++; isError = true; }
+
+                if (isError) countErrorItems++; 
+                else { monthData[month].ok++; liefData[lief].ok++; katData[kat].ok++; }
+                
+                monthData[month].total++; liefData[lief].total++; katData[kat].total++;
+            });
+
+            document.getElementById('statErrorRate').innerText = ((countErrorItems / data.length) * 100).toFixed(1) + "%";
+            document.getElementById('errorDetailsList').innerHTML = `<li>Verpackung: ${countVerp}x</li><li>Menge: ${countMeng}x</li><li>Qualität: ${countQuali}x</li>`;
+
+            const sortedMonths = Object.keys(monthData).sort();
+            const sortedKats = Object.keys(katData).sort((a,b) => katData[b].total - katData[a].total).slice(0, 10);
+            const sortedLiefs = Object.keys(liefData).sort((a,b) => liefData[b].total - liefData[a].total).slice(0, 10);
+
+            const isDark = document.body.classList.contains('dark-mode');
+            const colorText = isDark ? '#e0e0e0' : '#111';
+
+            const createDatasets = (keys, dataObj) => [
+                { label: 'Mängelfrei', data: keys.map(k => dataObj[k].ok), backgroundColor: '#4caf50' },
+                { label: 'Verpackung', data: keys.map(k => dataObj[k].verp), backgroundColor: '#d32f2f' },
+                { label: 'Menge', data: keys.map(k => dataObj[k].meng), backgroundColor: '#ff9800' },
+                { label: 'Qualität', data: keys.map(k => dataObj[k].qual), backgroundColor: '#1976d2' }
+            ];
+
+            const chartOptions = (title) => ({
+                scales: { 
+                    x: { stacked: true, ticks: { color: colorText } }, 
+                    y: { stacked: true, ticks: { color: colorText } } 
+                }, 
+                plugins: { 
+                    title: { display: true, text: title, color: colorText },
+                    legend: { labels: { color: colorText } }
+                }
+            });
+
+            chartInstances['months'] = new Chart(document.getElementById('chartMonths'), {
+                type: 'bar', data: { labels: sortedMonths, datasets: createDatasets(sortedMonths, monthData) },
+                options: chartOptions('Übersicht nach Monaten')
+            });
+
+            chartInstances['kategorien'] = new Chart(document.getElementById('chartKategorien'), {
+                type: 'bar', data: { labels: sortedKats, datasets: createDatasets(sortedKats, katData) },
+                options: chartOptions('Top Produktkategorien')
+            });
+
+            chartInstances['liefs'] = new Chart(document.getElementById('chartLiefs'), {
+                type: 'bar', data: { labels: sortedLiefs, datasets: createDatasets(sortedLiefs, liefData) },
+                options: chartOptions('Top Lieferanten')
+            });
+        }
+
+        // CSV EXPORT LOGIK
+        async function exportiereVonSupabase() {
+            const btn = document.getElementById('exportBtn'); btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
+            
+            const start = document.getElementById('exportStart').value;
+            const ende = document.getElementById('exportEnde').value;
+            const filterKat = document.getElementById('exportKategorieFilter').value;
+            const filterLief = document.getElementById('exportLieferantFilter').value;
+            const filterSped = document.getElementById('exportSpediteurFilter').value;
+            const filterMit = document.getElementById('exportMitarbeiterFilter').value;
+            const sep = document.getElementById('exportSeparator').value;
+
+            let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
+            if (filterKat) query = query.eq('produktkategorie', filterKat);
+            if (filterLief) query = query.eq('lieferant', filterLief);
+            if (filterSped) query = query.eq('spediteur', filterSped);
+            if (filterMit) query = query.eq('mitarbeiter', filterMit);
+
+            const { data: logs, error } = await query;
+            if (error || !logs || !logs.length) { showMessage("Keine Daten für diesen Zeitraum gefunden.", true); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
+            
+            let csv = `Datum${sep}Exakte_Uhrzeit${sep}Mitarbeiter${sep}Kategorie${sep}Produkt${sep}Lieferant${sep}Spediteur${sep}Artikelnummer${sep}Menge${sep}Netto_Preis${sep}Prüfart${sep}Fehlerakzeptanz(%)${sep}Erwartungswertfaktor${sep}Nötige_Stichproben${sep}Status${sep}Beschreibung${sep}Bilder_Links\n`;
+            
+            logs.forEach(l => csv += `${l.datum}${sep}${l.zeitstempel||''}${sep}${l.mitarbeiter||''}${sep}${l.produktkategorie||''}${sep}${l.produkt||''}${sep}${l.lieferant||''}${sep}${l.spediteur||''}${sep}${l.seriennummer}${sep}${l.menge}${sep}${l.preis}${sep}${l.pruefart||''}${sep}${l.fehlerakzeptanz||''}${sep}${l.erwartungswertfaktor||''}${sep}${l.stichproben_anzahl||''}${sep}${l.status}${sep}"${l.beschreibung||''}"${sep}"${l.bilder_urls||''}"\n`);
+            
+            const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
+            btn.innerText = "Daten herunterladen"; btn.disabled = false;
         }
 
         // HISTORIE (Letzte 14 Tage)
@@ -491,8 +725,8 @@
             data.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'history-item';
-                div.innerHTML = `<div><strong>${item.zeitstempel ? item.zeitstempel.split(' ')[1] : item.datum} - ${item.produkt}</strong><br>${item.lieferant} | Status: ${item.status}</div>
-                                <button class="danger-btn" style="width:auto;" onclick="loescheEintrag(${item.id})">Löschen</button>`;
+                div.innerHTML = `<div><strong>${item.zeitstempel ? item.zeitstempel.split(' ')[1] : item.datum} - ${item.produkt}</strong><br>${item.lieferant} | Status: <span style="color: ${item.status === 'Gesperrt' ? '#ef5350' : 'var(--action-green)'}">${item.status}</span></div>
+                                <button class="danger-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;" onclick="loescheEintrag(${item.id})">Löschen</button>`;
                 list.appendChild(div);
             });
         }
@@ -500,18 +734,18 @@
         async function loescheEintrag(id) {
             if(!confirm("Eintrag wirklich löschen?")) return;
             const { error } = await supabaseClient.from('wareneingang').delete().eq('id', id);
-            if(error) showMessage("Fehler: " + error.message, true); else { showMessage("Gelöscht."); ladeHistorie(); }
+            if(error) showMessage("Fehler: " + error.message, true); else { showMessage("Gelöscht."); ladeHistorie(); ladeDropdownDaten(); }
         }
 
         // NAVIGATION & CORE FUNCTIONS
         function zeigeSeite(id) {
-            ['loginPage', 'setupProfilePage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(p => document.getElementById(p).style.display = 'none');
+            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(p => document.getElementById(p).style.display = 'none');
             document.getElementById(id).style.display = 'block';
         }
 
         function navigiereZu(id) {
             zeigeSeite(id);
-            document.getElementById('mainMenuContainer').style.display = (id === 'loginPage' || id === 'setupProfilePage') ? 'none' : 'block';
+            document.getElementById('mainMenuContainer').style.display = (id === 'loginPage' || id === 'setupProfilePage' || id === 'setNewPasswordPage') ? 'none' : 'block';
             if (id === 'statistikPage') ladeStatistiken();
             if (id === 'historyPage') ladeHistorie();
         }
@@ -520,8 +754,74 @@
             const d = document.getElementById('menuDropdown');
             d.style.display = d.style.display === 'block' ? 'none' : 'block';
         }
+        
+        function toggleStatsFilter() {
+            const body = document.getElementById('statsFilterBody');
+            const arrow = document.getElementById('filterArrow');
+            if (body.style.display === 'block') { body.style.display = 'none'; arrow.innerText = '▼'; } 
+            else { body.style.display = 'block'; arrow.innerText = '▲'; }
+        }
 
-        // LOGIN / AUTH (Standard Logik beibehalten)
+        // DATEN SPEICHERN (ONLINE/OFFLINE)
+        async function inSupabaseSpeichern(isError) {
+            const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess'); 
+            btn.innerText = "Verarbeite..."; btn.disabled = true;
+            
+            let bilderUrls = []; 
+            const files = document.getElementById('mangelBilder').files;
+            
+            if (isError && files.length > 0 && navigator.onLine) {
+                for (let file of files) {
+                    const fn = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
+                    const { error } = await supabaseClient.storage.from('maengelbilder').upload(fn, file);
+                    if (!error) bilderUrls.push(supabaseClient.storage.from('maengelbilder').getPublicUrl(fn).data.publicUrl);
+                }
+            }
+
+            const payload = { 
+                datum: document.getElementById('datum').value, 
+                zeitstempel: erfassungsZeitstempel, 
+                mitarbeiter: document.getElementById('mitarbeiter').value, 
+                produktkategorie: document.getElementById('produktkategorie').value.trim(), 
+                produkt: document.getElementById('produkt').value.trim(),
+                lieferant: document.getElementById('lieferant').value.trim(), 
+                spediteur: document.getElementById('spediteur').value.trim(),
+                seriennummer: document.getElementById('artikelnummer').value, 
+                menge: parseInt(document.getElementById('menge').value),
+                preis: holeNettoPreis(), 
+                verpackung: document.getElementById('verpackung').value, 
+                mengeOk: document.getElementById('mengeOk').value,
+                maengel: document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja', 
+                pruefart: aktuellePruefart, 
+                fehlerakzeptanz: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('fehlerakzeptanz').value) : null, 
+                erwartungswertfaktor: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('erwartungswertfaktor').value) : null,
+                stichproben_anzahl: berechneteStichproben || null, 
+                status: currentStatus, 
+                beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
+                bilder_urls: bilderUrls.join(',')
+            };
+
+            if (!navigator.onLine) {
+                let cache = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
+                cache.push(payload);
+                localStorage.setItem('offlineWareneingang', JSON.stringify(cache));
+                showMessage("Offline gespeichert.");
+            } else {
+                const { error } = await supabaseClient.from('wareneingang').insert([payload]);
+                if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Gespeichert.");
+                ladeDropdownDaten();
+            }
+            
+            if (localStorage.getItem('checkgate_autofill') !== 'true') {
+                ['produkt','lieferant','spediteur','produktkategorie','artikelnummer'].forEach(id => document.getElementById(id).value = '');
+            } else document.getElementById('artikelnummer').value = '';
+            
+            btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
+            updateOfflineStatus();
+            navigiereZu('formPage');
+        }
+
+        // WEITERE LOGIK (Login, Formular-Berechnungen, Scanner)
         async function login() {
             const e = document.getElementById('email').value; const p = document.getElementById('passwort').value;
             const btn = document.getElementById('loginBtn'); btn.disabled = true;
@@ -531,7 +831,6 @@
 
         async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
 
-        // SCANNER & TOOLS
         function startScanner() {
             const r = document.getElementById('reader'); r.style.display = "block";
             if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
@@ -550,7 +849,6 @@
             } else alert(msg);
         }
 
-        // FORM LOGIK (Gleiches Schema wie vorher)
         function berechneNetto() {
             const isBrutto = document.getElementById('preisArt').value === 'brutto';
             const val = parseFloat(document.getElementById('preisEingabe').value) || 0;
@@ -560,108 +858,105 @@
             } else document.getElementById('nettoAnzeige').style.display = 'none';
         }
 
+        function holeNettoPreis() { const val = parseFloat(document.getElementById('preisEingabe').value) || 0; return document.getElementById('preisArt').value === 'brutto' ? parseFloat((val / 1.19).toFixed(2)) : val; }
+
         function updateStichproben() {
             const m = parseInt(document.getElementById('menge').value) || 1;
             const fa = (parseFloat(document.getElementById('fehlerakzeptanz').value) || 0) / 100;
             const ef = parseFloat(document.getElementById('erwartungswertfaktor').value) || 1.0;
-            let res = Math.ceil((m * fa) * ef + 2); // Vereinfachte Formel für Beispiel
-            if (res > m) res = m;
-            berechneteStichproben = res;
-            document.getElementById('stichprobenErgebnis').innerText = res;
+            let maxFehler = m * fa, sum = 0, stich = 0, rest = m;
+            while (sum <= ef && rest > 0) { sum += maxFehler / rest; stich++; rest--; }
+            berechneteStichproben = stich; document.getElementById('stichprobenErgebnis').innerText = stich;
         }
 
-        async function inSupabaseSpeichern(isError) {
-            const payload = { 
-                datum: document.getElementById('datum').value, 
-                mitarbeiter: document.getElementById('mitarbeiter').value,
-                produkt: document.getElementById('produkt').value,
-                lieferant: document.getElementById('lieferant').value,
-                spediteur: document.getElementById('spediteur').value,
-                produktkategorie: document.getElementById('produktkategorie').value,
-                seriennummer: document.getElementById('artikelnummer').value,
-                menge: parseInt(document.getElementById('menge').value),
-                status: isError ? 'Gesperrt' : 'Freigegeben',
-                zeitstempel: new Date().toLocaleString('de-DE')
-            };
-
-            if (!navigator.onLine) {
-                let cache = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
-                cache.push(payload);
-                localStorage.setItem('offlineWareneingang', JSON.stringify(cache));
-                showMessage("Offline gespeichert.");
-            } else {
-                const { error } = await supabaseClient.from('wareneingang').insert([payload]);
-                if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Gespeichert.");
-            }
-            
-            if (localStorage.getItem('checkgate_autofill') !== 'true') {
-                ['produkt','lieferant','spediteur','produktkategorie','artikelnummer'].forEach(id => document.getElementById(id).value = '');
-            } else document.getElementById('artikelnummer').value = '';
-            
-            updateOfflineStatus();
-            navigiereZu('formPage');
+        function geheZuPruefung() {
+            if (!document.getElementById('mitarbeiter').value.trim() || !document.getElementById('artikelnummer').value.trim() || !document.getElementById('lieferant').value.trim() || !document.getElementById('spediteur').value.trim()) return alert("Alle Felder (Mitarbeiter, Artikel, Lieferant, Spediteur) sind Pflichtfelder.");
+            const p = holeNettoPreis();
+            aktuellePruefart = p >= 750 ? "100% Vollprüfung" : "Stichprobenprüfung";
+            document.getElementById('pruefungsAnweisung').innerText = "Bitte machen Sie eine " + aktuellePruefart + ".";
+            document.getElementById('pruefungErfolgreich').value = 'ja';
+            document.getElementById('stichprobenRechner').style.display = p >= 750 ? 'none' : 'block';
+            if (p < 750) updateStichproben(); else berechneteStichproben = 0;
+            if (html5QrCode?.isScanning) html5QrCode.stop();
+            navigiereZu('pruefungPage');
         }
 
-        function updateOfflineStatus() {
-            const c = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]').length;
-            document.getElementById('offlineCountBadge').innerText = c;
+        function pruefen() {
+            const j = new Date(); erfassungsZeitstempel = j.toLocaleDateString('de-DE') + ' ' + j.toLocaleTimeString('de-DE');
+            let err = (document.getElementById('verpackung').value==='nein' || document.getElementById('mengeOk').value==='nein' || document.getElementById('pruefungErfolgreich').value==='nein');
+            currentStatus = err ? "Gesperrt" : "Freigegeben";
+            const rb = document.getElementById('resultBox'); rb.className = 'result'; rb.classList.add(err ? 'error' : 'success'); rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
+            document.getElementById('successActions').style.display = err ? 'none' : 'block'; document.getElementById('errorActions').style.display = err ? 'block' : 'none';
+            navigiereZu('resultPage');
         }
 
-        async function syncOfflineDaten() {
-            let cache = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
-            if (!cache.length) return showMessage("Nichts zu synchronisieren.");
-            for (let item of cache) await supabaseClient.from('wareneingang').insert([item]);
-            localStorage.removeItem('offlineWareneingang');
-            updateOfflineStatus();
-            showMessage("Synchronisation abgeschlossen.");
-        }
+        // EVENT LISTENER FÜR KLICKS OUTSIDE DROPDOWNS
+        document.addEventListener('click', function(e) {
+            const menuBtn = document.querySelector('.menu-toggle-btn');
+            const dropdown = document.getElementById('menuDropdown');
+            if (e.target !== menuBtn && !dropdown.contains(e.target) && !menuBtn.contains(e.target)) dropdown.style.display = 'none';
+            if(e.target.id !== 'lieferant') document.getElementById('lieferantDropdown').style.display = 'none'; 
+            if(e.target.id !== 'spediteur') document.getElementById('spediteurDropdown').style.display = 'none'; 
+            if(e.target.id !== 'produktkategorie') document.getElementById('kategorieDropdown').style.display = 'none'; 
+            if(e.target.id !== 'produkt') document.getElementById('produktDropdown').style.display = 'none'; 
+        });
 
-        function clearOfflineCache() { if(confirm("Cache leeren?")) { localStorage.removeItem('offlineWareneingang'); updateOfflineStatus(); } }
-
-        // Hilfsfunktionen (Autocomplete etc.)
-        async function ladeDropdownDaten() {
-            const { data } = await supabaseClient.from('wareneingang').select('lieferant, spediteur, produktkategorie, produkt').limit(500);
-            if (data) {
-                kategorienChronologisch = [...new Set(data.map(i => i.produktkategorie))];
-                lieferantenChronologisch = [...new Set(data.map(i => i.lieferant))];
-                spediteureChronologisch = [...new Set(data.map(i => i.spediteur))];
-                alleProdukte = [...new Set(data.map(i => i.produkt))];
-            }
-        }
-
+        // AUTOCOMPLETE LOGIK
         function filterKategorien() { doFilter('produktkategorie', 'kategorieDropdown', kategorienChronologisch); }
         function filterLieferanten() { doFilter('lieferant', 'lieferantDropdown', lieferantenChronologisch); }
         function filterSpediteure() { doFilter('spediteur', 'spediteurDropdown', spediteureChronologisch); }
-        function filterProdukte() { doFilter('produkt', 'produktDropdown', alleProdukte); }
+        function filterProdukte() { 
+            const k = document.getElementById('produktkategorie').value;
+            doFilter('produkt', 'produktDropdown', k && produkteNachKategorie[k] ? produkteNachKategorie[k] : alleProdukte); 
+        }
 
         function doFilter(inputId, dropdownId, list) {
             const val = document.getElementById(inputId).value.toLowerCase();
-            const d = document.getElementById(dropdownId);
-            d.innerHTML = '';
+            const d = document.getElementById(dropdownId); d.innerHTML = '';
             const filtered = list.filter(i => i && i.toLowerCase().includes(val));
             if (!filtered.length) return d.style.display = 'none';
             filtered.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'dropdown-item';
-                div.innerText = item;
+                const div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = item;
                 div.onclick = () => { document.getElementById(inputId).value = item; d.style.display = 'none'; };
                 d.appendChild(div);
             });
             d.style.display = 'block';
         }
 
-        function geheZuPruefung() {
-            const p = parseFloat(document.getElementById('preisEingabe').value) || 0;
-            aktuellePruefart = p >= 750 ? "100% Vollprüfung" : "Stichprobenprüfung";
-            document.getElementById('pruefungsAnweisung').innerText = "Bitte führen Sie eine " + aktuellePruefart + " durch.";
-            document.getElementById('stichprobenRechner').style.display = p >= 750 ? 'none' : 'block';
-            if (p < 750) updateStichproben();
-            navigiereZu('pruefungPage');
+        // SONSTIGES
+        function toggleAuthMode(m) {
+            document.getElementById('loginForm').style.display = m === 'login' ? 'block' : 'none';
+            document.getElementById('requestForm').style.display = m === 'request' ? 'block' : 'none';
+            document.getElementById('forgotPasswordForm').style.display = m === 'reset' ? 'block' : 'none';
+        }
+        
+        async function requestPasswordReset() {
+            const email = document.getElementById('resetEmail').value.trim();
+            if (!email) return alert("Bitte E-Mail angeben.");
+            await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+            alert("Link gesendet."); toggleAuthMode('login');
         }
 
-        function pruefen() { navigiereZu('resultPage'); document.getElementById('resultBox').innerText = "ERGEBNIS ERFASST"; document.getElementById(document.getElementById('pruefungErfolgreich').value === 'ja' ? 'successActions' : 'errorActions').style.display = 'block'; }
+        async function saveNewPassword() {
+            const pwd = document.getElementById('recoveryPassword').value;
+            await supabaseClient.auth.updateUser({ password: pwd });
+            alert("Passwort aktualisiert!"); window.history.replaceState(null, null, ' '); checkSession();
+        }
 
-        window.onload = () => { initSettings(); checkSession(); };
+        async function sendeAnfrage() {
+            const name = document.getElementById('reqName').value.trim(); const email = document.getElementById('reqEmail').value.trim();
+            await supabaseClient.from('zugangsanfragen').insert([{ email: email, mitarbeiter: name, anmerkung: document.getElementById('reqAnmerkung').value }]);
+            alert("Anfrage gesendet!"); toggleAuthMode('login');
+        }
+
+        async function saveProfile() {
+            const nK = document.getElementById('newKuerzel').value.trim(); const p = document.getElementById('newPassword').value;
+            await supabaseClient.auth.updateUser({ password: p, data: { kuerzel: nK } });
+            document.getElementById('mitarbeiter').value = nK; navigiereZu('formPage');
+        }
+
+        // START
+        window.onload = () => { initDates(); initSettings(); checkSession(); };
     </script>
 </body>
 </html>
