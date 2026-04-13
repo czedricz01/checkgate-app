@@ -58,7 +58,7 @@
         .dropdown-item:hover, .dropdown-item.active { background-color: var(--primary-light-bg); color: var(--primary-dark); font-weight: bold; }
         body.dark-mode .dropdown-item:hover, body.dark-mode .dropdown-item.active { color: #fff; }
 
-        button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 0; transition: background-color 0.2s; }
+        button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 4px; transition: background-color 0.2s; }
         button:hover:not(:disabled) { background-color: var(--action-green-dark); }
         button:disabled { background-color: #9e9e9e; cursor: not-allowed; }
         
@@ -70,7 +70,7 @@
         button.danger-btn { background-color: #d32f2f; margin-top: 5px;}
         button.danger-btn:hover:not(:disabled) { background-color: #b71c1c; }
         
-        .result { padding: 20px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; border-radius: 0; color: var(--text-dark); }
+        .result { padding: 20px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; border-radius: 4px; color: var(--text-dark); }
         .success { background-color: #e8f5e9; color: #1b5e20; border: 2px solid #4caf50; }
         .error { background-color: #ffebee; color: #b71c1c; border: 2px solid #ef5350; }
         body.dark-mode .success { background-color: #1b5e20; color: #e8f5e9; }
@@ -80,38 +80,38 @@
         #reader { width: 100%; margin-top: 15px; display: none; }
         
         .main-menu-container { position: absolute; top: 10px; right: 10px; z-index: 100; display: none; }
-        .menu-toggle-btn { background-color: var(--primary-main); color: white; border: none; padding: 8px 12px; font-size: 0.9em; cursor: pointer; border-radius: 0; width: auto; margin: 0; }
+        .menu-toggle-btn { background-color: var(--primary-main); color: white; border: none; padding: 8px 12px; font-size: 0.9em; cursor: pointer; border-radius: 4px; width: auto; margin: 0; }
         .menu-toggle-btn:hover { background-color: var(--primary-dark); }
         .menu-dropdown-content { display: none; position: absolute; right: 0; top: 100%; background-color: var(--bg-container); min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); border: 1px solid var(--border-default); border-top: none; }
         .menu-dropdown-content a { color: var(--text-dark); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.9em; font-weight: bold; border-bottom: 1px solid var(--border-default); cursor: pointer; }
         .menu-dropdown-content a:last-child { border-bottom: none; color: #d32f2f; }
         .menu-dropdown-content a:hover { background-color: var(--primary-light-bg); }
         
-        .instruction-box { background-color: var(--primary-light-bg); color: var(--primary-dark); padding: 15px; border-left: 5px solid var(--primary-main); margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; border-radius: 0; }
+        .instruction-box { background-color: var(--primary-light-bg); color: var(--primary-dark); padding: 15px; border-left: 5px solid var(--primary-main); margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; border-radius: 4px; }
         body.dark-mode .instruction-box { color: #fff; }
         
-        .netto-box { display: none; padding: 10px; background-color: var(--bg-container); border: 1px solid var(--action-green); margin-top: 5px; color: var(--action-green); font-weight: bold; border-radius: 0; }
-        .calc-box { background-color: var(--primary-light-bg); border: 1px solid var(--border-default); padding: 15px; margin-bottom: 20px; border-radius: 0; }
+        .netto-box { display: none; padding: 10px; background-color: var(--bg-container); border: 1px solid var(--action-green); margin-top: 5px; color: var(--action-green); font-weight: bold; border-radius: 4px; }
+        .calc-box { background-color: var(--primary-light-bg); border: 1px solid var(--border-default); padding: 15px; margin-bottom: 20px; border-radius: 4px; }
         
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .stat-card { background-color: var(--primary-light-bg); padding: 15px; text-align: center; border: 1px solid var(--primary-main); position: relative; cursor: default; }
+        .stat-card { background-color: var(--primary-light-bg); padding: 15px; text-align: center; border: 1px solid var(--primary-main); position: relative; cursor: default; border-radius: 4px; }
         .stat-card h3 { margin: 0 0 5px 0; font-size: 0.9em; color: var(--primary-dark); }
         body.dark-mode .stat-card h3 { color: #fff; }
         .stat-card .stat-val { font-size: 1.5em; font-weight: bold; color: var(--action-green); }
         .stat-card.error-card { cursor: pointer; }
         .stat-card.error-card .stat-val { color: #ef5350; }
         
-        .error-details { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-container); border: 1px solid #d32f2f; padding: 10px; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: left; font-size: 0.85em; font-weight: normal; color: var(--text-dark); }
+        .error-details { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-container); border: 1px solid #d32f2f; padding: 10px; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: left; font-size: 0.85em; font-weight: normal; color: var(--text-dark); border-radius: 4px;}
         .stat-card.error-card:hover .error-details, .stat-card.error-card.active .error-details { display: block; }
         .error-details ul { margin: 0; padding-left: 20px; }
         .error-details li { margin-bottom: 5px; }
 
-        .filter-toggle-header { background-color: var(--primary-main); color: white; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; margin-top: 10px; }
-        .filter-body { display: none; background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; }
-        .export-filter-body { background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; }
+        .filter-toggle-header { background-color: var(--primary-main); color: white; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; margin-top: 10px; border-radius: 4px; }
+        .filter-body { display: none; background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; border-radius: 4px; }
+        .export-filter-body { background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; border-radius: 4px; }
         
         .chart-container { margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .chart-wrapper { background-color: var(--bg-container); padding: 15px; border: 1px solid var(--primary-main); }
+        .chart-wrapper { background-color: var(--bg-container); padding: 15px; border: 1px solid var(--primary-main); border-radius: 4px; }
         canvas { max-width: 100%; }
 
         .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
@@ -120,7 +120,7 @@
         .toggle-link { display: block; text-align: center; margin-top: 15px; color: var(--primary-main); font-size: 0.9em; cursor: pointer; }
         
         h2 { margin-top: 10px; margin-bottom: 15px; color: var(--text-dark); text-align: center; }
-        h4 { color: var(--text-dark); }
+        h4 { color: var(--text-dark); margin-bottom: 5px; }
 
         .font-btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .font-btn-group button { margin-top: 0; padding: 10px; }
@@ -130,9 +130,18 @@
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
         #toast.error { background-color: #ef5350; }
         
-        /* Settings Toggle Switch Switch */
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-default); }
+        /* Modern Toggle Switch */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-default); }
         .setting-row label { margin-top: 0; }
+        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
+        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--action-green); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* History List */
+        .history-item { background: var(--primary-light-bg); border: 1px solid var(--border-default); padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -144,8 +153,9 @@
             <button class="menu-toggle-btn" onclick="toggleMenu()">☰ Menü</button>
             <div id="menuDropdown" class="menu-dropdown-content">
                 <a onclick="navigiereZu('formPage')">Eingang erfassen</a>
-                <a onclick="navigiereZu('statistikPage')">Statistik</a>
-                <a onclick="navigiereZu('adminPage')">Export</a>
+                <a onclick="navigiereZu('historyPage')" id="menuHistory">Meine Einträge</a>
+                <a onclick="navigiereZu('statistikPage')" id="menuStatistik" style="display:none;">Statistik</a>
+                <a onclick="navigiereZu('adminPage')" id="menuExport" style="display:none;">Export</a>
                 <a onclick="navigiereZu('settingsPage')">Einstellungen</a>
                 <a onclick="logout()">Logout</a>
             </div>
@@ -158,8 +168,8 @@
             <div class="action-section">
                 <h4>Erscheinungsbild</h4>
                 <div class="setting-row">
-                    <label>Dark Mode</label>
-                    <button id="darkModeToggleBtn" onclick="toggleDarkMode()" class="camera-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;">Aktivieren</button>
+                    <label>Erscheinungsbild anpassen</label>
+                    <button id="darkModeToggleBtn" onclick="toggleDarkMode()" class="camera-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;">Dark Mode aktivieren</button>
                 </div>
                 
                 <h4 style="margin-top: 20px;">Schriftgröße</h4>
@@ -173,30 +183,45 @@
             <div class="action-section">
                 <h4>Ablauf & Erfassung</h4>
                 <div class="setting-row">
-                    <label>Auto-Ausfüllen<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Letzte Kategorie, Produkt & Lieferant merken</span></label>
-                    <input type="checkbox" id="settingAutoFill" onchange="saveSetting('autofill', this.checked)" style="width: 25px; height: 25px; margin: 0;">
+                    <label>Auto-Ausfüllen<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Kategorie, Produkt & Lieferant merken</span></label>
+                    <label class="switch"><input type="checkbox" id="settingAutoFill" onchange="saveSetting('autofill', this.checked)"><span class="slider"></span></label>
                 </div>
                 <div class="setting-row">
                     <label>Scanner-Feedback<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Vibration bei erfolgreichem Scan</span></label>
-                    <input type="checkbox" id="settingVibrate" onchange="saveSetting('vibrate', this.checked)" style="width: 25px; height: 25px; margin: 0;">
+                    <label class="switch"><input type="checkbox" id="settingVibrate" onchange="saveSetting('vibrate', this.checked)"><span class="slider"></span></label>
                 </div>
                 <div class="setting-row">
-                    <label>Schnelleingabe-Modus<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Pop-ups durch dezenten Banner ersetzen</span></label>
-                    <input type="checkbox" id="settingFastTrack" onchange="saveSetting('fasttrack', this.checked)" style="width: 25px; height: 25px; margin: 0;">
+                    <label>Schnelleingabe-Modus<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Pop-ups durch Banner ersetzen</span></label>
+                    <label class="switch"><input type="checkbox" id="settingFastTrack" onchange="saveSetting('fasttrack', this.checked)"><span class="slider"></span></label>
                 </div>
             </div>
 
             <div class="action-section">
                 <h4>Offline-Speicher</h4>
-                <p style="font-size:0.9em;">Einträge, die ohne Internetverbindung erfasst wurden, werden hier zwischengespeichert.</p>
-                <div style="font-weight:bold; color:var(--primary-main); text-align:center; padding: 10px; background:var(--primary-light-bg);">
-                    Status: <span id="offlineCountBadge">0</span> Einträge warten auf Synchronisation
+                <p style="font-size:0.9em;">Einträge ohne Internetverbindung werden hier gesichert.</p>
+                <div style="font-weight:bold; color:var(--primary-main); text-align:center; padding: 10px; background:var(--primary-light-bg); border-radius:4px; margin-bottom: 10px;">
+                    Status: <span id="offlineCountBadge">0</span> Einträge im Cache
                 </div>
                 <button onclick="syncOfflineDaten()" class="camera-btn">Manuell Synchronisieren</button>
-                <button onclick="clearOfflineCache()" class="danger-btn">Cache löschen (Vorsicht!)</button>
+                <button onclick="clearOfflineCache()" class="danger-btn">Cache löschen</button>
+            </div>
+
+            <div class="action-section">
+                <h4>Entwickler / Rechte</h4>
+                <div class="setting-row">
+                    <label>Admin-Rechte (Für Testzwecke)<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Schaltet Statistik und Export frei</span></label>
+                    <label class="switch"><input type="checkbox" id="settingAdmin" onchange="toggleAdminRole(this.checked)"><span class="slider"></span></label>
+                </div>
             </div>
 
             <button class="secondary-btn" style="margin-top: 40px;" onclick="navigiereZu('formPage')">Zurück</button>
+        </div>
+
+        <div id="historyPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <h2>Meine heutigen Einträge</h2>
+            <div id="historyList"></div>
+            <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
 
         <div id="loginPage">
@@ -414,12 +439,15 @@
         let produkteNachKategorie = {};
         let currentFocusLieferant = -1, currentFocusSpediteur = -1, currentFocusKategorie = -1, currentFocusProdukt = -1;
         let chartInstances = {};
+        let currentUserRole = 'user'; 
 
         // Settings / Konfiguration
         function initSettings() {
             const isDark = localStorage.getItem('checkgate_darkmode') === 'true';
             if (isDark) { document.body.classList.add('dark-mode'); }
             document.querySelectorAll('.logo-container img').forEach(logo => { logo.src = isDark ? 'logo-dark.png' : 'logo.png'; });
+            
+            document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
 
             const savedSize = localStorage.getItem('checkgate_fontsize');
             if (savedSize) document.documentElement.style.setProperty('--base-font-size', savedSize + 'px');
@@ -437,7 +465,7 @@
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('checkgate_darkmode', isDark);
-            document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode DEAKTIVIEREN" : "Dark Mode aktivieren";
+            document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
             document.querySelectorAll('.logo-container img').forEach(logo => { logo.src = isDark ? 'logo-dark.png' : 'logo.png'; });
             if(document.getElementById('statistikPage').style.display === 'block') ladeStatistiken();
         }
@@ -445,6 +473,19 @@
         function setFontSize(size) {
             document.documentElement.style.setProperty('--base-font-size', size + 'px');
             localStorage.setItem('checkgate_fontsize', size);
+        }
+
+        async function toggleAdminRole(isAdmin) {
+            const newRole = isAdmin ? 'admin' : 'user';
+            const { error } = await supabaseClient.auth.updateUser({ data: { role: newRole } });
+            if (!error) {
+                currentUserRole = newRole;
+                checkSession(); // UI aktualisieren
+                showMessage(`Rechte auf ${newRole.toUpperCase()} geändert.`);
+            } else {
+                showMessage("Fehler: " + error.message, true);
+                document.getElementById('settingAdmin').checked = !isAdmin; // Zurücksetzen
+            }
         }
 
         // Offline / Cache Logik
@@ -510,26 +551,33 @@
         }
 
         function processUserLogin(user) {
-            if (user.user_metadata?.kuerzel) { document.getElementById('mitarbeiter').value = user.user_metadata.kuerzel; navigiereZu('formPage'); } 
+            // Rolle prüfen
+            currentUserRole = user.user_metadata?.role || 'user';
+            document.getElementById('settingAdmin').checked = currentUserRole === 'admin';
+            
+            document.getElementById('menuStatistik').style.display = currentUserRole === 'admin' ? 'block' : 'none';
+            document.getElementById('menuExport').style.display = currentUserRole === 'admin' ? 'block' : 'none';
+
+            if (user.user_metadata?.kuerzel) { 
+                document.getElementById('mitarbeiter').value = user.user_metadata.kuerzel; 
+                navigiereZu('formPage'); 
+            } 
             else zeigeSeite('setupProfilePage');
         }
 
         function zeigeSeite(seiteId) {
-            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage'].forEach(id => document.getElementById(id).style.display = 'none');
+            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(id => document.getElementById(id).style.display = 'none');
             document.getElementById(seiteId).style.display = 'block';
             
-            if (seiteId === 'settingsPage') {
-                const isDark = document.body.classList.contains('dark-mode');
-                document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode DEAKTIVIEREN" : "Dark Mode aktivieren";
-                updateOfflineStatus();
-            }
+            if (seiteId === 'settingsPage') updateOfflineStatus();
         }
 
         function navigiereZu(seiteId) {
             zeigeSeite(seiteId);
             const menuBtn = document.getElementById('mainMenuContainer');
-            menuBtn.style.display = (['formPage', 'adminPage', 'statistikPage', 'settingsPage'].includes(seiteId)) ? 'block' : 'none';
+            menuBtn.style.display = (['formPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].includes(seiteId)) ? 'block' : 'none';
             if (seiteId === 'statistikPage') ladeStatistiken();
+            if (seiteId === 'historyPage') ladeHistorie();
         }
 
         function toggleMenu() {
@@ -606,7 +654,7 @@
             if (!neuesKuerzel || pwd.length < 8 || !/[A-Z]/.test(pwd) || !/[a-z]/.test(pwd) || !/[0-9]/.test(pwd) || !/[^a-zA-Z0-9]/.test(pwd)) return alert("Eingaben fehlerhaft.");
             if (pwd !== pwdConfirm) return alert("Passwörter stimmen nicht überein.");
             const btn = document.getElementById('saveKuerzelBtn'); btn.innerText = "Speichert..."; btn.disabled = true;
-            const { error } = await supabaseClient.auth.updateUser({ password: pwd, data: { kuerzel: neuesKuerzel } });
+            const { error } = await supabaseClient.auth.updateUser({ password: pwd, data: { kuerzel: neuesKuerzel, role: 'user' } });
             btn.innerText = "Speichern & Weiter"; btn.disabled = false;
             if (error) alert("Fehler: " + error.message); else { document.getElementById('mitarbeiter').value = neuesKuerzel; navigiereZu('formPage'); }
         }
@@ -750,6 +798,49 @@
             });
         }
 
+        async function ladeHistorie() {
+            const kuerzel = document.getElementById('mitarbeiter').value;
+            const heuteStr = new Date().toISOString().split('T')[0];
+            const { data, error } = await supabaseClient.from('wareneingang')
+                .select('*')
+                .eq('mitarbeiter', kuerzel)
+                .gte('datum', heuteStr)
+                .order('id', { ascending: false })
+                .limit(20);
+            
+            const list = document.getElementById('historyList');
+            list.innerHTML = '';
+            if(error || !data || data.length === 0) {
+                list.innerHTML = '<p>Keine Einträge für heute gefunden.</p>';
+                return;
+            }
+            
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <div>
+                        <strong>${item.zeitstempel ? item.zeitstempel.split(' ')[1] : item.datum} - ${item.produkt}</strong><br>
+                        ${item.menge}x | ${item.lieferant} <br>
+                        <span style="color: ${item.status === 'Gesperrt' ? '#ef5350' : 'var(--action-green)'}">Status: ${item.status}</span>
+                    </div>
+                    <button class="danger-btn" style="width:auto; margin:0; padding:8px 12px; font-size: 0.9em;" onclick="loescheEintrag(${item.id})">Löschen</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function loescheEintrag(id) {
+            if(!confirm("Eintrag wirklich aus der Datenbank löschen?")) return;
+            const { error } = await supabaseClient.from('wareneingang').delete().eq('id', id);
+            if(error) showMessage("Fehler beim Löschen: " + error.message, true);
+            else {
+                showMessage("Eintrag gelöscht.");
+                ladeHistorie();
+                ladeDropdownDaten();
+            }
+        }
+
         function doFilter(inputId, dropdownId, baseList, focusVarName) {
             const input = document.getElementById(inputId).value.toLowerCase();
             const dropdown = document.getElementById(dropdownId);
@@ -801,7 +892,6 @@
             html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { 
                 document.getElementById('artikelnummer').value = text; 
                 
-                // Scanner Feedback Logik
                 if(localStorage.getItem('checkgate_vibrate') === 'true' && navigator.vibrate) {
                     navigator.vibrate(200);
                 }
@@ -896,11 +986,8 @@
             }
         }
 
-        // Auto-Fill Form Reset
         function resetFormFields() {
             document.getElementById('artikelnummer').value = ""; 
-            
-            // Wenn Auto-Fill ausgeschaltet ist, lösche auch die anderen Felder
             if (localStorage.getItem('checkgate_autofill') !== 'true') {
                 document.getElementById('produktkategorie').value = ""; 
                 document.getElementById('produkt').value = ""; 
@@ -918,8 +1005,6 @@
             const filterLief = document.getElementById('exportLieferantFilter').value;
             const filterSped = document.getElementById('exportSpediteurFilter').value;
             const filterMit = document.getElementById('exportMitarbeiterFilter').value;
-            
-            // Das ausgewählte CSV Trennzeichen auslesen
             const sep = document.getElementById('exportSeparator').value;
 
             let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
@@ -931,7 +1016,6 @@
             const { data: logs, error } = await query;
             if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
             
-            // CSV mit dynamischem Trennzeichen generieren
             let csv = `Datum${sep}Exakte_Uhrzeit${sep}Mitarbeiter${sep}Kategorie${sep}Produkt${sep}Lieferant${sep}Spediteur${sep}Artikelnummer${sep}Menge${sep}Netto_Preis${sep}Prüfart${sep}Fehlerakzeptanz(%)${sep}Erwartungswertfaktor${sep}Nötige_Stichproben${sep}Status${sep}Beschreibung${sep}Bilder_Links\n`;
             
             logs.forEach(l => csv += `${l.datum}${sep}${l.zeitstempel||''}${sep}${l.mitarbeiter||''}${sep}${l.produktkategorie||''}${sep}${l.produkt||''}${sep}${l.lieferant||''}${sep}${l.spediteur||''}${sep}${l.seriennummer}${sep}${l.menge}${sep}${l.preis}${sep}${l.pruefart||''}${sep}${l.fehlerakzeptanz||''}${sep}${l.erwartungswertfaktor||''}${sep}${l.stichproben_anzahl||''}${sep}${l.status}${sep}"${l.beschreibung||''}"${sep}"${l.bilder_urls||''}"\n`);
