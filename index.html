@@ -78,7 +78,7 @@
         .stat-card.error-card { cursor: pointer; }
         .stat-card.error-card .stat-val { color: #d32f2f; }
         
-        .error-details { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #d32f2f; padding: 10px; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: left; font-size: 0.85em; font-weight: normal; color: #333; max-height: 150px; overflow-y: auto; }
+        .error-details { display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #d32f2f; padding: 10px; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: left; font-size: 0.85em; font-weight: normal; color: #333; }
         .stat-card.error-card:hover .error-details, .stat-card.error-card.active .error-details { display: block; }
         .error-details ul { margin: 0; padding-left: 20px; }
         .error-details li { margin-bottom: 5px; }
@@ -87,14 +87,18 @@
         .filter-body { display: none; background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; }
         .export-filter-body { background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; }
         
-        /* Container für Diagramme */
         .chart-container { margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .chart-wrapper { background-color: white; padding: 10px; border: 1px solid var(--primary-main); }
+        .chart-wrapper { background-color: white; padding: 15px; border: 1px solid var(--primary-main); }
         canvas { max-width: 100%; }
 
         .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
         .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-dark); font-size: 0.9em; text-decoration: underline; cursor: pointer; font-weight: bold; }
         .toggle-link { display: block; text-align: center; margin-top: 15px; color: var(--primary-main); font-size: 0.9em; cursor: pointer; }
+        
+        .tooltip { position: relative; display: inline-block; cursor: pointer; color: white; background-color: var(--primary-main); width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 14px; margin-left: 5px; font-weight: bold; border-radius: 0; }
+        .tooltip .tooltiptext { visibility: hidden; width: 220px; background-color: #2c3e50; color: #fff; text-align: left; padding: 10px; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; font-size: 0.9em; font-weight: normal; box-shadow: 0 4px 8px rgba(0,0,0,0.2); pointer-events: none; border-radius: 0; }
+        .tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -5px; border-width: 5px; border-style: solid; border-color: #2c3e50 transparent transparent transparent; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
         
         h2 { margin-top: 10px; margin-bottom: 15px; color: var(--text-dark); text-align: center; }
         h4 { color: var(--text-dark); }
@@ -194,12 +198,14 @@
         <div id="pruefungPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <div id="pruefungsAnweisung" class="instruction-box"></div>
+            
             <div id="stichprobenRechner" class="calc-box" style="display:none;">
                 <h4 style="margin-top:0;">Stichprobenkalkulator</h4>
                 <label for="fehlerakzeptanz">Fehlerakzeptanz (%):</label><input type="number" id="fehlerakzeptanz" value="1.0" step="0.1" oninput="updateStichproben()">
                 <label for="erwartungswertfaktor">Erwartungswertfaktor:</label><input type="number" id="erwartungswertfaktor" value="1.0" step="0.1" oninput="updateStichproben()">
                 <div style="margin-top:15px; font-weight:bold; font-size:1.1em; color:var(--action-green-dark);">Nötige Stichproben: <span id="stichprobenErgebnis">0</span></div>
             </div>
+            
             <label for="pruefungErfolgreich">War die Prüfung erfolgreich?</label><select id="pruefungErfolgreich"><option value="ja">Ja (Keine Mängel festgestellt)</option><option value="nein">Nein (Mängel oder fehlendes Zubehör)</option></select>
             <button onclick="pruefen()">Absenden</button>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
@@ -261,8 +267,8 @@
                     <h3>Mängelquote</h3>
                     <div id="statErrorRate" class="stat-val">0%</div>
                     <div class="error-details">
-                        <strong>Mängelarten:</strong>
-                        <ul id="errorDetailsList"><li>Keine Mängel erfasst.</li></ul>
+                        <strong>Mängel nach Kategorie:</strong>
+                        <ul id="errorDetailsList"><li>Keine Mängel.</li></ul>
                     </div>
                 </div>
                 <div class="stat-card">
@@ -276,8 +282,8 @@
             </div>
 
             <div class="chart-container">
-                <div class="chart-wrapper"><canvas id="chartDefectTypes"></canvas></div>
-                <div class="chart-wrapper"><canvas id="chartTopLief"></canvas></div>
+                <div class="chart-wrapper"><canvas id="chartMonths"></canvas></div>
+                <div class="chart-wrapper"><canvas id="chartLiefs"></canvas></div>
             </div>
         </div>
     </div>
@@ -301,13 +307,10 @@
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
         let lieferantenChronologisch = [], spediteureChronologisch = [];
         let currentFocusLieferant = -1, currentFocusSpediteur = -1;
-        let chartInstances = {}; // Speichert die Graphen, um sie beim Update zurückzusetzen
+        let chartInstances = {};
 
-        if (window.location.hash.includes('type=recovery')) {
-            zeigeSeite('setNewPasswordPage');
-        } else {
-            checkSession();
-        }
+        if (window.location.hash.includes('type=recovery')) zeigeSeite('setNewPasswordPage');
+        else checkSession();
 
         async function checkSession() {
             const { data, error } = await supabaseClient.auth.getSession();
@@ -453,8 +456,8 @@
             document.getElementById('errorDetailsList').innerHTML = "<li>Keine Mängel erfasst.</li>";
             document.getElementById('statVolume').innerText = "0"; document.getElementById('statValue').innerText = "0";
 
-            if(chartInstances['defectTypes']) chartInstances['defectTypes'].destroy();
-            if(chartInstances['topLief']) chartInstances['topLief'].destroy();
+            if(chartInstances['months']) chartInstances['months'].destroy();
+            if(chartInstances['liefs']) chartInstances['liefs'].destroy();
 
             if (data.length === 0) return;
 
@@ -463,44 +466,61 @@
             document.getElementById('statVolume').innerText = totalVolume.toLocaleString('de-DE');
             document.getElementById('statValue').innerText = totalValue.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-            // Mängel auswerten nach Art
-            const errors = data.filter(d => d.maengel === 'ja' || d.verpackung === 'nein' || d.mengeOk === 'nein');
-            document.getElementById('statErrorRate').innerText = ((errors.length / data.length) * 100).toFixed(1) + "%";
-            
-            let countVerp = 0, countMeng = 0, countQuali = 0;
+            // Mängel Hover Analyse
+            let countVerp = 0, countMeng = 0, countQuali = 0, countErrorItems = 0;
+            const monthData = {};
+            const liefData = {};
 
-            if (errors.length > 0) {
-                let errorHtml = "";
-                errors.slice(0, 15).forEach(e => {
-                    let types = [];
-                    if (e.verpackung === 'nein') { types.push("Verpackung"); countVerp++; }
-                    if (e.mengeOk === 'nein') { types.push("Menge"); countMeng++; }
-                    if (e.maengel === 'ja') { types.push("Qualität"); countQuali++; }
-                    errorHtml += `<li><strong>${e.artikelnummer || 'Unbekannt'}</strong>: ${types.join(', ')}</li>`;
-                });
-                if (errors.length > 15) errorHtml += `<li>... und weitere</li>`;
-                document.getElementById('errorDetailsList').innerHTML = errorHtml;
-            }
+            data.forEach(d => {
+                const month = d.datum ? d.datum.substring(0, 7) : 'Unbekannt';
+                const lief = d.lieferant || 'Unbekannt';
+                
+                if (!monthData[month]) monthData[month] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
+                if (!liefData[lief]) liefData[lief] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
 
-            // Graphen zeichnen (Chart.js)
-            chartInstances['defectTypes'] = new Chart(document.getElementById('chartDefectTypes'), {
-                type: 'doughnut',
-                data: { labels: ['Verpackung', 'Menge', 'Qualität'], datasets: [{ data: [countVerp, countMeng, countQuali], backgroundColor: ['#d32f2f', '#ff9800', '#1976d2'] }] },
-                options: { plugins: { title: { display: true, text: 'Verteilung der Mängelarten' } } }
+                let isError = false;
+                if (d.verpackung === 'nein') { countVerp++; monthData[month].verp++; liefData[lief].verp++; isError = true; }
+                if (d.mengeOk === 'nein') { countMeng++; monthData[month].meng++; liefData[lief].meng++; isError = true; }
+                if (d.maengel === 'ja') { countQuali++; monthData[month].qual++; liefData[lief].qual++; isError = true; }
+
+                if (isError) countErrorItems++;
+                else { monthData[month].ok++; liefData[lief].ok++; }
+                
+                monthData[month].total++;
+                liefData[lief].total++;
             });
 
-            const liefCount = {}; data.forEach(d => { if (d.lieferant) liefCount[d.lieferant] = (liefCount[d.lieferant] || 0) + 1; });
-            const topLiefLabels = Object.keys(liefCount).sort((a,b) => liefCount[b] - liefCount[a]).slice(0, 5);
-            const topLiefData = topLiefLabels.map(l => liefCount[l]);
+            document.getElementById('statErrorRate').innerText = ((countErrorItems / data.length) * 100).toFixed(1) + "%";
+            document.getElementById('errorDetailsList').innerHTML = `
+                <li>Verpackung: ${countVerp}x</li>
+                <li>Menge: ${countMeng}x</li>
+                <li>Qualität: ${countQuali}x</li>
+            `;
 
-            chartInstances['topLief'] = new Chart(document.getElementById('chartTopLief'), {
+            // Charts
+            const sortedMonths = Object.keys(monthData).sort();
+            const sortedLiefs = Object.keys(liefData).sort((a,b) => liefData[b].total - liefData[a].total).slice(0, 10);
+
+            const createDatasets = (keys, dataObj) => [
+                { label: 'Mängelfrei', data: keys.map(k => dataObj[k].ok), backgroundColor: '#4caf50' },
+                { label: 'Verpackung', data: keys.map(k => dataObj[k].verp), backgroundColor: '#d32f2f' },
+                { label: 'Menge', data: keys.map(k => dataObj[k].meng), backgroundColor: '#ff9800' },
+                { label: 'Qualität', data: keys.map(k => dataObj[k].qual), backgroundColor: '#1976d2' }
+            ];
+
+            chartInstances['months'] = new Chart(document.getElementById('chartMonths'), {
                 type: 'bar',
-                data: { labels: topLiefLabels, datasets: [{ label: 'Anzahl Prüfungen', data: topLiefData, backgroundColor: '#4a6572' }] },
-                options: { plugins: { title: { display: true, text: 'Top Lieferanten (Volumen)' } } }
+                data: { labels: sortedMonths, datasets: createDatasets(sortedMonths, monthData) },
+                options: { scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { title: { display: true, text: 'Übersicht nach Monaten' } } }
+            });
+
+            chartInstances['liefs'] = new Chart(document.getElementById('chartLiefs'), {
+                type: 'bar',
+                data: { labels: sortedLiefs, datasets: createDatasets(sortedLiefs, liefData) },
+                options: { scales: { x: { stacked: true }, y: { stacked: true } }, plugins: { title: { display: true, text: 'Top Lieferanten (Gesamtprüfungen)' } } }
             });
         }
 
-        // Standard Filter/Autocomplete Code (unverändert)
         function filterLieferanten() {
             const input = document.getElementById('lieferant').value.toLowerCase(); const dropdown = document.getElementById('lieferantDropdown'); dropdown.innerHTML = ''; currentFocusLieferant = -1;
             let anzeigeListe = input === "" ? [...lieferantenChronologisch] : lieferantenChronologisch.filter(l => l.toLowerCase().startsWith(input)).sort((a, b) => a.localeCompare(b));
