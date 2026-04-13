@@ -171,7 +171,7 @@
         <div id="mainMenuContainer" class="main-menu-container">
             <button class="menu-toggle-btn" onclick="toggleMenu()">☰ Menü</button>
             <div id="menuDropdown" class="menu-dropdown-content">
-                <a onclick="navigiereZu('formPage')">Eingang erfassen</a>
+                <a onclick="ladeNeuenEingang()">Eingang erfassen</a>
                 <a onclick="navigiereZu('historyPage')" id="menuHistory">Meine Einträge</a>
                 <a onclick="navigiereZu('statistikPage')" id="menuStatistik" style="display:none;">Statistik</a>
                 <a onclick="navigiereZu('adminPage')" id="menuExport" style="display:none;">Export</a>
@@ -184,12 +184,8 @@
             <div class="logo-container"><img src="logo.png" id="logoImgSettings" alt="CheckGate Logo"></div>
             <h2>Einstellungen</h2>
             
-            <div class="action-section">
-                <h4>Erscheinungsbild</h4>
-                <div class="setting-row">
-                    <label>Erscheinungsbild anpassen</label>
-                    <button id="darkModeToggleBtn" onclick="toggleDarkMode()" class="camera-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;">Dark Mode aktivieren</button>
-                </div>
+            <div class="action-section" style="border-top: none;">
+                <button id="darkModeToggleBtn" onclick="toggleDarkMode()" class="camera-btn" style="margin-top: 0;">Dark Mode aktivieren</button>
                 
                 <h4 style="margin-top: 20px;">Schriftgröße</h4>
                 <div class="font-btn-group">
@@ -217,7 +213,6 @@
 
             <div class="action-section">
                 <h4>Offline-Speicher</h4>
-                <p style="font-size:0.9em;">Einträge ohne Internetverbindung werden hier gesichert.</p>
                 <div style="font-weight:bold; color:var(--primary-main); text-align:center; padding: 10px; background:var(--primary-light-bg); border-radius:4px; margin-bottom: 10px;">
                     Status: <span id="offlineCountBadge">0</span> Einträge im Cache
                 </div>
@@ -353,10 +348,10 @@
             <div id="errorActions" class="action-section" style="display:none;">
                 <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label><textarea id="mangelBeschreibung" rows="4"></textarea>
                 <label for="mangelBilder">Bilder hochladen:</label><input type="file" id="mangelBilder" accept="image/*" multiple capture="environment" style="margin-top: 10px;">
-                <button id="saveBtnError" onclick="inSupabaseSpeichern(true)">In Datenbank sichern & Neue Prüfung</button>
+                <button id="saveBtnError" onclick="inSupabaseSpeichern(true)">In Datenbank sichern</button>
             </div>
             <div id="successActions" class="action-section" style="display:none;">
-                <button id="saveBtnSuccess" onclick="inSupabaseSpeichern(false)">In Datenbank sichern & Neue Prüfung</button>
+                <button id="saveBtnSuccess" onclick="inSupabaseSpeichern(false)">In Datenbank sichern</button>
             </div>
         </div>
 
@@ -374,7 +369,9 @@
                 <label for="exportKategorieFilter">Kategorie:</label><select id="exportKategorieFilter"><option value="">Alle Kategorien</option></select>
                 <label for="exportLieferantFilter">Lieferant:</label><select id="exportLieferantFilter"><option value="">Alle Lieferanten</option></select>
                 <label for="exportSpediteurFilter">Spediteur:</label><select id="exportSpediteurFilter"><option value="">Alle Spediteure</option></select>
-                <label for="exportMitarbeiterFilter">Mitarbeiter:</label><select id="exportMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
+                
+                <label for="exportMitarbeiterFilter" id="labelExportMitarbeiter">Mitarbeiter:</label>
+                <select id="exportMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
                 
                 <div style="border-top: 1px solid var(--border-default); margin-top: 15px; padding-top: 15px;">
                     <label for="exportSeparator">CSV-Trennzeichen:</label>
@@ -443,6 +440,8 @@
         let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
         let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [], uniqueMit = [];
         let produkteNachKategorie = {}, chartInstances = {};
+        
+        let editModeId = null; // Speichert die ID für den Bearbeitungs-Modus
 
         // DATUMS-INITIALISIERUNG
         function initDates() {
@@ -515,14 +514,26 @@
                 }
 
                 const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
+                
+                // Menü Sichtbarkeiten
                 document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
-                document.getElementById('menuExport').style.display = isAdminOrOwner ? 'block' : 'none';
+                document.getElementById('menuExport').style.display = 'block'; // Export ist nun für alle sichtbar
+                
                 document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
+
+                // Export-Filter anpassen je nach Rolle
+                if (currentUserRole === 'user') {
+                    document.getElementById('labelExportMitarbeiter').style.display = 'none';
+                    document.getElementById('exportMitarbeiterFilter').style.display = 'none';
+                } else {
+                    document.getElementById('labelExportMitarbeiter').style.display = 'block';
+                    document.getElementById('exportMitarbeiterFilter').style.display = 'block';
+                }
 
                 if (currentUserRole === 'owner') ladeBenutzerRollen();
                 
                 ladeDropdownDaten();
-                navigiereZu('formPage'); 
+                ladeNeuenEingang(); 
             } else zeigeSeite('setupProfilePage');
         }
 
@@ -712,8 +723,13 @@
             const filterKat = document.getElementById('exportKategorieFilter').value;
             const filterLief = document.getElementById('exportLieferantFilter').value;
             const filterSped = document.getElementById('exportSpediteurFilter').value;
-            const filterMit = document.getElementById('exportMitarbeiterFilter').value;
             const sep = document.getElementById('exportSeparator').value;
+
+            // Mitarbeiter-Filter Logik basierend auf der Rolle
+            let filterMit = document.getElementById('exportMitarbeiterFilter').value;
+            if (currentUserRole === 'user') {
+                filterMit = document.getElementById('mitarbeiter').value; // Festsetzen auf eingeloggten Nutzer
+            }
 
             let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
             if (filterKat) query = query.eq('produktkategorie', filterKat);
@@ -750,10 +766,40 @@
             data.forEach(item => {
                 const div = document.createElement('div');
                 div.className = 'history-item';
-                div.innerHTML = `<div><strong>${item.zeitstempel ? item.zeitstempel.split(' ')[1] : item.datum} - ${item.produkt}</strong><br>${item.lieferant} | Status: <span style="color: ${item.status === 'Gesperrt' ? '#ef5350' : 'var(--action-green)'}">${item.status}</span></div>
-                                <button class="danger-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;" onclick="loescheEintrag(${item.id})">Löschen</button>`;
+                div.innerHTML = `
+                    <div>
+                        <strong>${item.zeitstempel ? item.zeitstempel.split(' ')[1] : item.datum} - ${item.produkt}</strong><br>
+                        ${item.lieferant} | Status: <span style="color: ${item.status === 'Gesperrt' ? '#ef5350' : 'var(--action-green)'}">${item.status}</span>
+                    </div>
+                    <div style="display:flex; gap: 5px;">
+                        <button class="secondary-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;" onclick="bearbeiteEintrag(${item.id})">Bearbeiten</button>
+                        <button class="danger-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;" onclick="loescheEintrag(${item.id})">Löschen</button>
+                    </div>`;
                 list.appendChild(div);
             });
+        }
+
+        async function bearbeiteEintrag(id) {
+            const { data, error } = await supabaseClient.from('wareneingang').select('*').eq('id', id).single();
+            if (error || !data) return showMessage("Fehler beim Laden des Eintrags.", true);
+            
+            document.getElementById('datum').value = data.datum;
+            document.getElementById('produktkategorie').value = data.produktkategorie || "";
+            document.getElementById('produkt').value = data.produkt || "";
+            document.getElementById('lieferant').value = data.lieferant || "";
+            document.getElementById('spediteur').value = data.spediteur || "";
+            document.getElementById('artikelnummer').value = data.seriennummer || "";
+            document.getElementById('menge').value = data.menge || 1;
+            document.getElementById('preisArt').value = "netto";
+            document.getElementById('preisEingabe').value = data.preis || 0;
+            document.getElementById('verpackung').value = data.verpackung || "ja";
+            document.getElementById('mengeOk').value = data.mengeOk || "ja";
+            
+            berechneNetto();
+            editModeId = id; // Setzt die ID für das spätere Update
+            
+            navigiereZu('formPage');
+            showMessage("Bearbeitungsmodus aktiv. Bitte Daten anpassen und durchklicken.");
         }
 
         async function loescheEintrag(id) {
@@ -763,6 +809,12 @@
         }
 
         // NAVIGATION & CORE FUNCTIONS
+        function ladeNeuenEingang() {
+            editModeId = null; // Stellt sicher, dass wir wieder im Insert-Modus sind
+            resetFormFields();
+            navigiereZu('formPage');
+        }
+
         function zeigeSeite(id) {
             ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(p => document.getElementById(p).style.display = 'none');
             document.getElementById(id).style.display = 'block';
@@ -787,7 +839,7 @@
             else { body.style.display = 'block'; arrow.innerText = '▲'; }
         }
 
-        // DATEN SPEICHERN (ONLINE/OFFLINE)
+        // DATEN SPEICHERN (ONLINE/OFFLINE & EDIT MODE)
         async function inSupabaseSpeichern(isError) {
             const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess'); 
             btn.innerText = "Verarbeite..."; btn.disabled = true;
@@ -827,21 +879,32 @@
             };
 
             if (!navigator.onLine) {
+                if (editModeId) {
+                    showMessage("Bearbeiten ist im Offline-Modus leider nicht möglich.", true);
+                    btn.innerText = "Speichern & Neu"; btn.disabled = false;
+                    return;
+                }
                 let cache = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
                 cache.push(payload);
                 localStorage.setItem('offlineWareneingang', JSON.stringify(cache));
                 showMessage("Offline gespeichert.");
             } else {
-                const { error } = await supabaseClient.from('wareneingang').insert([payload]);
-                if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Gespeichert.");
+                if (editModeId) {
+                    // Update bestehender Eintrag
+                    const { error } = await supabaseClient.from('wareneingang').update(payload).eq('id', editModeId);
+                    if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Erfolgreich aktualisiert.");
+                    editModeId = null; // Nach dem Update zurücksetzen
+                } else {
+                    // Neuer Eintrag
+                    const { error } = await supabaseClient.from('wareneingang').insert([payload]);
+                    if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Gespeichert.");
+                }
                 ladeDropdownDaten();
             }
             
-            if (localStorage.getItem('checkgate_autofill') !== 'true') {
-                ['produkt','lieferant','spediteur','produktkategorie','artikelnummer'].forEach(id => document.getElementById(id).value = '');
-            } else document.getElementById('artikelnummer').value = '';
+            resetFormFields();
             
-            btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
+            btn.innerText = "Speichern & Neu"; btn.disabled = false;
             updateOfflineStatus();
             navigiereZu('formPage');
         }
@@ -919,6 +982,14 @@
             const rb = document.getElementById('resultBox'); rb.className = 'result'; rb.classList.add(err ? 'error' : 'success'); rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
             document.getElementById('successActions').style.display = err ? 'none' : 'block'; document.getElementById('errorActions').style.display = err ? 'block' : 'none';
             navigiereZu('resultPage');
+        }
+
+        function resetFormFields() {
+            if (localStorage.getItem('checkgate_autofill') !== 'true') {
+                ['produkt','lieferant','spediteur','produktkategorie','artikelnummer'].forEach(id => document.getElementById(id).value = '');
+            } else {
+                document.getElementById('artikelnummer').value = '';
+            }
         }
 
         // EVENT LISTENER FÜR KLICKS OUTSIDE DROPDOWNS
