@@ -1,6 +1,7 @@
 {
   "name": "CheckGate Wareneingang",
   "short_name": "CheckGate",
+  "description": "Interne App zur effizienten Erfassung, Qualitätsprüfung und statistischen Auswertung von Wareneingängen.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f8f9fa",
