@@ -67,6 +67,8 @@
         
         button.secondary-btn { background-color: #6c757d; }
         button.secondary-btn:hover:not(:disabled) { background-color: #5a6268; }
+        button.danger-btn { background-color: #d32f2f; margin-top: 5px;}
+        button.danger-btn:hover:not(:disabled) { background-color: #b71c1c; }
         
         .result { padding: 20px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; border-radius: 0; color: var(--text-dark); }
         .success { background-color: #e8f5e9; color: #1b5e20; border: 2px solid #4caf50; }
@@ -122,9 +124,20 @@
 
         .font-btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .font-btn-group button { margin-top: 0; padding: 10px; }
+
+        /* Toast Notification */
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--action-green); color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; font-weight: bold; transform: translateX(-50%); opacity: 0; transition: opacity 0.5s, bottom 0.5s; }
+        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        #toast.error { background-color: #ef5350; }
+        
+        /* Settings Toggle Switch Switch */
+        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-bottom: 10px; border-bottom: 1px solid var(--border-default); }
+        .setting-row label { margin-top: 0; }
     </style>
 </head>
 <body>
+    <div id="toast">Nachricht</div>
+
     <div class="container">
         
         <div id="mainMenuContainer" class="main-menu-container">
@@ -144,16 +157,43 @@
             
             <div class="action-section">
                 <h4>Erscheinungsbild</h4>
-                <button id="darkModeToggleBtn" onclick="toggleDarkMode()" class="camera-btn">Dark Mode aktivieren</button>
-            </div>
-
-            <div class="action-section">
-                <h4>Schriftgröße</h4>
+                <div class="setting-row">
+                    <label>Dark Mode</label>
+                    <button id="darkModeToggleBtn" onclick="toggleDarkMode()" class="camera-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;">Aktivieren</button>
+                </div>
+                
+                <h4 style="margin-top: 20px;">Schriftgröße</h4>
                 <div class="font-btn-group">
                     <button onclick="setFontSize(14)" style="font-size: 14px;" class="secondary-btn">Klein</button>
                     <button onclick="setFontSize(16)" style="font-size: 16px;" class="secondary-btn">Normal</button>
                     <button onclick="setFontSize(20)" style="font-size: 20px;" class="secondary-btn">Groß</button>
                 </div>
+            </div>
+
+            <div class="action-section">
+                <h4>Ablauf & Erfassung</h4>
+                <div class="setting-row">
+                    <label>Auto-Ausfüllen<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Letzte Kategorie, Produkt & Lieferant merken</span></label>
+                    <input type="checkbox" id="settingAutoFill" onchange="saveSetting('autofill', this.checked)" style="width: 25px; height: 25px; margin: 0;">
+                </div>
+                <div class="setting-row">
+                    <label>Scanner-Feedback<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Vibration bei erfolgreichem Scan</span></label>
+                    <input type="checkbox" id="settingVibrate" onchange="saveSetting('vibrate', this.checked)" style="width: 25px; height: 25px; margin: 0;">
+                </div>
+                <div class="setting-row">
+                    <label>Schnelleingabe-Modus<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Pop-ups durch dezenten Banner ersetzen</span></label>
+                    <input type="checkbox" id="settingFastTrack" onchange="saveSetting('fasttrack', this.checked)" style="width: 25px; height: 25px; margin: 0;">
+                </div>
+            </div>
+
+            <div class="action-section">
+                <h4>Offline-Speicher</h4>
+                <p style="font-size:0.9em;">Einträge, die ohne Internetverbindung erfasst wurden, werden hier zwischengespeichert.</p>
+                <div style="font-weight:bold; color:var(--primary-main); text-align:center; padding: 10px; background:var(--primary-light-bg);">
+                    Status: <span id="offlineCountBadge">0</span> Einträge warten auf Synchronisation
+                </div>
+                <button onclick="syncOfflineDaten()" class="camera-btn">Manuell Synchronisieren</button>
+                <button onclick="clearOfflineCache()" class="danger-btn">Cache löschen (Vorsicht!)</button>
             </div>
 
             <button class="secondary-btn" style="margin-top: 40px;" onclick="navigiereZu('formPage')">Zurück</button>
@@ -294,6 +334,14 @@
                 <label for="exportLieferantFilter">Lieferant:</label><select id="exportLieferantFilter"><option value="">Alle Lieferanten</option></select>
                 <label for="exportSpediteurFilter">Spediteur:</label><select id="exportSpediteurFilter"><option value="">Alle Spediteure</option></select>
                 <label for="exportMitarbeiterFilter">Mitarbeiter:</label><select id="exportMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
+                
+                <div style="border-top: 1px solid var(--border-default); margin-top: 15px; padding-top: 15px;">
+                    <label for="exportSeparator">CSV-Trennzeichen:</label>
+                    <select id="exportSeparator">
+                        <option value=";">Semikolon ( ; ) - Standard Excel</option>
+                        <option value=",">Komma ( , ) - Standard Supabase</option>
+                    </select>
+                </div>
             </div>
             <button id="exportBtn" onclick="exportiereVonSupabase()">Daten herunterladen</button>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
@@ -367,29 +415,30 @@
         let currentFocusLieferant = -1, currentFocusSpediteur = -1, currentFocusKategorie = -1, currentFocusProdukt = -1;
         let chartInstances = {};
 
+        // Settings / Konfiguration
         function initSettings() {
             const isDark = localStorage.getItem('checkgate_darkmode') === 'true';
-            if (isDark) {
-                document.body.classList.add('dark-mode');
-            }
-            document.querySelectorAll('.logo-container img').forEach(logo => {
-                logo.src = isDark ? 'logo-dark.png' : 'logo.png';
-            });
+            if (isDark) { document.body.classList.add('dark-mode'); }
+            document.querySelectorAll('.logo-container img').forEach(logo => { logo.src = isDark ? 'logo-dark.png' : 'logo.png'; });
 
             const savedSize = localStorage.getItem('checkgate_fontsize');
             if (savedSize) document.documentElement.style.setProperty('--base-font-size', savedSize + 'px');
+
+            document.getElementById('settingAutoFill').checked = localStorage.getItem('checkgate_autofill') === 'true';
+            document.getElementById('settingVibrate').checked = localStorage.getItem('checkgate_vibrate') === 'true';
+            document.getElementById('settingFastTrack').checked = localStorage.getItem('checkgate_fasttrack') === 'true';
+            
+            updateOfflineStatus();
         }
         initSettings();
+
+        function saveSetting(key, val) { localStorage.setItem('checkgate_' + key, val); }
 
         function toggleDarkMode() {
             const isDark = document.body.classList.toggle('dark-mode');
             localStorage.setItem('checkgate_darkmode', isDark);
-            document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
-            
-            document.querySelectorAll('.logo-container img').forEach(logo => {
-                logo.src = isDark ? 'logo-dark.png' : 'logo.png';
-            });
-
+            document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode DEAKTIVIEREN" : "Dark Mode aktivieren";
+            document.querySelectorAll('.logo-container img').forEach(logo => { logo.src = isDark ? 'logo-dark.png' : 'logo.png'; });
             if(document.getElementById('statistikPage').style.display === 'block') ladeStatistiken();
         }
 
@@ -398,31 +447,57 @@
             localStorage.setItem('checkgate_fontsize', size);
         }
 
+        // Offline / Cache Logik
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('sw.js').catch(err => console.error('SW Registrierung fehlgeschlagen:', err));
         }
 
         window.addEventListener('online', syncOfflineDaten);
 
+        function updateOfflineStatus() {
+            let offlineData = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
+            document.getElementById('offlineCountBadge').innerText = offlineData.length;
+        }
+
+        function clearOfflineCache() {
+            if(confirm("Bist du sicher? Alle noch nicht synchronisierten Daten gehen verloren!")) {
+                localStorage.removeItem('offlineWareneingang');
+                updateOfflineStatus();
+                showMessage("Offline-Cache geleert.");
+            }
+        }
+
         async function syncOfflineDaten() {
             let offlineData = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
             if (offlineData.length === 0) return;
 
-            alert(`Internetverbindung wiederhergestellt. ${offlineData.length} Offline-Einträge werden synchronisiert...`);
+            showMessage(`Verbindung wiederhergestellt. Sync von ${offlineData.length} Einträgen läuft...`);
 
             let verbleibend = [];
             for (let eintrag of offlineData) {
                 const { error } = await supabaseClient.from('wareneingang').insert([eintrag]);
-                if (error) {
-                    console.error("Fehler beim Sync:", error);
-                    verbleibend.push(eintrag);
-                }
+                if (error) { console.error("Fehler beim Sync:", error); verbleibend.push(eintrag); }
             }
             
             localStorage.setItem('offlineWareneingang', JSON.stringify(verbleibend));
+            updateOfflineStatus();
+            
             if (verbleibend.length === 0) {
-                alert("Alle Offline-Einträge erfolgreich synchronisiert!");
+                showMessage("Offline-Einträge synchronisiert!");
                 if (document.getElementById('statistikPage').style.display === 'block') ladeStatistiken();
+            }
+        }
+
+        // Toast Messages
+        function showMessage(msg, isError = false) {
+            const fastTrack = localStorage.getItem('checkgate_fasttrack') === 'true';
+            if (fastTrack) {
+                const toast = document.getElementById('toast');
+                toast.innerText = msg;
+                toast.className = isError ? 'error show' : 'show';
+                setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 3000);
+            } else {
+                alert(msg);
             }
         }
 
@@ -445,7 +520,8 @@
             
             if (seiteId === 'settingsPage') {
                 const isDark = document.body.classList.contains('dark-mode');
-                document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
+                document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode DEAKTIVIEREN" : "Dark Mode aktivieren";
+                updateOfflineStatus();
             }
         }
 
@@ -719,7 +795,21 @@
         document.getElementById('produktkategorie').addEventListener('keydown', e => handleKeydown(e, 'kategorieDropdown', 'produktkategorie', 'currentFocusKategorie'));
         document.getElementById('produkt').addEventListener('keydown', e => handleKeydown(e, 'produktDropdown', 'produkt', 'currentFocusProdukt'));
 
-        function startScanner() { const rDiv = document.getElementById('reader'); rDiv.style.display = "block"; if (!html5QrCode) html5QrCode = new Html5Qrcode("reader"); html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { document.getElementById('artikelnummer').value = text; html5QrCode.stop().then(() => rDiv.style.display = "none"); }).catch(e => alert(e)); }
+        function startScanner() { 
+            const rDiv = document.getElementById('reader'); rDiv.style.display = "block"; 
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader"); 
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => { 
+                document.getElementById('artikelnummer').value = text; 
+                
+                // Scanner Feedback Logik
+                if(localStorage.getItem('checkgate_vibrate') === 'true' && navigator.vibrate) {
+                    navigator.vibrate(200);
+                }
+
+                html5QrCode.stop().then(() => rDiv.style.display = "none"); 
+            }).catch(e => alert(e)); 
+        }
+        
         function berechneNetto() { const isBrutto = document.getElementById('preisArt').value === 'brutto'; const val = parseFloat(document.getElementById('preisEingabe').value) || 0; const anzeige = document.getElementById('nettoAnzeige'); if (isBrutto) { document.getElementById('nettoWert').innerText = (val / 1.19).toFixed(2); anzeige.style.display = 'block'; } else anzeige.style.display = 'none'; }
         function holeNettoPreis() { const val = parseFloat(document.getElementById('preisEingabe').value) || 0; return document.getElementById('preisArt').value === 'brutto' ? parseFloat((val / 1.19).toFixed(2)) : val; }
         function updateStichproben() { const menge = parseInt(document.getElementById('menge').value) || 1; const fa = (parseFloat(document.getElementById('fehlerakzeptanz').value) || 0) / 100; const ef = parseFloat(document.getElementById('erwartungswertfaktor').value) || 0; let maxFehler = menge * fa, sum = 0, stichproben = 0, restmenge = menge; while (sum <= ef && restmenge > 0) { sum += maxFehler / restmenge; stichproben++; restmenge--; } berechneteStichproben = stichproben; document.getElementById('stichprobenErgebnis').innerText = stichproben; }
@@ -785,21 +875,37 @@
                 let offlineData = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
                 offlineData.push(payload);
                 localStorage.setItem('offlineWareneingang', JSON.stringify(offlineData));
-                alert("Offline-Modus aktiv: Eintrag wurde lokal zwischengespeichert und wird bei der nächsten Verbindung synchronisiert.");
+                
+                showMessage("Offline: Eintrag wurde lokal zwischengespeichert.", false);
                 btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
-                document.getElementById('artikelnummer').value = ""; document.getElementById('lieferant').value = ""; document.getElementById('spediteur').value = ""; 
+                
+                resetFormFields();
                 navigiereZu('formPage');
+                updateOfflineStatus();
                 return;
             }
 
             const { error: dbErr } = await supabaseClient.from('wareneingang').insert([payload]);
             btn.innerText = "In Datenbank sichern & Neue Prüfung"; btn.disabled = false;
             
-            if (dbErr) alert("DATENBANK-FEHLER: " + dbErr.message); 
+            if (dbErr) showMessage("DATENBANK-FEHLER: " + dbErr.message, true); 
             else { 
-                alert("Erfolgreich gespeichert!"); 
-                document.getElementById('artikelnummer').value = ""; document.getElementById('lieferant').value = ""; document.getElementById('spediteur').value = ""; 
+                showMessage("Erfolgreich gespeichert!", false); 
+                resetFormFields();
                 ladeDropdownDaten(); navigiereZu('formPage'); 
+            }
+        }
+
+        // Auto-Fill Form Reset
+        function resetFormFields() {
+            document.getElementById('artikelnummer').value = ""; 
+            
+            // Wenn Auto-Fill ausgeschaltet ist, lösche auch die anderen Felder
+            if (localStorage.getItem('checkgate_autofill') !== 'true') {
+                document.getElementById('produktkategorie').value = ""; 
+                document.getElementById('produkt').value = ""; 
+                document.getElementById('lieferant').value = ""; 
+                document.getElementById('spediteur').value = ""; 
             }
         }
 
@@ -812,6 +918,9 @@
             const filterLief = document.getElementById('exportLieferantFilter').value;
             const filterSped = document.getElementById('exportSpediteurFilter').value;
             const filterMit = document.getElementById('exportMitarbeiterFilter').value;
+            
+            // Das ausgewählte CSV Trennzeichen auslesen
+            const sep = document.getElementById('exportSeparator').value;
 
             let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
             if (filterKat) query = query.eq('produktkategorie', filterKat);
@@ -822,8 +931,10 @@
             const { data: logs, error } = await query;
             if (error || !logs || !logs.length) { alert("Keine Daten gefunden."); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
             
-            let csv = "Datum;Exakte_Uhrzeit;Mitarbeiter;Kategorie;Produkt;Lieferant;Spediteur;Artikelnummer;Menge;Netto_Preis;Prüfart;Fehlerakzeptanz(%);Erwartungswertfaktor;Nötige_Stichproben;Status;Beschreibung;Bilder_Links\n";
-            logs.forEach(l => csv += `${l.datum};${l.zeitstempel||''};${l.mitarbeiter||''};${l.produktkategorie||''};${l.produkt||''};${l.lieferant||''};${l.spediteur||''};${l.seriennummer};${l.menge};${l.preis};${l.pruefart||''};${l.fehlerakzeptanz||''};${l.erwartungswertfaktor||''};${l.stichproben_anzahl||''};${l.status};"${l.beschreibung||''}";"${l.bilder_urls||''}"\n`);
+            // CSV mit dynamischem Trennzeichen generieren
+            let csv = `Datum${sep}Exakte_Uhrzeit${sep}Mitarbeiter${sep}Kategorie${sep}Produkt${sep}Lieferant${sep}Spediteur${sep}Artikelnummer${sep}Menge${sep}Netto_Preis${sep}Prüfart${sep}Fehlerakzeptanz(%)${sep}Erwartungswertfaktor${sep}Nötige_Stichproben${sep}Status${sep}Beschreibung${sep}Bilder_Links\n`;
+            
+            logs.forEach(l => csv += `${l.datum}${sep}${l.zeitstempel||''}${sep}${l.mitarbeiter||''}${sep}${l.produktkategorie||''}${sep}${l.produkt||''}${sep}${l.lieferant||''}${sep}${l.spediteur||''}${sep}${l.seriennummer}${sep}${l.menge}${sep}${l.preis}${sep}${l.pruefart||''}${sep}${l.fehlerakzeptanz||''}${sep}${l.erwartungswertfaktor||''}${sep}${l.stichproben_anzahl||''}${sep}${l.status}${sep}"${l.beschreibung||''}"${sep}"${l.bilder_urls||''}"\n`);
             
             const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
             btn.innerText = "Daten herunterladen"; btn.disabled = false;
