@@ -38,1112 +38,331 @@
         }
 
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 20px; background-color: var(--bg-overall); margin: 0; color: var(--text-dark); font-size: var(--base-font-size); }
-        
         .container { max-width: 600px; margin: 0 auto; background: var(--bg-container); padding: 5px 20px 30px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); border-top: 5px solid var(--primary-main); position: relative; border-radius: 16px; min-height: 400px; }
-        
         .logo-container { text-align: center; margin-bottom: 0; margin-top: 15px; line-height: 0; }
-        .logo-container img { max-width: 180px; height: auto; vertical-align: top; transition: opacity 0.3s ease; }
-        
+        .logo-container img { max-width: 180px; height: auto; vertical-align: top; }
         label { display: block; margin-top: 15px; font-weight: bold; color: var(--text-dark); font-size: 0.95em; }
-        
-        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: var(--base-font-size); border-radius: 4px; background-color: var(--input-bg); color: var(--text-dark); transition: border-color 0.2s, box-shadow 0.2s; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary-main); box-shadow: 0 0 0 3px rgba(74, 101, 114, 0.1); background-color: var(--bg-container); }
-        input[readonly], input:disabled { background-color: #e9ecef; color: #6c757d; border-color: #ddd; cursor: not-allowed; }
-        body.dark-mode input[readonly], body.dark-mode input:disabled { background-color: #333; color: #888; border-color: #555; }
-        
-        .autocomplete-container { position: relative; width: 100%; }
-        .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background-color: var(--bg-container); border: 1px solid var(--primary-main); border-top: none; z-index: 99; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border-default); }
-        .dropdown-item:last-child { border-bottom: none; }
-        .dropdown-item:hover, .dropdown-item.active { background-color: var(--primary-light-bg); color: var(--primary-dark); font-weight: bold; }
-        body.dark-mode .dropdown-item:hover, body.dark-mode .dropdown-item.active { color: #fff; }
-
-        button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 4px; transition: background-color 0.2s; }
-        button:hover:not(:disabled) { background-color: var(--action-green-dark); }
-        button:disabled { background-color: #9e9e9e; cursor: not-allowed; }
-        
+        input, select, textarea { width: 100%; padding: 12px; margin-top: 5px; border: 1px solid var(--border-default); box-sizing: border-box; font-size: var(--base-font-size); border-radius: 4px; background-color: var(--input-bg); color: var(--text-dark); }
+        button { width: 100%; padding: 15px; background-color: var(--action-green); color: white; border: none; font-size: 1.1em; margin-top: 20px; cursor: pointer; font-weight: bold; border-radius: 4px; }
         button.camera-btn { background-color: var(--primary-main); margin-top: 10px; }
-        button.camera-btn:hover:not(:disabled) { background-color: var(--primary-dark); }
-        
         button.secondary-btn { background-color: #6c757d; }
-        button.secondary-btn:hover:not(:disabled) { background-color: #5a6268; }
         button.danger-btn { background-color: #d32f2f; margin-top: 5px;}
-        button.danger-btn:hover:not(:disabled) { background-color: #b71c1c; }
-        
         .result { padding: 20px; font-weight: bold; text-align: center; font-size: 1.2em; margin-bottom: 20px; border-radius: 4px; color: var(--text-dark); }
         .success { background-color: #e8f5e9; color: #1b5e20; border: 2px solid #4caf50; }
         .error { background-color: #ffebee; color: #b71c1c; border: 2px solid #ef5350; }
-        body.dark-mode .success { background-color: #1b5e20; color: #e8f5e9; }
-        body.dark-mode .error { background-color: #b71c1c; color: #ffebee; }
-        
-        .action-section { border-top: 2px solid var(--border-default); padding-top: 15px; margin-top: 15px; }
-        #reader { width: 100%; margin-top: 15px; display: none; }
-        
         .main-menu-container { position: absolute; top: 10px; right: 10px; z-index: 100; display: none; }
         .menu-toggle-btn { background-color: var(--primary-main); color: white; border: none; padding: 8px 12px; font-size: 0.9em; cursor: pointer; border-radius: 4px; width: auto; margin: 0; }
-        .menu-toggle-btn:hover { background-color: var(--primary-dark); }
-        .menu-dropdown-content { display: none; position: absolute; right: 0; top: 100%; background-color: var(--bg-container); min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); border: 1px solid var(--border-default); border-top: none; z-index: 1000; }
+        .menu-dropdown-content { display: none; position: absolute; right: 0; top: 100%; background-color: var(--bg-container); min-width: 160px; box-shadow: 0 8px 16px rgba(0,0,0,0.15); border: 1px solid var(--border-default); z-index: 1000; }
         .menu-dropdown-content a { color: var(--text-dark); padding: 12px 16px; text-decoration: none; display: block; font-size: 0.9em; font-weight: bold; border-bottom: 1px solid var(--border-default); cursor: pointer; }
-        .menu-dropdown-content a:last-child { border-bottom: none; color: #d32f2f; }
-        .menu-dropdown-content a:hover { background-color: var(--primary-light-bg); }
-        
-        .instruction-box { background-color: var(--primary-light-bg); color: var(--primary-dark); padding: 15px; border-left: 5px solid var(--primary-main); margin-bottom: 20px; font-weight: bold; font-size: 1.1em; text-align: center; border-radius: 4px; }
-        body.dark-mode .instruction-box { color: #fff; }
-        
-        .netto-box { display: none; padding: 10px; background-color: var(--bg-container); border: 1px solid var(--action-green); margin-top: 5px; color: var(--action-green); font-weight: bold; border-radius: 4px; }
-        .calc-box { background-color: var(--primary-light-bg); border: 1px solid var(--border-default); padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        
-        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .stat-card { background-color: var(--primary-light-bg); padding: 15px; text-align: center; border: 1px solid var(--primary-main); position: relative; cursor: default; border-radius: 4px; }
-        .stat-card h3 { margin: 0 0 5px 0; font-size: 0.9em; color: var(--primary-dark); }
-        body.dark-mode .stat-card h3 { color: #fff; }
-        .stat-card .stat-val { font-size: 1.5em; font-weight: bold; color: var(--action-green); }
-        .stat-card.error-card { cursor: pointer; }
-        .stat-card.error-card .stat-val { color: #ef5350; }
-        
-        .error-details { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-container); border: 1px solid #d32f2f; padding: 10px; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.2); text-align: left; font-size: 0.85em; font-weight: normal; color: var(--text-dark); border-radius: 4px;}
-        .stat-card.error-card:hover .error-details, .stat-card.error-card.active .error-details { display: block; }
-        .error-details ul { margin: 0; padding-left: 20px; }
-        .error-details li { margin-bottom: 5px; }
-
-        .filter-toggle-header { background-color: var(--primary-main); color: white; padding: 12px; font-weight: bold; cursor: pointer; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; margin-top: 10px; border-radius: 4px; }
-        .filter-body { display: none; background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; border-radius: 4px; }
-        .export-filter-body { background-color: var(--primary-light-bg); padding: 15px; border: 1px solid var(--border-default); margin-bottom: 20px; border-radius: 4px; }
-        
-        .chart-container { margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 20px; }
-        .chart-wrapper { background-color: var(--bg-container); padding: 15px; border: 1px solid var(--primary-main); border-radius: 4px; }
-        canvas { max-width: 100%; }
-
-        .privacy-hint { color: #d32f2f; font-size: 0.85em; font-weight: normal; margin-top: 3px; display: block; }
-        .privacy-link { display: block; text-align: center; margin-top: 25px; color: var(--primary-dark); font-size: 0.9em; text-decoration: underline; cursor: pointer; font-weight: bold; }
-        body.dark-mode .privacy-link { color: var(--text-dark); }
-        .toggle-link { display: block; text-align: center; margin-top: 15px; color: var(--primary-main); font-size: 0.9em; cursor: pointer; }
-        
-        h2 { margin-top: 10px; margin-bottom: 15px; color: var(--text-dark); text-align: center; }
-        h4 { color: var(--text-dark); margin-bottom: 5px; }
-
-        .font-btn-group { display: flex; gap: 10px; margin-top: 10px; }
-        .font-btn-group button { margin-top: 0; padding: 10px; }
-
-        #toast { visibility: hidden; min-width: 250px; background-color: var(--action-green); color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; font-weight: bold; transform: translateX(-50%); opacity: 0; transition: opacity 0.5s, bottom 0.5s; }
-        #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
-        #toast.error { background-color: #ef5350; }
-        
-        .setting-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-default); }
-        .setting-row label { margin-top: 0; }
-        .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 24px; }
-        .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: var(--action-green); }
-        input:checked + .slider:before { transform: translateX(20px); }
-
-        .history-item { background: var(--primary-light-bg); border: 1px solid var(--border-default); padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; font-size: 0.9em; }
-        
-        .role-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
-        .role-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-container); border: 1px solid var(--border-default); padding: 12px 15px; border-radius: 6px; }
-        .role-info { display: flex; flex-direction: column; gap: 4px; }
-        .role-name { font-weight: bold; font-size: 1.1em; color: var(--primary-main); }
-        .role-badge { font-size: 0.75em; font-weight: bold; text-transform: uppercase; padding: 3px 8px; border-radius: 12px; display: inline-block; width: fit-content; }
-        
-        .badge-user { background-color: #e0f2f1; color: #00695c; }
-        .badge-admin { background-color: #e8eaf6; color: #4a148c; }
-        .badge-owner { background-color: #fff8e1; color: #f57f17; }
-        
-        body.dark-mode .role-item { background: var(--primary-light-bg); }
-        body.dark-mode .badge-user { background-color: #004d40; color: #80cbc4; }
-        body.dark-mode .badge-admin { background-color: #311b92; color: #b39ddb; }
-        body.dark-mode .badge-owner { background-color: #ff6f00; color: #ffe082; }
-        
-        .role-select-wrapper select { width: 100%; min-width: 110px; padding: 8px; margin: 0; font-size: 0.9em; border-radius: 4px; }
+        .autocomplete-container { position: relative; width: 100%; }
+        .dropdown-list { position: absolute; top: 100%; left: 0; right: 0; background-color: var(--bg-container); border: 1px solid var(--primary-main); z-index: 99; max-height: 200px; overflow-y: auto; display: none; }
+        .dropdown-item { padding: 12px; cursor: pointer; border-bottom: 1px solid var(--border-default); }
+        .dropdown-item:hover { background-color: var(--primary-light-bg); }
+        .role-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-container); border: 1px solid var(--border-default); padding: 12px 15px; border-radius: 6px; margin-bottom: 10px; }
+        .badge-user { background-color: #e0f2f1; color: #00695c; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; }
+        .badge-admin { background-color: #e8eaf6; color: #4a148c; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; }
+        .badge-owner { background-color: #fff8e1; color: #f57f17; padding: 3px 8px; border-radius: 12px; font-size: 0.8em; }
+        #toast { visibility: hidden; min-width: 250px; background-color: var(--action-green); color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); opacity: 0; transition: opacity 0.5s; }
+        #toast.show { visibility: visible; opacity: 1; }
     </style>
 </head>
 <body>
     <div id="toast">Nachricht</div>
 
     <div class="container">
-        
         <div id="mainMenuContainer" class="main-menu-container">
             <button class="menu-toggle-btn" onclick="toggleMenu()">☰ Menü</button>
             <div id="menuDropdown" class="menu-dropdown-content">
                 <a onclick="ladeNeuenEingang()">Eingang erfassen</a>
                 <a onclick="navigiereZu('historyPage')" id="menuHistory">Meine Einträge</a>
                 <a onclick="navigiereZu('statistikPage')" id="menuStatistik" style="display:none;">Statistik</a>
-                <a onclick="navigiereZu('adminPage')" id="menuExport" style="display:none;">Export</a>
+                <a onclick="navigiereZu('adminPage')" id="menuExport">Export</a>
                 <a onclick="navigiereZu('settingsPage')">Einstellungen</a>
                 <a onclick="logout()">Logout</a>
             </div>
         </div>
 
-        <div id="settingsPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" id="logoImgSettings" alt="CheckGate Logo"></div>
-            <h2>Einstellungen</h2>
-            
-            <div class="action-section" style="border-top: none;">
-                <button id="darkModeToggleBtn" onclick="toggleDarkMode()" class="camera-btn" style="margin-top: 0;">Dark Mode aktivieren</button>
-                
-                <h4 style="margin-top: 20px;">Schriftgröße</h4>
-                <div class="font-btn-group">
-                    <button onclick="setFontSize(14)" style="font-size: 14px;" class="secondary-btn">Klein</button>
-                    <button onclick="setFontSize(16)" style="font-size: 16px;" class="secondary-btn">Normal</button>
-                    <button onclick="setFontSize(20)" style="font-size: 20px;" class="secondary-btn">Groß</button>
-                </div>
-            </div>
-
-            <div class="action-section">
-                <h4>Ablauf & Erfassung</h4>
-                <div class="setting-row">
-                    <label>Auto-Ausfüllen<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Kategorie, Produkt & Lieferant merken</span></label>
-                    <label class="switch"><input type="checkbox" id="settingAutoFill" onchange="saveSetting('autofill', this.checked)"><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <label>Scanner-Feedback<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Vibration bei erfolgreichem Scan</span></label>
-                    <label class="switch"><input type="checkbox" id="settingVibrate" onchange="saveSetting('vibrate', this.checked)"><span class="slider"></span></label>
-                </div>
-                <div class="setting-row">
-                    <label>Schnelleingabe-Modus<br><span style="font-size:0.8em; font-weight:normal; color:#666;">Pop-ups durch Banner ersetzen</span></label>
-                    <label class="switch"><input type="checkbox" id="settingFastTrack" onchange="saveSetting('fasttrack', this.checked)"><span class="slider"></span></label>
-                </div>
-            </div>
-
-            <div class="action-section">
-                <h4>Offline-Speicher</h4>
-                <div style="font-weight:bold; color:var(--primary-main); text-align:center; padding: 10px; background:var(--primary-light-bg); border-radius:4px; margin-bottom: 10px;">
-                    Status: <span id="offlineCountBadge">0</span> Einträge im Cache
-                </div>
-                <button onclick="syncOfflineDaten()" class="camera-btn">Manuell Synchronisieren</button>
-                <button onclick="clearOfflineCache()" class="danger-btn">Cache löschen</button>
-            </div>
-
-            <div id="ownerSection" class="action-section" style="display:none; border: 2px solid var(--action-green); padding: 15px; border-radius: 4px;">
-                <h4 style="color:var(--action-green-dark); margin-top: 0; margin-bottom: 5px;">Benutzerverwaltung</h4>
-                
-                <div style="margin-top: 20px; border-top: 1px solid var(--border-default); padding-top: 15px;">
-                    <h4 style="margin-bottom: 5px;">Magic Link senden</h4>
-                    <p style="font-size:0.85em; margin-top:0;">Sendet einen passwortlosen Zugangslink. Ideal für neue Mitarbeiter.</p>
-                    <input type="email" id="magicLinkEmail" placeholder="E-Mail-Adresse">
-                    <button onclick="sendMagicLink()" class="camera-btn" style="margin-top: 10px;">Zugangslink versenden</button>
-                </div>
-
-                <div style="margin-top: 20px; border-top: 1px solid var(--border-default); padding-top: 15px;">
-                    <h4>Rollenverteilung</h4>
-                    <div id="userRoleList">Lade Benutzer...</div>
-                </div>
-            </div>
-
-            <button class="secondary-btn" style="margin-top: 40px;" onclick="navigiereZu('formPage')">Zurück</button>
-        </div>
-
-        <div id="historyPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" id="logoImgHistory" alt="CheckGate Logo"></div>
-            <h2>Einträge der letzten 14 Tage</h2>
-            <div id="historyList">Lade Historie...</div>
-            <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
-        </div>
-
-        <div id="loginPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" id="logoImgLogin" alt="CheckGate Logo"></div>
+        <div id="loginPage">
+            <div class="logo-container"><img src="logo.png" id="logoImgLogin" alt="Logo"></div>
             <div id="loginForm">
                 <h2>Mitarbeiter Login</h2>
-                <label for="email">E-Mail Adresse:</label><input type="email" id="email" placeholder="Eingabe: E-Mail">
-                <label for="passwort">Passwort:</label><input type="password" id="passwort" placeholder="Eingabe: Passwort">
+                <label>E-Mail Adresse:</label><input type="email" id="email" placeholder="Eingabe: E-Mail">
+                <label>Passwort:</label><input type="password" id="passwort" placeholder="Eingabe: Passwort">
                 <button id="loginBtn" onclick="login()">Einloggen</button>
-                <a class="toggle-link" onclick="toggleAuthMode('request')">Kein Konto? Zugang anfragen.</a>
+                <a style="display:block; text-align:center; margin-top:15px; cursor:pointer;" onclick="toggleAuthMode('request')">Kein Konto? Zugang anfragen.</a>
             </div>
             <div id="requestForm" style="display:none;">
                 <h2>Zugang anfragen</h2>
-                <label for="reqName">Vollständiger Name:</label><input type="text" id="reqName" placeholder="Max Mustermann">
-                <label for="reqEmail">E-Mail Adresse:</label><input type="email" id="reqEmail" placeholder="deine@email.de">
-                <label for="reqAnmerkung">Anmerkung (Optional):</label><textarea id="reqAnmerkung" rows="3"></textarea>
-                <button onclick="sendeAnfrage()" class="camera-btn">Anfrage senden</button>
-                <a class="toggle-link" onclick="toggleAuthMode('login')">Zurück zum Login</a>
+                <label>Name:</label><input type="text" id="reqName">
+                <label>E-Mail:</label><input type="email" id="reqEmail">
+                <label>Anmerkung:</label><textarea id="reqAnmerkung"></textarea>
+                <button onclick="sendeAnfrage()">Anfrage senden</button>
+                <a style="display:block; text-align:center; margin-top:15px; cursor:pointer;" onclick="toggleAuthMode('login')">Zurück zum Login</a>
             </div>
-            <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
-        </div>
-
-        <div id="setNewPasswordPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2>Dauerhaften Zugang einrichten</h2>
-            <p style="text-align: center; font-size: 0.9em;">Lege ein Passwort fest, um dich zukünftig auch ohne E-Mail-Link anzumelden.</p>
-            <label for="magicPassword">Neues Passwort:</label><input type="password" id="magicPassword" placeholder="Min. 8 Zeichen">
-            <label for="confirmMagicPassword">Passwort bestätigen:</label><input type="password" id="confirmMagicPassword">
-            <button id="saveMagicPwdBtn" onclick="saveMagicPassword()">Passwort speichern & Weiter</button>
-            <button class="secondary-btn" onclick="ueberspringePasswort()">Überspringen</button>
         </div>
 
         <div id="setupProfilePage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
             <h2>Profil einrichten</h2>
-            <label for="newKuerzel">Dein Mitarbeiterkürzel:</label><input type="text" id="newKuerzel" placeholder="z. B. AB">
-            <label for="newPassword">Neues Passwort (Optional):</label><input type="password" id="newPassword" placeholder="Falls Login ohne Link gewünscht">
-            <button id="saveKuerzelBtn" onclick="saveProfile()">Speichern & Weiter</button>
+            <label>Dein Mitarbeiterkürzel:</label><input type="text" id="newKuerzel" placeholder="z. B. AB">
+            <label>Neues Passwort (für Login ohne Link):</label><input type="password" id="newPassword">
+            <button id="saveKuerzelBtn" onclick="saveProfile()">Speichern & Starten</button>
+        </div>
+
+        <div id="setNewPasswordPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
+            <h2>Dauerhaften Zugang einrichten</h2>
+            <label>Neues Passwort:</label><input type="password" id="magicPassword">
+            <label>Bestätigen:</label><input type="password" id="confirmMagicPassword">
+            <button id="saveMagicPwdBtn" onclick="saveMagicPassword()">Passwort speichern</button>
+            <button class="secondary-btn" onclick="ueberspringePasswort()">Überspringen</button>
         </div>
 
         <div id="formPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" id="logoImgForm" alt="CheckGate Logo"></div>
-            <label for="datum">Datum:</label><input type="date" id="datum">
-            <label for="mitarbeiter">Mitarbeiterkürzel:</label><input type="text" id="mitarbeiter" readonly>
-            
-            <label for="produktkategorie">Produktkategorie:</label>
-            <div class="autocomplete-container">
-                <input type="text" id="produktkategorie" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterKategorien()" onfocus="filterKategorien()">
-                <div id="kategorieDropdown" class="dropdown-list"></div>
-            </div>
-
-            <label for="produkt">Produkt:</label>
-            <div class="autocomplete-container">
-                <input type="text" id="produkt" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterProdukte()" onfocus="filterProdukte()">
-                <div id="produktDropdown" class="dropdown-list"></div>
-            </div>
-
-            <label for="lieferant">Lieferant:</label>
-            <div class="autocomplete-container">
-                <input type="text" id="lieferant" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterLieferanten()" onfocus="filterLieferanten()">
-                <div id="lieferantDropdown" class="dropdown-list"></div>
-            </div>
-            
-            <label for="spediteur">Spediteur:</label>
-            <div class="autocomplete-container">
-                <input type="text" id="spediteur" placeholder="Tippen für Vorschläge..." autocomplete="off" oninput="filterSpediteure()" onfocus="filterSpediteure()">
-                <div id="spediteurDropdown" class="dropdown-list"></div>
-            </div>
-            
-            <label for="artikelnummer">Artikelnummer:</label>
-            <input type="text" id="artikelnummer" placeholder="Scannen oder tippen...">
-            <button type="button" class="camera-btn" onclick="startScanner()">Barcode scannen</button>
-            <div id="reader"></div>
-
-            <label for="menge">Gelieferte Menge (Stück):</label><input type="number" id="menge" min="1" value="100">
-            <label for="preisArt">Preisart für Eingabe:</label><select id="preisArt" onchange="berechneNetto()"><option value="netto">Netto</option><option value="brutto">Brutto</option></select>
-            <label for="preisEingabe">Einzelpreis (€):</label><input type="number" id="preisEingabe" min="0" step="0.01" value="0.00" oninput="berechneNetto()">
-            <div id="nettoAnzeige" class="netto-box">Berechneter Nettopreis: <span id="nettoWert">0.00</span> €</div>
-
-            <label for="verpackung">Sichtprüfung: Verpackung intakt?</label><select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein (Transportschaden)</option></select>
-            <label for="mengeOk">Mengenprüfung: Stimmt mit Lieferschein überein?</label><select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
-            
+            <div class="logo-container"><img src="logo.png" id="logoImgForm" alt="Logo"></div>
+            <label>Datum:</label><input type="date" id="datum">
+            <label>Mitarbeiter:</label><input type="text" id="mitarbeiter" readonly>
+            <label>Kategorie:</label><input type="text" id="produktkategorie" oninput="filterKategorien()" onfocus="filterKategorien()">
+            <div id="kategorieDropdown" class="dropdown-list"></div>
+            <label>Produkt:</label><input type="text" id="produkt" oninput="filterProdukte()" onfocus="filterProdukte()">
+            <div id="produktDropdown" class="dropdown-list"></div>
+            <label>Lieferant:</label><input type="text" id="lieferant" oninput="filterLieferanten()" onfocus="filterLieferanten()">
+            <div id="lieferantDropdown" class="dropdown-list"></div>
+            <label>Spediteur:</label><input type="text" id="spediteur" oninput="filterSpediteure()" onfocus="filterSpediteure()">
+            <div id="spediteurDropdown" class="dropdown-list"></div>
+            <label>Artikelnummer:</label><input type="text" id="artikelnummer">
+            <button class="camera-btn" onclick="startScanner()">Barcode scannen</button>
+            <div id="reader" style="display:none;"></div>
+            <label>Menge:</label><input type="number" id="menge" value="100">
+            <label>Preisart:</label><select id="preisArt" onchange="berechneNetto()"><option value="netto">Netto</option><option value="brutto">Brutto</option></select>
+            <label>Preis (€):</label><input type="number" id="preisEingabe" step="0.01" oninput="berechneNetto()">
+            <div id="nettoAnzeige" style="display:none; color:var(--action-green); font-weight:bold; margin-top:5px;">Netto: <span id="nettoWert"></span> €</div>
+            <label>Verpackung OK?</label><select id="verpackung"><option value="ja">Ja</option><option value="nein">Nein</option></select>
+            <label>Menge OK?</label><select id="mengeOk"><option value="ja">Ja</option><option value="nein">Nein</option></select>
             <button onclick="geheZuPruefung()">Weiter</button>
-            <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
         </div>
 
         <div id="pruefungPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" id="logoImgPruefung" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
             <div id="pruefungsAnweisung" class="instruction-box"></div>
-            
             <div id="stichprobenRechner" class="calc-box" style="display:none;">
-                <h4 style="margin-top:0;">Stichprobenkalkulator</h4>
-                <label for="fehlerakzeptanz">Fehlerakzeptanz (%):</label><input type="number" id="fehlerakzeptanz" value="1.0" step="0.1" oninput="updateStichproben()">
-                <label for="erwartungswertfaktor">Erwartungswertfaktor:</label><input type="number" id="erwartungswertfaktor" value="1.0" step="0.1" oninput="updateStichproben()">
-                <div style="margin-top:15px; font-weight:bold; font-size:1.1em; color:var(--action-green-dark);">Nötige Stichproben: <span id="stichprobenErgebnis">0</span></div>
+                <label>Fehlerakzeptanz (%):</label><input type="number" id="fehlerakzeptanz" value="1.0" step="0.1" oninput="updateStichproben()">
+                <label>Faktor:</label><input type="number" id="erwartungswertfaktor" value="1.0" step="0.1" oninput="updateStichproben()">
+                <p>Nötig: <span id="stichprobenErgebnis">0</span></p>
             </div>
-            
-            <label for="pruefungErfolgreich">War die Prüfung erfolgreich?</label><select id="pruefungErfolgreich"><option value="ja">Ja (Keine Mängel festgestellt)</option><option value="nein">Nein (Mängel oder fehlendes Zubehör)</option></select>
+            <label>Erfolgreich?</label><select id="pruefungErfolgreich"><option value="ja">Ja</option><option value="nein">Nein</option></select>
             <button onclick="pruefen()">Absenden</button>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
 
         <div id="resultPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
             <div id="resultBox" class="result"></div>
-            <div id="errorActions" class="action-section" style="display:none;">
-                <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label><textarea id="mangelBeschreibung" rows="4"></textarea>
-                <label for="mangelBilder">Bilder hochladen:</label><input type="file" id="mangelBilder" accept="image/*" multiple capture="environment" style="margin-top: 10px;">
-                <button id="saveBtnError" onclick="inSupabaseSpeichern(true)">In Datenbank sichern</button>
+            <div id="errorActions" style="display:none;">
+                <label>Mängel:</label><textarea id="mangelBeschreibung"></textarea>
+                <input type="file" id="mangelBilder" accept="image/*" multiple capture="environment">
             </div>
-            <div id="successActions" class="action-section" style="display:none;">
-                <button id="saveBtnSuccess" onclick="inSupabaseSpeichern(false)">In Datenbank sichern</button>
-            </div>
+            <button onclick="inSupabaseSpeichern()">In Datenbank sichern</button>
         </div>
 
-        <div id="datenschutzPage" style="display:none;">
-            <h2>Datenschutzerklärung</h2>
-            <button class="secondary-btn" onclick="location.reload()">Zurück</button>
-        </div>
-
-        <div id="adminPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" id="logoImgAdmin" alt="CheckGate Logo"></div>
-            <h2>Daten-Export</h2>
-            <div class="export-filter-body">
-                <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
-                <label for="exportEnde">Bis Datum:</label><input type="date" id="exportEnde">
-                <label for="exportKategorieFilter">Kategorie:</label><select id="exportKategorieFilter"><option value="">Alle Kategorien</option></select>
-                <label for="exportLieferantFilter">Lieferant:</label><select id="exportLieferantFilter"><option value="">Alle Lieferanten</option></select>
-                <label for="exportSpediteurFilter">Spediteur:</label><select id="exportSpediteurFilter"><option value="">Alle Spediteure</option></select>
-                
-                <label for="exportMitarbeiterFilter" id="labelExportMitarbeiter">Mitarbeiter:</label>
-                <select id="exportMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
-                
-                <div style="border-top: 1px solid var(--border-default); margin-top: 15px; padding-top: 15px;">
-                    <label for="exportSeparator">CSV-Trennzeichen:</label>
-                    <select id="exportSeparator">
-                        <option value=";">Semikolon ( ; ) - Standard Excel</option>
-                        <option value=",">Komma ( , ) - Standard Supabase</option>
-                    </select>
-                </div>
-            </div>
-            <button id="exportBtn" onclick="exportiereVonSupabase()">Daten herunterladen</button>
+        <div id="historyPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
+            <h2>Historie (14 Tage)</h2>
+            <div id="historyList"></div>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
 
+        <div id="settingsPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
+            <h2>Einstellungen</h2>
+            <button id="darkModeToggleBtn" onclick="toggleDarkMode()">Dark Mode aktivieren</button>
+            <div id="ownerSection" style="display:none; margin-top:20px; border-top:2px solid var(--action-green); padding-top:10px;">
+                <h3>Owner Verwaltung</h3>
+                <label>Magic Link an:</label><input type="email" id="magicLinkEmail">
+                <button onclick="sendMagicLink()" class="camera-btn">Link senden</button>
+                <h4>Rollen</h4>
+                <div id="userRoleList"></div>
+            </div>
+            <button class="secondary-btn" style="margin-top:20px;" onclick="navigiereZu('formPage')">Zurück</button>
+        </div>
+        
         <div id="statistikPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" id="logoImgStat" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
             <h2>Statistik</h2>
-            
-            <div class="filter-toggle-header" onclick="toggleStatsFilter()">Filter einstellen <span id="filterArrow">▼</span></div>
-            <div id="statsFilterBody" class="filter-body">
-                <label for="statStart">Von:</label><input type="date" id="statStart">
-                <label for="statEnde">Bis:</label><input type="date" id="statEnde">
-                <label for="statKategorieFilter">Kategorie:</label><select id="statKategorieFilter"><option value="">Alle Kategorien</option></select>
-                <label for="statLieferantFilter">Lieferant:</label><select id="statLieferantFilter"><option value="">Alle Lieferanten</option></select>
-                <label for="statSpediteurFilter">Spediteur:</label><select id="statSpediteurFilter"><option value="">Alle Spediteure</option></select>
-                <label for="statMitarbeiterFilter">Mitarbeiter:</label><select id="statMitarbeiterFilter"><option value="">Alle Mitarbeiter</option></select>
-                <button class="camera-btn" onclick="ladeStatistiken()">Aktualisieren</button>
-            </div>
-
             <div class="stat-grid">
-                <div class="stat-card">
-                    <h3>Gesamtprüfungen</h3>
-                    <div id="statTotal" class="stat-val">0</div>
-                </div>
-                <div class="stat-card error-card" onclick="this.classList.toggle('active')">
-                    <h3>Mängelquote</h3>
-                    <div id="statErrorRate" class="stat-val">0%</div>
-                    <div class="error-details">
-                        <strong>Mängel nach Kategorie:</strong>
-                        <ul id="errorDetailsList"><li>Keine Mängel erfasst.</li></ul>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <h3>Volumen (Stk)</h3>
-                    <div id="statVolume" class="stat-val">0</div>
-                </div>
-                <div class="stat-card">
-                    <h3>Wert (€)</h3>
-                    <div id="statValue" class="stat-val">0</div>
-                </div>
+                <div class="stat-card"><h3>Gesamt</h3><div id="statTotal" class="stat-val">0</div></div>
+                <div class="stat-card"><h3>Mängel</h3><div id="statErrorRate" class="stat-val">0%</div></div>
             </div>
+            <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
+        </div>
 
-            <div class="chart-container">
-                <div class="chart-wrapper"><canvas id="chartMonths"></canvas></div>
-                <div class="chart-wrapper"><canvas id="chartKategorien"></canvas></div>
-                <div class="chart-wrapper"><canvas id="chartLiefs"></canvas></div>
-            </div>
+        <div id="adminPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" alt="Logo"></div>
+            <h2>Export</h2>
+            <label>Von:</label><input type="date" id="exportStart">
+            <label>Bis:</label><input type="date" id="exportEnde">
+            <button onclick="exportiereVonSupabase()">Download CSV</button>
+            <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
     </div>
 
     <script>
-        // GLOBALE URL-PRÜFUNG VOR DEM START
-        const startupURL = window.location.href;
-        let pendingMagicLinkFlow = false;
-        
-        // Supabase nutzt Hash-Fragmente für seine Links (#access_token=...&type=magiclink)
-        if (startupURL.includes('type=magiclink') || startupURL.includes('type=invite') || startupURL.includes('type=recovery')) {
-            pendingMagicLinkFlow = true;
-        }
-
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
-        let currentUserRole = 'user';
-        let currentStatus = "", erfassungsZeitstempel = "", aktuellePruefart = "", html5QrCode, berechneteStichproben = 0;
-        let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [], uniqueMit = [];
-        let produkteNachKategorie = {}, chartInstances = {};
-        
-        let editModeId = null; 
-
-        function initDates() {
-            const heute = new Date();
-            const y = heute.getFullYear();
-            const m = String(heute.getMonth() + 1).padStart(2, '0');
-            const letzterTag = new Date(y, heute.getMonth() + 1, 0).getDate();
-            
-            document.getElementById('datum').valueAsDate = heute;
-            document.getElementById('exportStart').value = `${y}-${m}-01`;
-            document.getElementById('exportEnde').value = `${y}-${m}-${letzterTag}`;
-            document.getElementById('statStart').value = `${y}-01-01`;
-            document.getElementById('statEnde').value = `${y}-12-31`;
-        }
-
-        function initSettings() {
-            const isDark = localStorage.getItem('checkgate_darkmode') === 'true';
-            if (isDark) document.body.classList.add('dark-mode');
-            updateLogoSource(isDark);
-            
-            document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
-            const savedSize = localStorage.getItem('checkgate_fontsize');
-            if (savedSize) document.documentElement.style.setProperty('--base-font-size', savedSize + 'px');
-
-            document.getElementById('settingAutoFill').checked = localStorage.getItem('checkgate_autofill') === 'true';
-            document.getElementById('settingVibrate').checked = localStorage.getItem('checkgate_vibrate') === 'true';
-            document.getElementById('settingFastTrack').checked = localStorage.getItem('checkgate_fasttrack') === 'true';
-            updateOfflineStatus();
-        }
-
-        function updateLogoSource(isDark) {
-            const src = isDark ? 'logo-dark.png' : 'logo.png';
-            document.querySelectorAll('.logo-container img').forEach(img => img.src = src);
-        }
-
-        function toggleDarkMode() {
-            const isDark = document.body.classList.toggle('dark-mode');
-            localStorage.setItem('checkgate_darkmode', isDark);
-            document.getElementById('darkModeToggleBtn').innerText = isDark ? "Light Mode aktivieren" : "Dark Mode aktivieren";
-            updateLogoSource(isDark);
-            if(document.getElementById('statistikPage').style.display === 'block') ladeStatistiken();
-        }
-
-        function setFontSize(size) {
-            document.documentElement.style.setProperty('--base-font-size', size + 'px');
-            localStorage.setItem('checkgate_fontsize', size);
-        }
-
-        function saveSetting(key, val) { localStorage.setItem('checkgate_' + key, val); }
-
-        async function processUserLogin(user) {
-            if (user.user_metadata?.kuerzel) { 
-                const kuerzel = user.user_metadata.kuerzel.toLowerCase();
-                document.getElementById('mitarbeiter').value = kuerzel; 
-
-                let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
-                
-                if (error || !data) {
-                    await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
-                    currentUserRole = 'user';
-                } else {
-                    currentUserRole = data.role;
-                }
-
-                const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
-                
-                document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
-                document.getElementById('menuExport').style.display = 'block'; 
-                
-                document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
-
-                if (currentUserRole === 'user') {
-                    document.getElementById('labelExportMitarbeiter').style.display = 'none';
-                    document.getElementById('exportMitarbeiterFilter').style.display = 'none';
-                } else {
-                    document.getElementById('labelExportMitarbeiter').style.display = 'block';
-                    document.getElementById('exportMitarbeiterFilter').style.display = 'block';
-                }
-
-                if (currentUserRole === 'owner') ladeBenutzerRollen();
-                
-                ladeDropdownDaten();
-                ladeNeuenEingang(); 
-            } else {
-                zeigeSeite('setupProfilePage');
-            }
-        }
-
-        async function ladeBenutzerRollen() {
-            const { data, error } = await supabaseClient.from('benutzer_rollen').select('*').order('kuerzel');
-            const list = document.getElementById('userRoleList');
-            if (error) return list.innerText = "Fehler beim Laden der Rollen.";
-            list.innerHTML = '<div class="role-list"></div>';
-            const listContainer = list.querySelector('.role-list');
-            
-            data.forEach(user => {
-                let badgeClass = 'badge-user';
-                if (user.role === 'admin') badgeClass = 'badge-admin';
-                if (user.role === 'owner') badgeClass = 'badge-owner';
-                
-                listContainer.innerHTML += `
-                    <div class="role-item">
-                        <div class="role-info">
-                            <span class="role-name">${user.kuerzel.toUpperCase()}</span>
-                            <span class="role-badge ${badgeClass}">${user.role}</span>
-                        </div>
-                        <div class="role-select-wrapper">
-                            <select onchange="updateRolle('${user.kuerzel}', this.value)">
-                                <option value="user" ${user.role==='user'?'selected':''}>User</option>
-                                <option value="admin" ${user.role==='admin'?'selected':''}>Admin</option>
-                                <option value="owner" ${user.role==='owner'?'selected':''}>Owner</option>
-                            </select>
-                        </div>
-                    </div>`;
-            });
-        }
-
-        async function updateRolle(k, r) {
-            const { error } = await supabaseClient.from('benutzer_rollen').update({ role: r }).eq('kuerzel', k);
-            if (error) showMessage("Fehler: " + error.message, true); else { showMessage("Rolle aktualisiert."); ladeBenutzerRollen(); }
-        }
-
-        async function sendMagicLink() {
-            const email = document.getElementById('magicLinkEmail').value.trim();
-            if (!email) return showMessage("Bitte eine E-Mail-Adresse eingeben.", true);
-            
-            const btn = document.querySelector('button[onclick="sendMagicLink()"]');
-            btn.disabled = true; btn.innerText = "Sende...";
-
-            const { error } = await supabaseClient.auth.signInWithOtp({ 
-                email: email,
-                options: { shouldCreateUser: true }
-            });
-            
-            btn.disabled = false; btn.innerText = "Zugangslink versenden";
-
-            if (error) {
-                showMessage("Fehler: " + error.message, true);
-            } else {
-                showMessage("Magic Link wurde an " + email + " gesendet!");
-                document.getElementById('magicLinkEmail').value = '';
-            }
-        }
-
-        async function ladeDropdownDaten() {
-            const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, spediteur, mitarbeiter, produktkategorie, produkt').limit(2000);
-            if (data && !error) {
-                const uniqueLief = [], uniqueSped = [], uniqueKat = [], prodMap = {}, allProds = [];
-                uniqueMit = [];
-
-                data.forEach(row => { 
-                    if (row.lieferant && !uniqueLief.includes(row.lieferant)) uniqueLief.push(row.lieferant); 
-                    if (row.spediteur && !uniqueSped.includes(row.spediteur)) uniqueSped.push(row.spediteur); 
-                    if (row.mitarbeiter && !uniqueMit.includes(row.mitarbeiter)) uniqueMit.push(row.mitarbeiter); 
-                    if (row.produktkategorie && !uniqueKat.includes(row.produktkategorie)) uniqueKat.push(row.produktkategorie);
-                    if (row.produkt) {
-                        if (!allProds.includes(row.produkt)) allProds.push(row.produkt);
-                        if (row.produktkategorie) {
-                            if (!prodMap[row.produktkategorie]) prodMap[row.produktkategorie] = [];
-                            if (!prodMap[row.produktkategorie].includes(row.produkt)) prodMap[row.produktkategorie].push(row.produkt);
-                        }
-                    }
-                });
-                
-                lieferantenChronologisch = uniqueLief; spediteureChronologisch = uniqueSped;
-                kategorienChronologisch = uniqueKat; produkteNachKategorie = prodMap; alleProdukte = allProds;
-                
-                populateSelect('statKategorieFilter', uniqueKat, 'Alle Kategorien');
-                populateSelect('statLieferantFilter', uniqueLief, 'Alle Lieferanten');
-                populateSelect('statSpediteurFilter', uniqueSped, 'Alle Spediteure');
-                populateSelect('statMitarbeiterFilter', uniqueMit, 'Alle Mitarbeiter');
-                
-                populateSelect('exportKategorieFilter', uniqueKat, 'Alle Kategorien');
-                populateSelect('exportLieferantFilter', uniqueLief, 'Alle Lieferanten');
-                populateSelect('exportSpediteurFilter', uniqueSped, 'Alle Spediteure');
-                populateSelect('exportMitarbeiterFilter', uniqueMit, 'Alle Mitarbeiter');
-            }
-        }
-
-        function populateSelect(elementId, items, defaultText) {
-            const select = document.getElementById(elementId);
-            select.innerHTML = `<option value="">${defaultText}</option>`;
-            items.sort().forEach(item => select.add(new Option(item, item)));
-        }
-
-        async function ladeStatistiken() {
-            const start = document.getElementById('statStart').value; 
-            const ende = document.getElementById('statEnde').value;
-            const filterKat = document.getElementById('statKategorieFilter').value;
-            const filterLief = document.getElementById('statLieferantFilter').value; 
-            const filterSped = document.getElementById('statSpediteurFilter').value; 
-            const filterMit = document.getElementById('statMitarbeiterFilter').value;
-
-            let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
-            if (filterKat) query = query.eq('produktkategorie', filterKat);
-            if (filterLief) query = query.eq('lieferant', filterLief);
-            if (filterSped) query = query.eq('spediteur', filterSped);
-            if (filterMit) query = query.eq('mitarbeiter', filterMit);
-
-            const { data, error } = await query;
-            if (error) return console.error("Fehler beim Laden der Statistik:", error);
-
-            document.getElementById('statTotal').innerText = data.length;
-            document.getElementById('statErrorRate').innerText = "0%";
-            document.getElementById('errorDetailsList').innerHTML = "<li>Keine Mängel erfasst.</li>";
-            document.getElementById('statVolume').innerText = "0"; document.getElementById('statValue').innerText = "0";
-
-            if(chartInstances['months']) chartInstances['months'].destroy();
-            if(chartInstances['kategorien']) chartInstances['kategorien'].destroy();
-            if(chartInstances['liefs']) chartInstances['liefs'].destroy();
-
-            if (data.length === 0) return;
-
-            const totalVolume = data.reduce((sum, item) => sum + (parseInt(item.menge) || 0), 0);
-            const totalValue = data.reduce((sum, item) => sum + ((parseFloat(item.preis) || 0) * (parseInt(item.menge) || 0)), 0);
-            document.getElementById('statVolume').innerText = totalVolume.toLocaleString('de-DE');
-            document.getElementById('statValue').innerText = totalValue.toLocaleString('de-DE', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-            let countVerp = 0, countMeng = 0, countQuali = 0, countErrorItems = 0;
-            const monthData = {}; const liefData = {}; const katData = {};
-
-            data.forEach(d => {
-                const month = d.datum ? d.datum.substring(0, 7) : 'Unbekannt';
-                const lief = d.lieferant || 'Unbekannt';
-                const kat = d.produktkategorie || 'Unbekannt';
-                
-                if (!monthData[month]) monthData[month] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
-                if (!liefData[lief]) liefData[lief] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
-                if (!katData[kat]) katData[kat] = { ok: 0, verp: 0, meng: 0, qual: 0, total: 0 };
-
-                let isError = false;
-                if (d.verpackung === 'nein') { countVerp++; monthData[month].verp++; liefData[lief].verp++; katData[kat].verp++; isError = true; }
-                if (d.mengeOk === 'nein') { countMeng++; monthData[month].meng++; liefData[lief].meng++; katData[kat].meng++; isError = true; }
-                if (d.maengel === 'ja') { countQuali++; monthData[month].qual++; liefData[lief].qual++; katData[kat].qual++; isError = true; }
-
-                if (isError) countErrorItems++; 
-                else { monthData[month].ok++; liefData[lief].ok++; katData[kat].ok++; }
-                
-                monthData[month].total++; liefData[lief].total++; katData[kat].total++;
-            });
-
-            document.getElementById('statErrorRate').innerText = ((countErrorItems / data.length) * 100).toFixed(1) + "%";
-            document.getElementById('errorDetailsList').innerHTML = `<li>Verpackung: ${countVerp}x</li><li>Menge: ${countMeng}x</li><li>Qualität: ${countQuali}x</li>`;
-
-            const sortedMonths = Object.keys(monthData).sort();
-            const sortedKats = Object.keys(katData).sort((a,b) => katData[b].total - katData[a].total).slice(0, 10);
-            const sortedLiefs = Object.keys(liefData).sort((a,b) => liefData[b].total - liefData[a].total).slice(0, 10);
-
-            const isDark = document.body.classList.contains('dark-mode');
-            const colorText = isDark ? '#e0e0e0' : '#111';
-
-            const createDatasets = (keys, dataObj) => [
-                { label: 'Mängelfrei', data: keys.map(k => dataObj[k].ok), backgroundColor: '#4caf50' },
-                { label: 'Verpackung', data: keys.map(k => dataObj[k].verp), backgroundColor: '#d32f2f' },
-                { label: 'Menge', data: keys.map(k => dataObj[k].meng), backgroundColor: '#ff9800' },
-                { label: 'Qualität', data: keys.map(k => dataObj[k].qual), backgroundColor: '#1976d2' }
-            ];
-
-            const chartOptions = (title) => ({
-                scales: { 
-                    x: { stacked: true, ticks: { color: colorText } }, 
-                    y: { stacked: true, ticks: { color: colorText } } 
-                }, 
-                plugins: { 
-                    title: { display: true, text: title, color: colorText },
-                    legend: { labels: { color: colorText } }
-                }
-            });
-
-            chartInstances['months'] = new Chart(document.getElementById('chartMonths'), {
-                type: 'bar', data: { labels: sortedMonths, datasets: createDatasets(sortedMonths, monthData) },
-                options: chartOptions('Übersicht nach Monaten')
-            });
-
-            chartInstances['kategorien'] = new Chart(document.getElementById('chartKategorien'), {
-                type: 'bar', data: { labels: sortedKats, datasets: createDatasets(sortedKats, katData) },
-                options: chartOptions('Top Produktkategorien')
-            });
-
-            chartInstances['liefs'] = new Chart(document.getElementById('chartLiefs'), {
-                type: 'bar', data: { labels: sortedLiefs, datasets: createDatasets(sortedLiefs, liefData) },
-                options: chartOptions('Top Lieferanten')
-            });
-        }
-
-        async function exportiereVonSupabase() {
-            const btn = document.getElementById('exportBtn'); btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
-            
-            const start = document.getElementById('exportStart').value;
-            const ende = document.getElementById('exportEnde').value;
-            const filterKat = document.getElementById('exportKategorieFilter').value;
-            const filterLief = document.getElementById('exportLieferantFilter').value;
-            const filterSped = document.getElementById('exportSpediteurFilter').value;
-            const sep = document.getElementById('exportSeparator').value;
-
-            let filterMit = document.getElementById('exportMitarbeiterFilter').value;
-            if (currentUserRole === 'user') {
-                filterMit = document.getElementById('mitarbeiter').value; 
-            }
-
-            let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
-            if (filterKat) query = query.eq('produktkategorie', filterKat);
-            if (filterLief) query = query.eq('lieferant', filterLief);
-            if (filterSped) query = query.eq('spediteur', filterSped);
-            if (filterMit) query = query.eq('mitarbeiter', filterMit);
-
-            const { data: logs, error } = await query;
-            if (error || !logs || !logs.length) { showMessage("Keine Daten für diesen Zeitraum gefunden.", true); btn.disabled = false; btn.innerText = "Daten herunterladen"; return; }
-            
-            let csv = `Datum${sep}Exakte_Uhrzeit${sep}Mitarbeiter${sep}Kategorie${sep}Produkt${sep}Lieferant${sep}Spediteur${sep}Artikelnummer${sep}Menge${sep}Netto_Preis${sep}Prüfart${sep}Fehlerakzeptanz(%)${sep}Erwartungswertfaktor${sep}Nötige_Stichproben${sep}Status${sep}Beschreibung${sep}Bilder_Links\n`;
-            
-            logs.forEach(l => csv += `${l.datum}${sep}${l.zeitstempel||''}${sep}${l.mitarbeiter||''}${sep}${l.produktkategorie||''}${sep}${l.produkt||''}${sep}${l.lieferant||''}${sep}${l.spediteur||''}${sep}${l.seriennummer}${sep}${l.menge}${sep}${l.preis}${sep}${l.pruefart||''}${sep}${l.fehlerakzeptanz||''}${sep}${l.erwartungswertfaktor||''}${sep}${l.stichproben_anzahl||''}${sep}${l.status}${sep}"${l.beschreibung||''}"${sep}"${l.bilder_urls||''}"\n`);
-            
-            const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); a.download = `Wareneingang_Export.csv`; a.click();
-            btn.innerText = "Daten herunterladen"; btn.disabled = false;
-        }
-
-        async function ladeHistorie() {
-            const kuerzel = document.getElementById('mitarbeiter').value;
-            const pastDate = new Date();
-            pastDate.setDate(pastDate.getDate() - 14);
-            const pastDateStr = pastDate.toISOString().split('T')[0];
-
-            const { data, error } = await supabaseClient.from('wareneingang')
-                .select('*').eq('mitarbeiter', kuerzel).gte('datum', pastDateStr)
-                .order('id', { ascending: false }).limit(50);
-            
-            const list = document.getElementById('historyList');
-            list.innerHTML = '';
-            if(error || !data || data.length === 0) return list.innerHTML = '<p>Keine Einträge gefunden.</p>';
-            
-            data.forEach(item => {
-                const div = document.createElement('div');
-                div.className = 'history-item';
-                div.innerHTML = `
-                    <div>
-                        <strong>${item.zeitstempel ? item.zeitstempel.split(' ')[1] : item.datum} - ${item.produkt}</strong><br>
-                        ${item.lieferant} | Status: <span style="color: ${item.status === 'Gesperrt' ? '#ef5350' : 'var(--action-green)'}">${item.status}</span>
-                    </div>
-                    <div style="display:flex; gap: 5px;">
-                        <button class="secondary-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;" onclick="bearbeiteEintrag(${item.id})">Bearbeiten</button>
-                        <button class="danger-btn" style="width:auto; margin:0; padding:8px 12px; font-size:0.9em;" onclick="loescheEintrag(${item.id})">Löschen</button>
-                    </div>`;
-                list.appendChild(div);
-            });
-        }
-
-        async function bearbeiteEintrag(id) {
-            const { data, error } = await supabaseClient.from('wareneingang').select('*').eq('id', id).single();
-            if (error || !data) return showMessage("Fehler beim Laden des Eintrags.", true);
-            
-            document.getElementById('datum').value = data.datum;
-            document.getElementById('produktkategorie').value = data.produktkategorie || "";
-            document.getElementById('produkt').value = data.produkt || "";
-            document.getElementById('lieferant').value = data.lieferant || "";
-            document.getElementById('spediteur').value = data.spediteur || "";
-            document.getElementById('artikelnummer').value = data.seriennummer || "";
-            document.getElementById('menge').value = data.menge || 1;
-            document.getElementById('preisArt').value = "netto";
-            document.getElementById('preisEingabe').value = data.preis || 0;
-            document.getElementById('verpackung').value = data.verpackung || "ja";
-            document.getElementById('mengeOk').value = data.mengeOk || "ja";
-            
-            berechneNetto();
-            editModeId = id; 
-            
-            navigiereZu('formPage');
-            showMessage("Bearbeitungsmodus aktiv. Bitte Daten anpassen und durchklicken.");
-        }
-
-        async function loescheEintrag(id) {
-            if(!confirm("Eintrag wirklich löschen?")) return;
-            const { error } = await supabaseClient.from('wareneingang').delete().eq('id', id);
-            if(error) showMessage("Fehler: " + error.message, true); else { showMessage("Gelöscht."); ladeHistorie(); ladeDropdownDaten(); }
-        }
-
-        function ladeNeuenEingang() {
-            editModeId = null; 
-            resetFormFields();
-            navigiereZu('formPage');
-        }
+        let currentUserRole = 'user', editModeId = null, html5QrCode;
+        let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [];
 
         function zeigeSeite(id) {
-            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(p => document.getElementById(p).style.display = 'none');
-            document.getElementById(id).style.display = 'block';
-        }
-
-        function navigiereZu(id) {
-            zeigeSeite(id);
+            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'historyPage', 'settingsPage', 'statistikPage', 'adminPage'].forEach(p => {
+                document.getElementById(p).style.display = (p === id) ? 'block' : 'none';
+            });
             document.getElementById('mainMenuContainer').style.display = (id === 'loginPage' || id === 'setupProfilePage' || id === 'setNewPasswordPage') ? 'none' : 'block';
-            if (id === 'statistikPage') ladeStatistiken();
-            if (id === 'historyPage') ladeHistorie();
         }
 
-        function toggleMenu() {
-            const d = document.getElementById('menuDropdown');
-            d.style.display = d.style.display === 'block' ? 'none' : 'block';
-        }
-        
-        function toggleStatsFilter() {
-            const body = document.getElementById('statsFilterBody');
-            const arrow = document.getElementById('filterArrow');
-            if (body.style.display === 'block') { body.style.display = 'none'; arrow.innerText = '▼'; } 
-            else { body.style.display = 'block'; arrow.innerText = '▲'; }
-        }
-
-        async function inSupabaseSpeichern(isError) {
-            const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess'); 
-            btn.innerText = "Verarbeite..."; btn.disabled = true;
+        async function processUserLogin(user) {
+            const kuerzel = user.user_metadata?.kuerzel;
+            if (!kuerzel) return zeigeSeite('setupProfilePage');
             
-            let bilderUrls = []; 
-            const files = document.getElementById('mangelBilder').files;
+            document.getElementById('mitarbeiter').value = kuerzel;
+            const { data } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel.toLowerCase()).single();
+            currentUserRole = data ? data.role : 'user';
             
-            if (isError && files.length > 0 && navigator.onLine) {
-                for (let file of files) {
-                    const fn = `${Date.now()}_${file.name.replace(/\s/g, '_')}`;
-                    const { error } = await supabaseClient.storage.from('maengelbilder').upload(fn, file);
-                    if (!error) bilderUrls.push(supabaseClient.storage.from('maengelbilder').getPublicUrl(fn).data.publicUrl);
-                }
-            }
-
-            const payload = { 
-                datum: document.getElementById('datum').value, 
-                zeitstempel: erfassungsZeitstempel, 
-                mitarbeiter: document.getElementById('mitarbeiter').value, 
-                produktkategorie: document.getElementById('produktkategorie').value.trim(), 
-                produkt: document.getElementById('produkt').value.trim(),
-                lieferant: document.getElementById('lieferant').value.trim(), 
-                spediteur: document.getElementById('spediteur').value.trim(),
-                seriennummer: document.getElementById('artikelnummer').value, 
-                menge: parseInt(document.getElementById('menge').value),
-                preis: holeNettoPreis(), 
-                verpackung: document.getElementById('verpackung').value, 
-                mengeOk: document.getElementById('mengeOk').value,
-                maengel: document.getElementById('pruefungErfolgreich').value === 'ja' ? 'nein' : 'ja', 
-                pruefart: aktuellePruefart, 
-                fehlerakzeptanz: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('fehlerakzeptanz').value) : null, 
-                erwartungswertfaktor: aktuellePruefart === "Stichprobenprüfung" ? parseFloat(document.getElementById('erwartungswertfaktor').value) : null,
-                stichproben_anzahl: berechneteStichproben || null, 
-                status: currentStatus, 
-                beschreibung: isError ? document.getElementById('mangelBeschreibung').value : "",
-                bilder_urls: bilderUrls.join(',')
-            };
-
-            if (!navigator.onLine) {
-                if (editModeId) {
-                    showMessage("Bearbeiten ist im Offline-Modus leider nicht möglich.", true);
-                    btn.innerText = "Speichern & Neu"; btn.disabled = false;
-                    return;
-                }
-                let cache = JSON.parse(localStorage.getItem('offlineWareneingang') || '[]');
-                cache.push(payload);
-                localStorage.setItem('offlineWareneingang', JSON.stringify(cache));
-                showMessage("Offline gespeichert.");
-            } else {
-                if (editModeId) {
-                    const { error } = await supabaseClient.from('wareneingang').update(payload).eq('id', editModeId);
-                    if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Erfolgreich aktualisiert.");
-                    editModeId = null; 
-                } else {
-                    const { error } = await supabaseClient.from('wareneingang').insert([payload]);
-                    if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Gespeichert.");
-                }
-                ladeDropdownDaten();
-            }
+            document.getElementById('menuStatistik').style.display = (currentUserRole === 'admin' || currentUserRole === 'owner') ? 'block' : 'none';
+            document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
+            if (currentUserRole === 'owner') ladeBenutzerRollen();
             
-            resetFormFields();
-            
-            btn.innerText = "Speichern & Neu"; btn.disabled = false;
-            updateOfflineStatus();
-            navigiereZu('formPage');
+            ladeDropdownDaten();
+            zeigeSeite('formPage');
         }
 
         async function login() {
-            const e = document.getElementById('email').value; 
+            const e = document.getElementById('email').value;
             const p = document.getElementById('passwort').value;
-            const btn = document.getElementById('loginBtn'); 
-            
-            if(!e || !p) {
-                return showMessage("Bitte E-Mail und Passwort eingeben", true);
-            }
-            
-            btn.disabled = true; 
-            btn.innerText = "Prüfe Daten...";
-            
+            const btn = document.getElementById('loginBtn');
+            btn.disabled = true;
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
-            
-            if (error) { 
-                showMessage("Login fehlgeschlagen: " + error.message, true); 
-                btn.disabled = false; 
-                btn.innerText = "Einloggen";
-            } else {
-                // Erfolgreicher Login -> wird vom Auth-Listener aufgefangen
-                btn.disabled = false; 
-                btn.innerText = "Einloggen";
-                document.getElementById('email').value = "";
-                document.getElementById('passwort').value = "";
-            }
+            if (error) { alert("Fehler: " + error.message); btn.disabled = false; }
         }
 
         async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
 
-        function startScanner() {
-            const r = document.getElementById('reader'); r.style.display = "block";
-            if (!html5QrCode) html5QrCode = new Html5Qrcode("reader");
-            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
-                document.getElementById('artikelnummer').value = text;
-                if(localStorage.getItem('checkgate_vibrate') === 'true' && navigator.vibrate) navigator.vibrate(200);
-                html5QrCode.stop().then(() => r.style.display = "none");
-            }).catch(e => alert("Kamera-Fehler: " + e));
+        async function saveProfile() {
+            const k = document.getElementById('newKuerzel').value.trim();
+            const p = document.getElementById('newPassword').value;
+            if (!k) return alert("Kürzel fehlt");
+            const update = p.length >= 8 ? { password: p, data: { kuerzel: k } } : { data: { kuerzel: k } };
+            await supabaseClient.auth.updateUser(update);
+            location.reload();
         }
 
-        function showMessage(msg, isError = false) {
-            if (localStorage.getItem('checkgate_fasttrack') === 'true') {
-                const t = document.getElementById('toast'); t.innerText = msg;
-                t.className = isError ? 'error show' : 'show';
-                setTimeout(() => t.classList.remove("show"), 3000);
-            } else alert(msg);
+        async function sendMagicLink() {
+            const email = document.getElementById('magicLinkEmail').value;
+            await supabaseClient.auth.signInWithOtp({ email });
+            alert("Gesendet!");
         }
 
-        function berechneNetto() {
-            const isBrutto = document.getElementById('preisArt').value === 'brutto';
-            const val = parseFloat(document.getElementById('preisEingabe').value) || 0;
-            if (isBrutto) { 
-                document.getElementById('nettoWert').innerText = (val / 1.19).toFixed(2);
-                document.getElementById('nettoAnzeige').style.display = 'block';
-            } else document.getElementById('nettoAnzeige').style.display = 'none';
+        async function ladeBenutzerRollen() {
+            const { data } = await supabaseClient.from('benutzer_rollen').select('*');
+            const list = document.getElementById('userRoleList');
+            list.innerHTML = '';
+            data.forEach(u => {
+                list.innerHTML += `<div class="role-item"><span>${u.kuerzel}</span><select onchange="updateRolle('${u.kuerzel}', this.value)"><option value="user" ${u.role==='user'?'selected':''}>User</option><option value="admin" ${u.role==='admin'?'selected':''}>Admin</option><option value="owner" ${u.role==='owner'?'selected':''}>Owner</option></select></div>`;
+            });
         }
 
-        function holeNettoPreis() { const val = parseFloat(document.getElementById('preisEingabe').value) || 0; return document.getElementById('preisArt').value === 'brutto' ? parseFloat((val / 1.19).toFixed(2)) : val; }
+        async function updateRolle(k, r) { await supabaseClient.from('benutzer_rollen').update({ role: r }).eq('kuerzel', k); }
 
-        function updateStichproben() {
-            const m = parseInt(document.getElementById('menge').value) || 1;
-            const fa = (parseFloat(document.getElementById('fehlerakzeptanz').value) || 0) / 100;
-            const ef = parseFloat(document.getElementById('erwartungswertfaktor').value) || 1.0;
-            let maxFehler = m * fa, sum = 0, stich = 0, rest = m;
-            while (sum <= ef && rest > 0) { sum += maxFehler / rest; stich++; rest--; }
-            berechneteStichproben = stich; document.getElementById('stichprobenErgebnis').innerText = stich;
+        function navigiereZu(id) {
+            zeigeSeite(id);
+            if(id === 'historyPage') ladeHistorie();
+            if(id === 'statistikPage') ladeStatistik();
         }
 
-        function geheZuPruefung() {
-            if (!document.getElementById('mitarbeiter').value.trim() || !document.getElementById('artikelnummer').value.trim() || !document.getElementById('lieferant').value.trim() || !document.getElementById('spediteur').value.trim()) return alert("Alle Felder (Mitarbeiter, Artikel, Lieferant, Spediteur) sind Pflichtfelder.");
-            
-            const p = holeNettoPreis();
-            const m = parseInt(document.getElementById('menge').value) || 1;
-            
-            aktuellePruefart = (p >= 750 || m < 15) ? "100% Vollprüfung" : "Stichprobenprüfung";
-            
-            document.getElementById('pruefungsAnweisung').innerText = "Bitte machen Sie eine " + aktuellePruefart + ".";
-            document.getElementById('pruefungErfolgreich').value = 'ja';
-            document.getElementById('stichprobenRechner').style.display = (aktuellePruefart === "100% Vollprüfung") ? 'none' : 'block';
-            
-            if (aktuellePruefart === "Stichprobenprüfung") updateStichproben(); else berechneteStichproben = 0;
-            
-            if (html5QrCode?.isScanning) html5QrCode.stop();
-            navigiereZu('pruefungPage');
+        async function ladeHistorie() {
+            const k = document.getElementById('mitarbeiter').value;
+            const pastDate = new Date(); pastDate.setDate(pastDate.getDate() - 14);
+            const { data } = await supabaseClient.from('wareneingang').select('*').eq('mitarbeiter', k).gte('datum', pastDate.toISOString().split('T')[0]).order('id', {ascending:false});
+            const list = document.getElementById('historyList');
+            list.innerHTML = data.length ? '' : 'Keine Einträge';
+            data.forEach(i => {
+                list.innerHTML += `<div class="history-item"><div><strong>${i.produkt}</strong><br>${i.status}</div><button style="width:auto; padding:5px 10px;" onclick="bearbeite(${i.id})">Edit</button></div>`;
+            });
         }
 
-        function pruefen() {
-            const j = new Date(); erfassungsZeitstempel = j.toLocaleDateString('de-DE') + ' ' + j.toLocaleTimeString('de-DE');
-            let err = (document.getElementById('verpackung').value==='nein' || document.getElementById('mengeOk').value==='nein' || document.getElementById('pruefungErfolgreich').value==='nein');
-            currentStatus = err ? "Gesperrt" : "Freigegeben";
-            const rb = document.getElementById('resultBox'); rb.className = 'result'; rb.classList.add(err ? 'error' : 'success'); rb.innerHTML = `STATUS: ${currentStatus.toUpperCase()}`;
-            document.getElementById('successActions').style.display = err ? 'none' : 'block'; document.getElementById('errorActions').style.display = err ? 'block' : 'none';
-            navigiereZu('resultPage');
+        async function bearbeite(id) {
+            const { data } = await supabaseClient.from('wareneingang').select('*').eq('id', id).single();
+            editModeId = id;
+            document.getElementById('produkt').value = data.produkt;
+            document.getElementById('menge').value = data.menge;
+            zeigeSeite('formPage');
         }
 
-        function resetFormFields() {
-            if (localStorage.getItem('checkgate_autofill') !== 'true') {
-                ['produkt','lieferant','spediteur','produktkategorie','artikelnummer'].forEach(id => document.getElementById(id).value = '');
-            } else {
-                document.getElementById('artikelnummer').value = '';
+        function toggleMenu() { const d = document.getElementById('menuDropdown'); d.style.display = d.style.display === 'block' ? 'none' : 'block'; }
+        function toggleAuthMode(m) { document.getElementById('loginForm').style.display = m === 'login' ? 'block' : 'none'; document.getElementById('requestForm').style.display = m === 'request' ? 'block' : 'none'; }
+        function berechneNetto() { const b = document.getElementById('preisArt').value === 'brutto'; const v = parseFloat(document.getElementById('preisEingabe').value) || 0; document.getElementById('nettoWert').innerText = b ? (v / 1.19).toFixed(2) : v.toFixed(2); document.getElementById('nettoAnzeige').style.display = 'block'; }
+        
+        async function ladeDropdownDaten() {
+            const { data } = await supabaseClient.from('wareneingang').select('lieferant, spediteur, produktkategorie, produkt').limit(100);
+            if(data) {
+                kategorienChronologisch = [...new Set(data.map(i => i.produktkategorie))];
+                lieferantenChronologisch = [...new Set(data.map(i => i.lieferant))];
+                alleProdukte = [...new Set(data.map(i => i.produkt))];
             }
         }
 
-        document.addEventListener('click', function(e) {
-            const menuBtn = document.querySelector('.menu-toggle-btn');
-            const dropdown = document.getElementById('menuDropdown');
-            if (e.target !== menuBtn && !dropdown.contains(e.target) && !menuBtn.contains(e.target)) dropdown.style.display = 'none';
-            if(e.target.id !== 'lieferant') document.getElementById('lieferantDropdown').style.display = 'none'; 
-            if(e.target.id !== 'spediteur') document.getElementById('spediteurDropdown').style.display = 'none'; 
-            if(e.target.id !== 'produktkategorie') document.getElementById('kategorieDropdown').style.display = 'none'; 
-            if(e.target.id !== 'produkt') document.getElementById('produktDropdown').style.display = 'none'; 
-        });
-
         function filterKategorien() { doFilter('produktkategorie', 'kategorieDropdown', kategorienChronologisch); }
-        function filterLieferanten() { doFilter('lieferant', 'lieferantDropdown', lieferantenChronologisch); }
-        function filterSpediteure() { doFilter('spediteur', 'spediteurDropdown', spediteureChronologisch); }
-        function filterProdukte() { 
-            const k = document.getElementById('produktkategorie').value;
-            doFilter('produkt', 'produktDropdown', k && produkteNachKategorie[k] ? produkteNachKategorie[k] : alleProdukte); 
-        }
-
-        function doFilter(inputId, dropdownId, list) {
-            const val = document.getElementById(inputId).value.toLowerCase();
-            const d = document.getElementById(dropdownId); d.innerHTML = '';
-            const filtered = list.filter(i => i && i.toLowerCase().includes(val));
-            if (!filtered.length) return d.style.display = 'none';
-            filtered.forEach(item => {
-                const div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = item;
-                div.onclick = () => { document.getElementById(inputId).value = item; d.style.display = 'none'; };
-                d.appendChild(div);
-            });
+        function doFilter(iId, dId, list) {
+            const v = document.getElementById(iId).value.toLowerCase();
+            const d = document.getElementById(dId); d.innerHTML = '';
+            const f = list.filter(item => item && item.toLowerCase().includes(v));
+            if(!f.length) return d.style.display = 'none';
+            f.forEach(item => { const div = document.createElement('div'); div.className = 'dropdown-item'; div.innerText = item; div.onclick = () => { document.getElementById(iId).value = item; d.style.display = 'none'; }; d.appendChild(div); });
             d.style.display = 'block';
         }
 
-        function toggleAuthMode(m) {
-            document.getElementById('loginForm').style.display = m === 'login' ? 'block' : 'none';
-            document.getElementById('requestForm').style.display = m === 'request' ? 'block' : 'none';
-        }
-
-        async function sendeAnfrage() {
-            const name = document.getElementById('reqName').value.trim(); const email = document.getElementById('reqEmail').value.trim();
-            await supabaseClient.from('zugangsanfragen').insert([{ email: email, mitarbeiter: name, anmerkung: document.getElementById('reqAnmerkung').value }]);
-            alert("Anfrage gesendet!"); toggleAuthMode('login');
-        }
-
-        async function saveProfile() {
-            const nK = document.getElementById('newKuerzel').value.trim(); 
-            const p = document.getElementById('newPassword').value;
-            const pConf = document.getElementById('confirmPassword').value;
-
-            if (!nK) return showMessage("Bitte Kürzel eingeben.", true);
-            if (p && p !== pConf) return showMessage("Passwörter stimmen nicht überein.", true);
-            if (p && p.length < 8) return showMessage("Passwort muss mind. 8 Zeichen lang sein.", true);
-
-            const btn = document.getElementById('saveKuerzelBtn'); 
-            btn.disabled = true; btn.innerText = "Speichert...";
-            
-            if(p.length >= 8) {
-                 await supabaseClient.auth.updateUser({ password: p, data: { kuerzel: nK } });
-            } else {
-                 await supabaseClient.auth.updateUser({ data: { kuerzel: nK } });
-            }
-            
-            btn.disabled = false; btn.innerText = "Speichern & Weiter";
-            document.getElementById('mitarbeiter').value = nK; 
-            
-            window.history.replaceState(null, null, window.location.pathname);
-            
-            const { data } = await supabaseClient.auth.getSession();
-            if(data.session) processUserLogin(data.session.user);
-        }
-
-        async function saveMagicPassword() {
-            const pwd = document.getElementById('magicPassword').value;
-            const pwdConf = document.getElementById('confirmMagicPassword').value;
-            
-            if(pwd !== pwdConf) return showMessage("Passwörter stimmen nicht überein.", true);
-            if(pwd.length < 8) return showMessage("Passwort muss mind. 8 Zeichen lang sein.", true);
-            
-            const btn = document.getElementById('saveMagicPwdBtn'); 
-            btn.disabled = true; btn.innerText = "Speichere...";
-            
-            const { error } = await supabaseClient.auth.updateUser({ password: pwd });
-            
-            btn.disabled = false; btn.innerText = "Passwort speichern & Weiter";
-            
-            if (error) {
-                showMessage("Fehler: " + error.message, true);
-            } else { 
-                showMessage("Passwort erfolgreich gespeichert!"); 
-                ueberspringePasswort();
-            }
-        }
-
-        function ueberspringePasswort() {
-            window.history.replaceState(null, null, window.location.pathname);
-            supabaseClient.auth.getSession().then(({ data }) => {
-                if(data.session) processUserLogin(data.session.user);
+        function startScanner() {
+            const r = document.getElementById('reader'); r.style.display = 'block';
+            if(!html5QrCode) html5QrCode = new Html5Qrcode("reader");
+            html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: 250 }, (text) => {
+                document.getElementById('artikelnummer').value = text;
+                html5QrCode.stop().then(() => r.style.display = 'none');
             });
         }
 
-        // START-LOGIK & ROUTING LISTENER
-        window.onload = () => { 
-            initDates(); 
-            initSettings(); 
-            
-            // UI zu Beginn ausblenden, um Flackern zu verhindern
-            document.querySelectorAll('.container > div').forEach(div => div.style.display = 'none');
+        function geheZuPruefung() { zeigeSeite('pruefungPage'); }
+        function pruefen() { 
+            const ok = document.getElementById('pruefungErfolgreich').value === 'ja';
+            const rb = document.getElementById('resultBox'); rb.innerText = ok ? "FREIGABE" : "GESPERRT"; rb.className = 'result ' + (ok ? 'success' : 'error');
+            document.getElementById('errorActions').style.display = ok ? 'none' : 'block';
+            zeigeSeite('resultPage'); 
+        }
 
-            // Warten auf Supabase Auth Event
+        async function inSupabaseSpeichern() {
+            const payload = {
+                datum: document.getElementById('datum').value,
+                mitarbeiter: document.getElementById('mitarbeiter').value,
+                produkt: document.getElementById('produkt').value,
+                status: document.getElementById('resultBox').innerText === "FREIGABE" ? "Freigegeben" : "Gesperrt",
+                menge: parseInt(document.getElementById('menge').value)
+            };
+            if(editModeId) await supabaseClient.from('wareneingang').update(payload).eq('id', editModeId);
+            else await supabaseClient.from('wareneingang').insert([payload]);
+            editModeId = null;
+            location.reload();
+        }
+
+        function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+
+        window.onload = () => {
+            initDates();
+            initSettings();
             supabaseClient.auth.onAuthStateChange((event, session) => {
-                console.log("Auth Event: ", event);
-
                 if (session) {
-                    // Prüfen, ob eine Session über einen Magic Link oder Invite erstellt wurde
-                    if (pendingMagicLinkFlow) {
-                        if (!session.user.user_metadata?.kuerzel) {
-                            zeigeSeite('setupProfilePage');
-                        } else {
-                            zeigeSeite('setNewPasswordPage');
-                        }
+                    if (window.location.hash.includes('type=magiclink')) {
+                        zeigeSeite(session.user.user_metadata?.kuerzel ? 'setNewPasswordPage' : 'setupProfilePage');
                     } else {
-                        // Normaler Login / bestehende Session
                         processUserLogin(session.user);
                     }
                 } else {
