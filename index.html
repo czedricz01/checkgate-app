@@ -236,7 +236,7 @@
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
 
-        <div id="loginPage">
+        <div id="loginPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" id="logoImgLogin" alt="CheckGate Logo"></div>
             <div id="loginForm">
                 <h2>Mitarbeiter Login</h2>
@@ -432,10 +432,10 @@
     </div>
 
     <script>
-        // GANZ OBEN: URL VOR DEM LADEN DES SUPABASE-CLIENTS PRÜFEN
-        const startupUrl = window.location.href;
-        let isRecoveryFlow = startupUrl.includes('recovery');
-        let isInviteFlow = startupUrl.includes('invite');
+        // FLAGS SETZEN, BEVOR SUPABASE DIE URL SÄUBERT
+        let url = window.location.href;
+        let isRecoveryFlow = url.includes('type=recovery') || url.includes('recovery');
+        let isInviteFlow = url.includes('type=invite') || url.includes('invite');
 
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
@@ -1054,12 +1054,12 @@
                 showMessage("Fehler: " + error.message, true);
             } else { 
                 showMessage("Passwort erfolgreich aktualisiert!"); 
-                
                 isRecoveryFlow = false;
                 window.history.replaceState(null, null, window.location.pathname);
                 
                 const { data } = await supabaseClient.auth.getSession();
                 if(data.session) processUserLogin(data.session.user);
+                else zeigeSeite('loginPage');
             }
         }
 
@@ -1088,12 +1088,12 @@
                 showMessage("Fehler: " + error.message, true);
             } else { 
                 document.getElementById('mitarbeiter').value = nK; 
-                
                 isInviteFlow = false;
                 window.history.replaceState(null, null, window.location.pathname);
                 
                 const { data } = await supabaseClient.auth.getSession();
                 if(data.session) processUserLogin(data.session.user);
+                else zeigeSeite('loginPage');
             }
         }
 
@@ -1102,17 +1102,40 @@
             initDates(); 
             initSettings(); 
             
+            // Verhindert ein kurzes Flackern der UI
+            document.querySelectorAll('.container > div').forEach(div => div.style.display = 'none');
+
+            // Wenn wir einen speziellen Flow in der URL haben, zwingen wir die UI hierauf zu bleiben
+            if (isRecoveryFlow) {
+                zeigeSeite('setNewPasswordPage');
+            } else if (isInviteFlow) {
+                zeigeSeite('setupProfilePage');
+            }
+
+            // Supabase Listener fängt Statusänderungen im Hintergrund ab
             supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (event === 'PASSWORD_RECOVERY' || (session && isRecoveryFlow)) {
+                console.log("Auth Event: ", event);
+
+                if (event === 'PASSWORD_RECOVERY') {
+                    isRecoveryFlow = true;
                     zeigeSeite('setNewPasswordPage');
+                    return;
                 } 
-                else if (session && isInviteFlow) {
+
+                if (isRecoveryFlow) {
+                    zeigeSeite('setNewPasswordPage');
+                    return; 
+                }
+                
+                if (isInviteFlow) {
                     zeigeSeite('setupProfilePage');
-                } 
-                else if (session) {
+                    return; 
+                }
+                
+                // Normales Routing
+                if (session) {
                     processUserLogin(session.user);
-                } 
-                else {
+                } else {
                     zeigeSeite('loginPage');
                 }
             });
