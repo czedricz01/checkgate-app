@@ -125,12 +125,10 @@
         .font-btn-group { display: flex; gap: 10px; margin-top: 10px; }
         .font-btn-group button { margin-top: 0; padding: 10px; }
 
-        /* Toast Notification */
         #toast { visibility: hidden; min-width: 250px; background-color: var(--action-green); color: #fff; text-align: center; border-radius: 4px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; font-weight: bold; transform: translateX(-50%); opacity: 0; transition: opacity 0.5s, bottom 0.5s; }
         #toast.show { visibility: visible; opacity: 1; bottom: 50px; }
         #toast.error { background-color: #ef5350; }
         
-        /* Modern Toggle Switch */
         .setting-row { display: flex; justify-content: space-between; align-items: center; margin-top: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-default); }
         .setting-row label { margin-top: 0; }
         .switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
@@ -140,17 +138,14 @@
         input:checked + .slider { background-color: var(--action-green); }
         input:checked + .slider:before { transform: translateX(20px); }
 
-        /* History List */
         .history-item { background: var(--primary-light-bg); border: 1px solid var(--border-default); padding: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; font-size: 0.9em; }
         
-        /* Role Management Styling */
         .role-list { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
         .role-item { display: flex; justify-content: space-between; align-items: center; background: var(--bg-container); border: 1px solid var(--border-default); padding: 12px 15px; border-radius: 6px; }
         .role-info { display: flex; flex-direction: column; gap: 4px; }
         .role-name { font-weight: bold; font-size: 1.1em; color: var(--primary-main); }
         .role-badge { font-size: 0.75em; font-weight: bold; text-transform: uppercase; padding: 3px 8px; border-radius: 12px; display: inline-block; width: fit-content; }
         
-        /* Badge Colors */
         .badge-user { background-color: #e0f2f1; color: #00695c; }
         .badge-admin { background-color: #e8eaf6; color: #4a148c; }
         .badge-owner { background-color: #fff8e1; color: #f57f17; }
@@ -221,9 +216,19 @@
             </div>
 
             <div id="ownerSection" class="action-section" style="display:none; border: 2px solid var(--action-green); padding: 15px; border-radius: 4px;">
-                <h4 style="color:var(--action-green-dark); margin-top: 0;">Benutzerverwaltung</h4>
-                <p style="font-size:0.9em;">Rollenvergabe für registrierte Mitarbeiter.</p>
-                <div id="userRoleList">Lade Benutzer...</div>
+                <h4 style="color:var(--action-green-dark); margin-top: 0; margin-bottom: 5px;">Benutzerverwaltung</h4>
+                
+                <div style="margin-top: 20px; border-top: 1px solid var(--border-default); padding-top: 15px;">
+                    <h4 style="margin-bottom: 5px;">Magic Link senden</h4>
+                    <p style="font-size:0.85em; margin-top:0;">Sendet einen passwortlosen Zugangslink. Ideal für neue Mitarbeiter.</p>
+                    <input type="email" id="magicLinkEmail" placeholder="E-Mail-Adresse">
+                    <button onclick="sendMagicLink()" class="camera-btn" style="margin-top: 10px;">Zugangslink versenden</button>
+                </div>
+
+                <div style="margin-top: 20px; border-top: 1px solid var(--border-default); padding-top: 15px;">
+                    <h4>Rollenverteilung</h4>
+                    <div id="userRoleList">Lade Benutzer...</div>
+                </div>
             </div>
 
             <button class="secondary-btn" style="margin-top: 40px;" onclick="navigiereZu('formPage')">Zurück</button>
@@ -236,21 +241,14 @@
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
 
-        <div id="loginPage">
+        <div id="loginPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" id="logoImgLogin" alt="CheckGate Logo"></div>
             <div id="loginForm">
                 <h2>Mitarbeiter Login</h2>
                 <label for="email">E-Mail Adresse:</label><input type="email" id="email" placeholder="Eingabe: E-Mail">
                 <label for="passwort">Passwort:</label><input type="password" id="passwort" placeholder="Eingabe: Passwort">
                 <button id="loginBtn" onclick="login()">Einloggen</button>
-                <a class="toggle-link" onclick="toggleAuthMode('reset')">Passwort vergessen?</a>
                 <a class="toggle-link" onclick="toggleAuthMode('request')">Kein Konto? Zugang anfragen.</a>
-            </div>
-            <div id="forgotPasswordForm" style="display:none;">
-                <h2>Passwort zurücksetzen</h2>
-                <label for="resetEmail">E-Mail Adresse:</label><input type="email" id="resetEmail" placeholder="deine@email.de">
-                <button id="resetBtn" onclick="requestPasswordReset()" class="camera-btn">Link anfordern</button>
-                <a class="toggle-link" onclick="toggleAuthMode('login')">Zurück zum Login</a>
             </div>
             <div id="requestForm" style="display:none;">
                 <h2>Zugang anfragen</h2>
@@ -265,18 +263,19 @@
 
         <div id="setNewPasswordPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
-            <h2>Neues Passwort festlegen</h2>
-            <label for="recoveryPassword">Neues Passwort:</label><input type="password" id="recoveryPassword" placeholder="Min. 8 Zeichen">
-            <label for="confirmRecoveryPassword">Passwort bestätigen:</label><input type="password" id="confirmRecoveryPassword">
-            <button id="saveRecoveryBtn" onclick="saveNewPassword()">Passwort speichern</button>
+            <h2>Dauerhaften Zugang einrichten</h2>
+            <p style="text-align: center; font-size: 0.9em;">Lege ein Passwort fest, um dich zukünftig auch ohne E-Mail-Link anzumelden.</p>
+            <label for="magicPassword">Neues Passwort:</label><input type="password" id="magicPassword" placeholder="Min. 8 Zeichen">
+            <label for="confirmMagicPassword">Passwort bestätigen:</label><input type="password" id="confirmMagicPassword">
+            <button id="saveMagicPwdBtn" onclick="saveMagicPassword()">Passwort speichern & Weiter</button>
+            <button class="secondary-btn" onclick="ueberspringePasswort()">Überspringen</button>
         </div>
 
         <div id="setupProfilePage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Profil einrichten</h2>
             <label for="newKuerzel">Dein Mitarbeiterkürzel:</label><input type="text" id="newKuerzel" placeholder="z. B. AB">
-            <label for="newPassword">Neues Passwort:</label><input type="password" id="newPassword" placeholder="Min. 8 Zeichen">
-            <label for="confirmPassword">Passwort bestätigen:</label><input type="password" id="confirmPassword">
+            <label for="newPassword">Neues Passwort (Optional):</label><input type="password" id="newPassword" placeholder="Falls Login ohne Link gewünscht">
             <button id="saveKuerzelBtn" onclick="saveProfile()">Speichern & Weiter</button>
         </div>
 
@@ -432,6 +431,15 @@
     </div>
 
     <script>
+        // GLOBALE URL-PRÜFUNG VOR DEM START
+        const startupURL = window.location.href;
+        let pendingMagicLinkFlow = false;
+        
+        // Supabase nutzt Hash-Fragmente für seine Links (#access_token=...&type=magiclink)
+        if (startupURL.includes('type=magiclink') || startupURL.includes('type=invite') || startupURL.includes('type=recovery')) {
+            pendingMagicLinkFlow = true;
+        }
+
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -443,7 +451,6 @@
         
         let editModeId = null; 
 
-        // DATUMS-INITIALISIERUNG
         function initDates() {
             const heute = new Date();
             const y = heute.getFullYear();
@@ -457,7 +464,6 @@
             document.getElementById('statEnde').value = `${y}-12-31`;
         }
 
-        // INITIALISIERUNG SETTINGS
         function initSettings() {
             const isDark = localStorage.getItem('checkgate_darkmode') === 'true';
             if (isDark) document.body.classList.add('dark-mode');
@@ -493,28 +499,6 @@
 
         function saveSetting(key, val) { localStorage.setItem('checkgate_' + key, val); }
 
-        // AUTH & ROLLEN
-        async function checkSession() {
-            const url = window.location.href;
-            
-            // WICHTIG: URL-Parameter VOR dem Laden der Session prüfen,
-            // um kurzes Aufblitzen der Login-Seite bei Recovery- oder Invite-Links zu verhindern.
-            if (url.includes('type=recovery') || url.includes('recovery')) {
-                zeigeSeite('setNewPasswordPage');
-                await supabaseClient.auth.getSession(); // Token im Hintergrund laden
-                return;
-            }
-            if (url.includes('type=invite') || url.includes('invite')) {
-                zeigeSeite('setupProfilePage');
-                await supabaseClient.auth.getSession(); // Token im Hintergrund laden
-                return;
-            }
-
-            // Normaler Ablauf ohne spezielle Links
-            const { data, error } = await supabaseClient.auth.getSession();
-            if (data.session) processUserLogin(data.session.user); else zeigeSeite('loginPage');
-        }
-
         async function processUserLogin(user) {
             if (user.user_metadata?.kuerzel) { 
                 const kuerzel = user.user_metadata.kuerzel.toLowerCase();
@@ -548,7 +532,9 @@
                 
                 ladeDropdownDaten();
                 ladeNeuenEingang(); 
-            } else zeigeSeite('setupProfilePage');
+            } else {
+                zeigeSeite('setupProfilePage');
+            }
         }
 
         async function ladeBenutzerRollen() {
@@ -585,7 +571,28 @@
             if (error) showMessage("Fehler: " + error.message, true); else { showMessage("Rolle aktualisiert."); ladeBenutzerRollen(); }
         }
 
-        // DATEN FÜR FILTER LADEN
+        async function sendMagicLink() {
+            const email = document.getElementById('magicLinkEmail').value.trim();
+            if (!email) return showMessage("Bitte eine E-Mail-Adresse eingeben.", true);
+            
+            const btn = document.querySelector('button[onclick="sendMagicLink()"]');
+            btn.disabled = true; btn.innerText = "Sende...";
+
+            const { error } = await supabaseClient.auth.signInWithOtp({ 
+                email: email,
+                options: { shouldCreateUser: true }
+            });
+            
+            btn.disabled = false; btn.innerText = "Zugangslink versenden";
+
+            if (error) {
+                showMessage("Fehler: " + error.message, true);
+            } else {
+                showMessage("Magic Link wurde an " + email + " gesendet!");
+                document.getElementById('magicLinkEmail').value = '';
+            }
+        }
+
         async function ladeDropdownDaten() {
             const { data, error } = await supabaseClient.from('wareneingang').select('lieferant, spediteur, mitarbeiter, produktkategorie, produkt').limit(2000);
             if (data && !error) {
@@ -627,7 +634,6 @@
             items.sort().forEach(item => select.add(new Option(item, item)));
         }
 
-        // STATISTIKEN BERECHNEN & ANZEIGEN
         async function ladeStatistiken() {
             const start = document.getElementById('statStart').value; 
             const ende = document.getElementById('statEnde').value;
@@ -728,7 +734,6 @@
             });
         }
 
-        // CSV EXPORT LOGIK
         async function exportiereVonSupabase() {
             const btn = document.getElementById('exportBtn'); btn.innerText = "CSV wird erstellt..."; btn.disabled = true;
             
@@ -761,7 +766,6 @@
             btn.innerText = "Daten herunterladen"; btn.disabled = false;
         }
 
-        // HISTORIE (Letzte 14 Tage)
         async function ladeHistorie() {
             const kuerzel = document.getElementById('mitarbeiter').value;
             const pastDate = new Date();
@@ -821,7 +825,6 @@
             if(error) showMessage("Fehler: " + error.message, true); else { showMessage("Gelöscht."); ladeHistorie(); ladeDropdownDaten(); }
         }
 
-        // NAVIGATION & CORE FUNCTIONS
         function ladeNeuenEingang() {
             editModeId = null; 
             resetFormFields();
@@ -852,7 +855,6 @@
             else { body.style.display = 'block'; arrow.innerText = '▲'; }
         }
 
-        // DATEN SPEICHERN (ONLINE/OFFLINE & EDIT MODE)
         async function inSupabaseSpeichern(isError) {
             const btn = isError ? document.getElementById('saveBtnError') : document.getElementById('saveBtnSuccess'); 
             btn.innerText = "Verarbeite..."; btn.disabled = true;
@@ -920,12 +922,31 @@
             navigiereZu('formPage');
         }
 
-        // WEITERE LOGIK (Login, Formular-Berechnungen, Scanner)
         async function login() {
-            const e = document.getElementById('email').value; const p = document.getElementById('passwort').value;
-            const btn = document.getElementById('loginBtn'); btn.disabled = true;
+            const e = document.getElementById('email').value; 
+            const p = document.getElementById('passwort').value;
+            const btn = document.getElementById('loginBtn'); 
+            
+            if(!e || !p) {
+                return showMessage("Bitte E-Mail und Passwort eingeben", true);
+            }
+            
+            btn.disabled = true; 
+            btn.innerText = "Prüfe Daten...";
+            
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
-            if (error) { showMessage("Login fehlgeschlagen.", true); btn.disabled = false; } else processUserLogin(data.user);
+            
+            if (error) { 
+                showMessage("Login fehlgeschlagen: " + error.message, true); 
+                btn.disabled = false; 
+                btn.innerText = "Einloggen";
+            } else {
+                // Erfolgreicher Login -> wird vom Auth-Listener aufgefangen
+                btn.disabled = false; 
+                btn.innerText = "Einloggen";
+                document.getElementById('email').value = "";
+                document.getElementById('passwort').value = "";
+            }
         }
 
         async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
@@ -1003,7 +1024,6 @@
             }
         }
 
-        // EVENT LISTENER FÜR KLICKS OUTSIDE DROPDOWNS
         document.addEventListener('click', function(e) {
             const menuBtn = document.querySelector('.menu-toggle-btn');
             const dropdown = document.getElementById('menuDropdown');
@@ -1014,7 +1034,6 @@
             if(e.target.id !== 'produkt') document.getElementById('produktDropdown').style.display = 'none'; 
         });
 
-        // AUTOCOMPLETE LOGIK
         function filterKategorien() { doFilter('produktkategorie', 'kategorieDropdown', kategorienChronologisch); }
         function filterLieferanten() { doFilter('lieferant', 'lieferantDropdown', lieferantenChronologisch); }
         function filterSpediteure() { doFilter('spediteur', 'spediteurDropdown', spediteureChronologisch); }
@@ -1036,41 +1055,9 @@
             d.style.display = 'block';
         }
 
-        // SONSTIGES
         function toggleAuthMode(m) {
             document.getElementById('loginForm').style.display = m === 'login' ? 'block' : 'none';
             document.getElementById('requestForm').style.display = m === 'request' ? 'block' : 'none';
-            document.getElementById('forgotPasswordForm').style.display = m === 'reset' ? 'block' : 'none';
-        }
-        
-        async function requestPasswordReset() {
-            const email = document.getElementById('resetEmail').value.trim();
-            if (!email) return alert("Bitte E-Mail angeben.");
-            await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
-            alert("Link gesendet."); toggleAuthMode('login');
-        }
-
-        async function saveNewPassword() {
-            const pwd = document.getElementById('recoveryPassword').value;
-            const pwdConf = document.getElementById('confirmRecoveryPassword').value;
-            
-            if(pwd !== pwdConf) return showMessage("Passwörter stimmen nicht überein.", true);
-            if(pwd.length < 8) return showMessage("Passwort muss mind. 8 Zeichen lang sein.", true);
-            
-            const btn = document.getElementById('saveRecoveryBtn'); 
-            btn.disabled = true; btn.innerText = "Speichere...";
-            
-            const { error } = await supabaseClient.auth.updateUser({ password: pwd });
-            
-            btn.disabled = false; btn.innerText = "Passwort speichern";
-            
-            if (error) {
-                showMessage("Fehler: " + error.message, true);
-            } else { 
-                showMessage("Passwort erfolgreich aktualisiert!"); 
-                window.history.replaceState(null, null, window.location.pathname);
-                checkSession(); 
-            }
         }
 
         async function sendeAnfrage() {
@@ -1084,36 +1071,85 @@
             const p = document.getElementById('newPassword').value;
             const pConf = document.getElementById('confirmPassword').value;
 
-            if (!nK || p.length < 8) return showMessage("Bitte Kürzel und Passwort (min. 8 Zeichen) eingeben.", true);
-            if (p !== pConf) return showMessage("Passwörter stimmen nicht überein.", true);
+            if (!nK) return showMessage("Bitte Kürzel eingeben.", true);
+            if (p && p !== pConf) return showMessage("Passwörter stimmen nicht überein.", true);
+            if (p && p.length < 8) return showMessage("Passwort muss mind. 8 Zeichen lang sein.", true);
 
             const btn = document.getElementById('saveKuerzelBtn'); 
             btn.disabled = true; btn.innerText = "Speichert...";
             
-            const { error } = await supabaseClient.auth.updateUser({ password: p, data: { kuerzel: nK } });
+            if(p.length >= 8) {
+                 await supabaseClient.auth.updateUser({ password: p, data: { kuerzel: nK } });
+            } else {
+                 await supabaseClient.auth.updateUser({ data: { kuerzel: nK } });
+            }
             
             btn.disabled = false; btn.innerText = "Speichern & Weiter";
+            document.getElementById('mitarbeiter').value = nK; 
+            
+            window.history.replaceState(null, null, window.location.pathname);
+            
+            const { data } = await supabaseClient.auth.getSession();
+            if(data.session) processUserLogin(data.session.user);
+        }
+
+        async function saveMagicPassword() {
+            const pwd = document.getElementById('magicPassword').value;
+            const pwdConf = document.getElementById('confirmMagicPassword').value;
+            
+            if(pwd !== pwdConf) return showMessage("Passwörter stimmen nicht überein.", true);
+            if(pwd.length < 8) return showMessage("Passwort muss mind. 8 Zeichen lang sein.", true);
+            
+            const btn = document.getElementById('saveMagicPwdBtn'); 
+            btn.disabled = true; btn.innerText = "Speichere...";
+            
+            const { error } = await supabaseClient.auth.updateUser({ password: pwd });
+            
+            btn.disabled = false; btn.innerText = "Passwort speichern & Weiter";
             
             if (error) {
                 showMessage("Fehler: " + error.message, true);
             } else { 
-                document.getElementById('mitarbeiter').value = nK; 
-                window.history.replaceState(null, null, window.location.pathname); // URL säubern
-                checkSession(); 
+                showMessage("Passwort erfolgreich gespeichert!"); 
+                ueberspringePasswort();
             }
         }
 
-        // START & ROUTING
+        function ueberspringePasswort() {
+            window.history.replaceState(null, null, window.location.pathname);
+            supabaseClient.auth.getSession().then(({ data }) => {
+                if(data.session) processUserLogin(data.session.user);
+            });
+        }
+
+        // START-LOGIK & ROUTING LISTENER
         window.onload = () => { 
             initDates(); 
             initSettings(); 
             
-            // Supabase Listener für Events, die erst NACH dem Laden passieren
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (event === 'PASSWORD_RECOVERY') zeigeSeite('setNewPasswordPage');
-            });
+            // UI zu Beginn ausblenden, um Flackern zu verhindern
+            document.querySelectorAll('.container > div').forEach(div => div.style.display = 'none');
 
-            checkSession(); 
+            // Warten auf Supabase Auth Event
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                console.log("Auth Event: ", event);
+
+                if (session) {
+                    // Prüfen, ob eine Session über einen Magic Link oder Invite erstellt wurde
+                    if (pendingMagicLinkFlow) {
+                        if (!session.user.user_metadata?.kuerzel) {
+                            zeigeSeite('setupProfilePage');
+                        } else {
+                            zeigeSeite('setNewPasswordPage');
+                        }
+                    } else {
+                        // Normaler Login / bestehende Session
+                        processUserLogin(session.user);
+                    }
+                } else {
+                    zeigeSeite('loginPage');
+                }
+            });
         };
     </script>
 </body>
