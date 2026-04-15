@@ -432,11 +432,6 @@
     </div>
 
     <script>
-        // FLAGS SETZEN, BEVOR SUPABASE DIE URL SÄUBERT
-        let url = window.location.href;
-        let isRecoveryFlow = url.includes('type=recovery') || url.includes('recovery');
-        let isInviteFlow = url.includes('type=invite') || url.includes('invite');
-
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -500,40 +495,45 @@
 
         // AUTH & ROLLEN
         async function processUserLogin(user) {
-            if (user.user_metadata?.kuerzel) { 
-                const kuerzel = user.user_metadata.kuerzel.toLowerCase();
-                document.getElementById('mitarbeiter').value = kuerzel; 
+            try {
+                if (user.user_metadata?.kuerzel) { 
+                    const kuerzel = user.user_metadata.kuerzel.toLowerCase();
+                    document.getElementById('mitarbeiter').value = kuerzel; 
 
-                let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
-                
-                if (error || !data) {
-                    await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
-                    currentUserRole = 'user';
+                    let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
+                    
+                    if (error || !data) {
+                        await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
+                        currentUserRole = 'user';
+                    } else {
+                        currentUserRole = data.role;
+                    }
+
+                    const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
+                    
+                    document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
+                    document.getElementById('menuExport').style.display = 'block'; 
+                    
+                    document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
+
+                    if (currentUserRole === 'user') {
+                        document.getElementById('labelExportMitarbeiter').style.display = 'none';
+                        document.getElementById('exportMitarbeiterFilter').style.display = 'none';
+                    } else {
+                        document.getElementById('labelExportMitarbeiter').style.display = 'block';
+                        document.getElementById('exportMitarbeiterFilter').style.display = 'block';
+                    }
+
+                    if (currentUserRole === 'owner') ladeBenutzerRollen();
+                    
+                    ladeDropdownDaten();
+                    ladeNeuenEingang(); 
                 } else {
-                    currentUserRole = data.role;
+                    zeigeSeite('setupProfilePage');
                 }
-
-                const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
-                
-                document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
-                document.getElementById('menuExport').style.display = 'block'; 
-                
-                document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
-
-                if (currentUserRole === 'user') {
-                    document.getElementById('labelExportMitarbeiter').style.display = 'none';
-                    document.getElementById('exportMitarbeiterFilter').style.display = 'none';
-                } else {
-                    document.getElementById('labelExportMitarbeiter').style.display = 'block';
-                    document.getElementById('exportMitarbeiterFilter').style.display = 'block';
-                }
-
-                if (currentUserRole === 'owner') ladeBenutzerRollen();
-                
-                ladeDropdownDaten();
-                ladeNeuenEingang(); 
-            } else {
-                zeigeSeite('setupProfilePage');
+            } catch (err) {
+                console.error("Fehler beim Profil-Laden:", err);
+                showMessage("Fehler beim Laden des Profils.", true);
             }
         }
 
@@ -908,10 +908,25 @@
 
         // WEITERE LOGIK (Login, Formular-Berechnungen, Scanner)
         async function login() {
-            const e = document.getElementById('email').value; const p = document.getElementById('passwort').value;
-            const btn = document.getElementById('loginBtn'); btn.disabled = true;
+            const e = document.getElementById('email').value; 
+            const p = document.getElementById('passwort').value;
+            const btn = document.getElementById('loginBtn'); 
+            btn.disabled = true; 
+            btn.innerText = "Prüfe Daten...";
+            
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
-            if (error) { showMessage("Login fehlgeschlagen.", true); btn.disabled = false; }
+            
+            if (error) { 
+                showMessage("Login fehlgeschlagen: " + error.message, true); 
+                btn.disabled = false; 
+                btn.innerText = "Einloggen";
+            } else {
+                btn.disabled = false; 
+                btn.innerText = "Einloggen";
+                document.getElementById('email').value = "";
+                document.getElementById('passwort').value = "";
+                processUserLogin(data.user);
+            }
         }
 
         async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
@@ -1032,7 +1047,7 @@
         async function requestPasswordReset() {
             const email = document.getElementById('resetEmail').value.trim();
             if (!email) return alert("Bitte E-Mail angeben.");
-            await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname + '?type=recovery' });
+            await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname + '#type=recovery' });
             alert("Link gesendet."); toggleAuthMode('login');
         }
 
@@ -1054,7 +1069,6 @@
                 showMessage("Fehler: " + error.message, true);
             } else { 
                 showMessage("Passwort erfolgreich aktualisiert!"); 
-                isRecoveryFlow = false;
                 window.history.replaceState(null, null, window.location.pathname);
                 
                 const { data } = await supabaseClient.auth.getSession();
@@ -1088,8 +1102,7 @@
                 showMessage("Fehler: " + error.message, true);
             } else { 
                 document.getElementById('mitarbeiter').value = nK; 
-                isInviteFlow = false;
-                window.history.replaceState(null, null, window.location.pathname);
+                window.history.replaceState(null, null, window.location.pathname); 
                 
                 const { data } = await supabaseClient.auth.getSession();
                 if(data.session) processUserLogin(data.session.user);
@@ -1098,44 +1111,29 @@
         }
 
         // START & ROUTING
-        window.onload = () => { 
+        window.onload = async () => { 
             initDates(); 
             initSettings(); 
             
-            // Verhindert ein kurzes Flackern der UI
-            document.querySelectorAll('.container > div').forEach(div => div.style.display = 'none');
+            const hash = window.location.hash;
 
-            // Wenn wir einen speziellen Flow in der URL haben, zwingen wir die UI hierauf zu bleiben
-            if (isRecoveryFlow) {
+            if (hash.includes('type=recovery')) {
                 zeigeSeite('setNewPasswordPage');
-            } else if (isInviteFlow) {
+            } else if (hash.includes('type=invite')) {
                 zeigeSeite('setupProfilePage');
+            } else {
+                const { data } = await supabaseClient.auth.getSession();
+                if (data.session) {
+                    processUserLogin(data.session.user);
+                } else {
+                    zeigeSeite('loginPage');
+                }
             }
 
-            // Supabase Listener fängt Statusänderungen im Hintergrund ab
             supabaseClient.auth.onAuthStateChange((event, session) => {
-                console.log("Auth Event: ", event);
-
                 if (event === 'PASSWORD_RECOVERY') {
-                    isRecoveryFlow = true;
                     zeigeSeite('setNewPasswordPage');
-                    return;
-                } 
-
-                if (isRecoveryFlow) {
-                    zeigeSeite('setNewPasswordPage');
-                    return; 
-                }
-                
-                if (isInviteFlow) {
-                    zeigeSeite('setupProfilePage');
-                    return; 
-                }
-                
-                // Normales Routing
-                if (session) {
-                    processUserLogin(session.user);
-                } else {
+                } else if (event === 'SIGNED_OUT') {
                     zeigeSeite('loginPage');
                 }
             });
