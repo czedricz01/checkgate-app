@@ -266,7 +266,7 @@
         <div id="setNewPasswordPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Neues Passwort festlegen</h2>
-            <label for="recoveryPassword">Neues Passwort:</label><input type="password" id="recoveryPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
+            <label for="recoveryPassword">Neues Passwort:</label><input type="password" id="recoveryPassword" placeholder="Min. 8 Zeichen">
             <label for="confirmRecoveryPassword">Passwort bestätigen:</label><input type="password" id="confirmRecoveryPassword">
             <button id="saveRecoveryBtn" onclick="saveNewPassword()">Passwort speichern</button>
         </div>
@@ -275,7 +275,7 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Profil einrichten</h2>
             <label for="newKuerzel">Dein Mitarbeiterkürzel:</label><input type="text" id="newKuerzel" placeholder="z. B. AB">
-            <label for="newPassword">Neues Passwort:</label><input type="password" id="newPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
+            <label for="newPassword">Neues Passwort:</label><input type="password" id="newPassword" placeholder="Min. 8 Zeichen">
             <label for="confirmPassword">Passwort bestätigen:</label><input type="password" id="confirmPassword">
             <button id="saveKuerzelBtn" onclick="saveProfile()">Speichern & Weiter</button>
         </div>
@@ -495,6 +495,22 @@
 
         // AUTH & ROLLEN
         async function checkSession() {
+            const url = window.location.href;
+            
+            // WICHTIG: URL-Parameter VOR dem Laden der Session prüfen,
+            // um kurzes Aufblitzen der Login-Seite bei Recovery- oder Invite-Links zu verhindern.
+            if (url.includes('type=recovery') || url.includes('recovery')) {
+                zeigeSeite('setNewPasswordPage');
+                await supabaseClient.auth.getSession(); // Token im Hintergrund laden
+                return;
+            }
+            if (url.includes('type=invite') || url.includes('invite')) {
+                zeigeSeite('setupProfilePage');
+                await supabaseClient.auth.getSession(); // Token im Hintergrund laden
+                return;
+            }
+
+            // Normaler Ablauf ohne spezielle Links
             const { data, error } = await supabaseClient.auth.getSession();
             if (data.session) processUserLogin(data.session.user); else zeigeSeite('loginPage');
         }
@@ -1064,9 +1080,27 @@
         }
 
         async function saveProfile() {
-            const nK = document.getElementById('newKuerzel').value.trim(); const p = document.getElementById('newPassword').value;
-            await supabaseClient.auth.updateUser({ password: p, data: { kuerzel: nK } });
-            document.getElementById('mitarbeiter').value = nK; navigiereZu('formPage');
+            const nK = document.getElementById('newKuerzel').value.trim(); 
+            const p = document.getElementById('newPassword').value;
+            const pConf = document.getElementById('confirmPassword').value;
+
+            if (!nK || p.length < 8) return showMessage("Bitte Kürzel und Passwort (min. 8 Zeichen) eingeben.", true);
+            if (p !== pConf) return showMessage("Passwörter stimmen nicht überein.", true);
+
+            const btn = document.getElementById('saveKuerzelBtn'); 
+            btn.disabled = true; btn.innerText = "Speichert...";
+            
+            const { error } = await supabaseClient.auth.updateUser({ password: p, data: { kuerzel: nK } });
+            
+            btn.disabled = false; btn.innerText = "Speichern & Weiter";
+            
+            if (error) {
+                showMessage("Fehler: " + error.message, true);
+            } else { 
+                document.getElementById('mitarbeiter').value = nK; 
+                window.history.replaceState(null, null, window.location.pathname); // URL säubern
+                checkSession(); 
+            }
         }
 
         // START & ROUTING
@@ -1074,18 +1108,12 @@
             initDates(); 
             initSettings(); 
             
-            // Supabase Listener für Recovery Events
+            // Supabase Listener für Events, die erst NACH dem Laden passieren
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 if (event === 'PASSWORD_RECOVERY') zeigeSeite('setNewPasswordPage');
             });
 
-            // Direkter URL-Check beim Laden
-            const url = window.location.href;
-            if (url.includes('type=recovery')) {
-                zeigeSeite('setNewPasswordPage');
-            } else {
-                checkSession(); 
-            }
+            checkSession(); 
         };
     </script>
 </body>
