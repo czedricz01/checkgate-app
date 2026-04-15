@@ -266,7 +266,7 @@
         <div id="setNewPasswordPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Neues Passwort festlegen</h2>
-            <label for="recoveryPassword">Neues Passwort:</label><input type="password" id="recoveryPassword">
+            <label for="recoveryPassword">Neues Passwort:</label><input type="password" id="recoveryPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
             <label for="confirmRecoveryPassword">Passwort bestätigen:</label><input type="password" id="confirmRecoveryPassword">
             <button id="saveRecoveryBtn" onclick="saveNewPassword()">Passwort speichern</button>
         </div>
@@ -275,7 +275,7 @@
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Profil einrichten</h2>
             <label for="newKuerzel">Dein Mitarbeiterkürzel:</label><input type="text" id="newKuerzel" placeholder="z. B. AB">
-            <label for="newPassword">Neues Passwort:</label><input type="password" id="newPassword">
+            <label for="newPassword">Neues Passwort:</label><input type="password" id="newPassword" placeholder="Min. 8 Zeichen, Groß-/Kleinb., Zahl, Sonderz.">
             <label for="confirmPassword">Passwort bestätigen:</label><input type="password" id="confirmPassword">
             <button id="saveKuerzelBtn" onclick="saveProfile()">Speichern & Weiter</button>
         </div>
@@ -441,7 +441,7 @@
         let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [], uniqueMit = [];
         let produkteNachKategorie = {}, chartInstances = {};
         
-        let editModeId = null; // Speichert die ID für den Bearbeitungs-Modus
+        let editModeId = null; 
 
         // DATUMS-INITIALISIERUNG
         function initDates() {
@@ -515,13 +515,11 @@
 
                 const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
                 
-                // Menü Sichtbarkeiten
                 document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
-                document.getElementById('menuExport').style.display = 'block'; // Export ist nun für alle sichtbar
+                document.getElementById('menuExport').style.display = 'block'; 
                 
                 document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
 
-                // Export-Filter anpassen je nach Rolle
                 if (currentUserRole === 'user') {
                     document.getElementById('labelExportMitarbeiter').style.display = 'none';
                     document.getElementById('exportMitarbeiterFilter').style.display = 'none';
@@ -725,10 +723,9 @@
             const filterSped = document.getElementById('exportSpediteurFilter').value;
             const sep = document.getElementById('exportSeparator').value;
 
-            // Mitarbeiter-Filter Logik basierend auf der Rolle
             let filterMit = document.getElementById('exportMitarbeiterFilter').value;
             if (currentUserRole === 'user') {
-                filterMit = document.getElementById('mitarbeiter').value; // Festsetzen auf eingeloggten Nutzer
+                filterMit = document.getElementById('mitarbeiter').value; 
             }
 
             let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
@@ -796,7 +793,7 @@
             document.getElementById('mengeOk').value = data.mengeOk || "ja";
             
             berechneNetto();
-            editModeId = id; // Setzt die ID für das spätere Update
+            editModeId = id; 
             
             navigiereZu('formPage');
             showMessage("Bearbeitungsmodus aktiv. Bitte Daten anpassen und durchklicken.");
@@ -810,7 +807,7 @@
 
         // NAVIGATION & CORE FUNCTIONS
         function ladeNeuenEingang() {
-            editModeId = null; // Stellt sicher, dass wir wieder im Insert-Modus sind
+            editModeId = null; 
             resetFormFields();
             navigiereZu('formPage');
         }
@@ -890,12 +887,10 @@
                 showMessage("Offline gespeichert.");
             } else {
                 if (editModeId) {
-                    // Update bestehender Eintrag
                     const { error } = await supabaseClient.from('wareneingang').update(payload).eq('id', editModeId);
                     if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Erfolgreich aktualisiert.");
-                    editModeId = null; // Nach dem Update zurücksetzen
+                    editModeId = null; 
                 } else {
-                    // Neuer Eintrag
                     const { error } = await supabaseClient.from('wareneingang').insert([payload]);
                     if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Gespeichert.");
                 }
@@ -1041,8 +1036,25 @@
 
         async function saveNewPassword() {
             const pwd = document.getElementById('recoveryPassword').value;
-            await supabaseClient.auth.updateUser({ password: pwd });
-            alert("Passwort aktualisiert!"); window.history.replaceState(null, null, ' '); checkSession();
+            const pwdConf = document.getElementById('confirmRecoveryPassword').value;
+            
+            if(pwd !== pwdConf) return showMessage("Passwörter stimmen nicht überein.", true);
+            if(pwd.length < 8) return showMessage("Passwort muss mind. 8 Zeichen lang sein.", true);
+            
+            const btn = document.getElementById('saveRecoveryBtn'); 
+            btn.disabled = true; btn.innerText = "Speichere...";
+            
+            const { error } = await supabaseClient.auth.updateUser({ password: pwd });
+            
+            btn.disabled = false; btn.innerText = "Passwort speichern";
+            
+            if (error) {
+                showMessage("Fehler: " + error.message, true);
+            } else { 
+                showMessage("Passwort erfolgreich aktualisiert!"); 
+                window.history.replaceState(null, null, window.location.pathname);
+                checkSession(); 
+            }
         }
 
         async function sendeAnfrage() {
@@ -1057,8 +1069,24 @@
             document.getElementById('mitarbeiter').value = nK; navigiereZu('formPage');
         }
 
-        // START
-        window.onload = () => { initDates(); initSettings(); checkSession(); };
+        // START & ROUTING
+        window.onload = () => { 
+            initDates(); 
+            initSettings(); 
+            
+            // Supabase Listener für Recovery Events
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'PASSWORD_RECOVERY') zeigeSeite('setNewPasswordPage');
+            });
+
+            // Direkter URL-Check beim Laden
+            const url = window.location.href;
+            if (url.includes('type=recovery')) {
+                zeigeSeite('setNewPasswordPage');
+            } else {
+                checkSession(); 
+            }
+        };
     </script>
 </body>
 </html>
