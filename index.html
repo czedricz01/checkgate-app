@@ -432,6 +432,11 @@
     </div>
 
     <script>
+        // GLOBALE VARIABLEN & ROUTING
+        const initialUrl = window.location.href;
+        let isRecoveryFlow = initialUrl.includes('type=recovery') || initialUrl.includes('recovery');
+        let isInviteFlow = initialUrl.includes('type=invite') || initialUrl.includes('invite');
+
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -907,7 +912,6 @@
             const btn = document.getElementById('loginBtn'); btn.disabled = true;
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
             if (error) { showMessage("Login fehlgeschlagen.", true); btn.disabled = false; }
-            // onAuthStateChange fängt das 'SIGNED_IN' Event automatisch ab
         }
 
         async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
@@ -1098,37 +1102,31 @@
             initDates(); 
             initSettings(); 
             
-            const url = window.location.href;
-            let isRecoveryLink = url.includes('type=recovery') || url.includes('recovery');
-            let isInviteLink = url.includes('type=invite') || url.includes('invite');
-
-            if (isRecoveryLink) {
+            // Sofortige UI-Anpassung basierend auf dem ersten URL-Check
+            if (isRecoveryFlow) {
                 zeigeSeite('setNewPasswordPage');
-            } else if (isInviteLink) {
+            } else if (isInviteFlow) {
                 zeigeSeite('setupProfilePage');
+            } else {
+                zeigeSeite('loginPage'); 
             }
 
             supabaseClient.auth.onAuthStateChange((event, session) => {
                 console.log("Auth Event: ", event);
 
                 if (event === 'PASSWORD_RECOVERY') {
-                    isRecoveryLink = true;
+                    isRecoveryFlow = true;
                     zeigeSeite('setNewPasswordPage');
                 } 
                 else if (session) {
-                    if (isRecoveryLink || document.getElementById('setNewPasswordPage').style.display === 'block') {
-                        return; 
-                    }
-                    if (isInviteLink || document.getElementById('setupProfilePage').style.display === 'block') {
-                        return; 
-                    }
+                    // Verhindert, dass der Login die Wiederherstellungs-UI überschreibt
+                    if (isRecoveryFlow || document.getElementById('setNewPasswordPage').style.display === 'block') return; 
+                    if (isInviteFlow || document.getElementById('setupProfilePage').style.display === 'block') return; 
                     
                     processUserLogin(session.user);
                 } 
-                else if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
-                    if (!isRecoveryLink && !isInviteLink) {
-                        zeigeSeite('loginPage');
-                    }
+                else if (event === 'SIGNED_OUT' || !session) {
+                    if (!isRecoveryFlow && !isInviteFlow) zeigeSeite('loginPage');
                 }
             });
         };
