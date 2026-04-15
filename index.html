@@ -223,11 +223,11 @@
             <div id="ownerSection" class="action-section" style="display:none; border: 2px solid var(--action-green); padding: 15px; border-radius: 4px;">
                 <h4 style="color:var(--action-green-dark); margin-top: 0;">Benutzerverwaltung</h4>
                 
-                <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid var(--border-default);">
-                    <h4 style="margin-top:0; margin-bottom: 5px;">Magic Link senden</h4>
+                <div style="margin-top: 15px; border-bottom: 1px solid var(--border-default); padding-bottom: 15px; margin-bottom: 15px;">
+                    <h4 style="margin-top: 0; margin-bottom: 5px;">Magic Link senden</h4>
                     <p style="font-size:0.85em; margin-top:0;">Sendet einen passwortlosen Zugangslink per E-Mail.</p>
                     <input type="email" id="magicLinkEmail" placeholder="E-Mail-Adresse">
-                    <button onclick="sendMagicLink()" class="camera-btn" style="margin-top: 10px;">Zugangslink versenden</button>
+                    <button onclick="sendMagicLink()" class="camera-btn" style="margin-top: 10px;">Link versenden</button>
                 </div>
 
                 <p style="font-size:0.9em; margin-top:0;">Rollenvergabe für registrierte Mitarbeiter.</p>
@@ -267,19 +267,18 @@
         <div id="setNewPasswordPage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Dauerhaften Zugang einrichten</h2>
-            <p style="text-align: center; font-size: 0.9em;">Lege ein Passwort fest, um dich zukünftig auch ohne E-Mail-Link anzumelden.</p>
+            <p style="text-align: center; font-size: 0.9em; margin-bottom: 20px;">Lege ein Passwort fest, um dich zukünftig ohne E-Mail-Link anzumelden.</p>
             <label for="recoveryPassword">Neues Passwort:</label><input type="password" id="recoveryPassword" placeholder="Min. 8 Zeichen">
             <label for="confirmRecoveryPassword">Passwort bestätigen:</label><input type="password" id="confirmRecoveryPassword">
-            <button id="saveRecoveryBtn" onclick="saveNewPassword()">Passwort speichern & Weiter</button>
-            <button class="secondary-btn" onclick="ueberspringePasswort()">Überspringen</button>
+            <button id="saveRecoveryBtn" onclick="saveNewPassword()">Passwort speichern</button>
+            <button class="secondary-btn" onclick="ueberspringePasswort()" style="margin-top:10px;">Überspringen</button>
         </div>
 
         <div id="setupProfilePage" style="display:none;">
             <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
             <h2>Profil einrichten</h2>
             <label for="newKuerzel">Dein Mitarbeiterkürzel:</label><input type="text" id="newKuerzel" placeholder="z. B. AB">
-            <label for="newPassword">Neues Passwort (Optional):</label><input type="password" id="newPassword" placeholder="Min. 8 Zeichen">
-            <label for="confirmPassword">Passwort bestätigen:</label><input type="password" id="confirmPassword">
+            <label for="newPassword">Neues Passwort (Optional):</label><input type="password" id="newPassword" placeholder="Min. 8 Zeichen für Login ohne Link">
             <button id="saveKuerzelBtn" onclick="saveProfile()">Speichern & Weiter</button>
         </div>
 
@@ -444,7 +443,7 @@
         let lieferantenChronologisch = [], spediteureChronologisch = [], kategorienChronologisch = [], alleProdukte = [], uniqueMit = [];
         let produkteNachKategorie = {}, chartInstances = {};
         
-        let editModeId = null; // Speichert die ID für den Bearbeitungs-Modus
+        let editModeId = null; 
 
         // DATUMS-INITIALISIERUNG
         function initDates() {
@@ -478,7 +477,9 @@
 
         function updateLogoSource(isDark) {
             const src = isDark ? 'logo-dark.png' : 'logo.png';
-            document.querySelectorAll('.logo-container img').forEach(img => img.src = src);
+            document.querySelectorAll('.logo-container img').forEach(img => {
+                img.src = src;
+            });
         }
 
         function toggleDarkMode() {
@@ -497,6 +498,23 @@
         function saveSetting(key, val) { localStorage.setItem('checkgate_' + key, val); }
 
         // AUTH & ROLLEN
+        async function checkSession(isMagicLink = false) {
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (data.session) {
+                if (isMagicLink) {
+                    if (!data.session.user.user_metadata?.kuerzel) {
+                        zeigeSeite('setupProfilePage');
+                    } else {
+                        zeigeSeite('setNewPasswordPage');
+                    }
+                } else {
+                    processUserLogin(data.session.user);
+                }
+            } else {
+                zeigeSeite('loginPage');
+            }
+        }
+
         async function processUserLogin(user) {
             if (user.user_metadata?.kuerzel) { 
                 const kuerzel = user.user_metadata.kuerzel.toLowerCase();
@@ -505,7 +523,11 @@
                 let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
                 
                 if (error || !data) {
-                    await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
+                    try {
+                        await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
+                    } catch (e) {
+                        console.error("Upsert failed due to permissions, continuing as user.");
+                    }
                     currentUserRole = 'user';
                 } else {
                     currentUserRole = data.role;
@@ -513,13 +535,11 @@
 
                 const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
                 
-                // Menü Sichtbarkeiten
                 document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
-                document.getElementById('menuExport').style.display = 'block'; // Export ist nun für alle sichtbar
+                document.getElementById('menuExport').style.display = isAdminOrOwner ? 'block' : 'none'; 
                 
                 document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
 
-                // Export-Filter anpassen je nach Rolle
                 if (currentUserRole === 'user') {
                     document.getElementById('labelExportMitarbeiter').style.display = 'none';
                     document.getElementById('exportMitarbeiterFilter').style.display = 'none';
@@ -569,91 +589,6 @@
         async function updateRolle(k, r) {
             const { error } = await supabaseClient.from('benutzer_rollen').update({ role: r }).eq('kuerzel', k);
             if (error) showMessage("Fehler: " + error.message, true); else { showMessage("Rolle aktualisiert."); ladeBenutzerRollen(); }
-        }
-
-        // NEU: MAGIC LINK FUNKTION
-        async function sendMagicLink() {
-            const email = document.getElementById('magicLinkEmail').value.trim();
-            if (!email) return alert("Bitte eine E-Mail-Adresse eingeben!");
-            
-            const btn = document.querySelector('#ownerSection .camera-btn');
-            btn.disabled = true; btn.innerText = "Sende...";
-            
-            const { error } = await supabaseClient.auth.signInWithOtp({ email: email });
-            
-            btn.disabled = false; btn.innerText = "Zugangslink versenden";
-            
-            if (error) {
-                alert("Fehler: " + error.message);
-            } else {
-                alert("Magic Link versendet!");
-                document.getElementById('magicLinkEmail').value = '';
-            }
-        }
-
-        // NEU: PASSWORT SPEICHERN NACH MAGIC LINK
-        async function saveNewPassword() {
-            const pwd = document.getElementById('recoveryPassword').value;
-            const pwdConf = document.getElementById('confirmRecoveryPassword').value;
-            
-            if (pwd !== pwdConf) return alert("Die Passwörter stimmen nicht überein!");
-            if (pwd.length < 8) return alert("Das Passwort muss mindestens 8 Zeichen lang sein!");
-            
-            const btn = document.getElementById('saveRecoveryBtn');
-            btn.disabled = true; btn.innerText = "Speichere...";
-            
-            const { error } = await supabaseClient.auth.updateUser({ password: pwd });
-            
-            btn.disabled = false; btn.innerText = "Passwort speichern & Weiter";
-            
-            if (error) {
-                alert("Fehler: " + error.message);
-            } else {
-                alert("Passwort erfolgreich aktualisiert!"); 
-                ueberspringePasswort();
-            }
-        }
-
-        function ueberspringePasswort() {
-            // Hash aus der URL entfernen, um Loops zu verhindern
-            window.location.hash = ''; 
-            const url = new URL(window.location);
-            url.searchParams.delete('type');
-            window.history.replaceState({}, document.title, url);
-            
-            supabaseClient.auth.getSession().then(({ data }) => {
-                if(data.session) processUserLogin(data.session.user);
-                else zeigeSeite('loginPage');
-            });
-        }
-
-        async function saveProfile() {
-            const nK = document.getElementById('newKuerzel').value.trim(); 
-            const p = document.getElementById('newPassword').value;
-            const pConf = document.getElementById('confirmPassword').value;
-            
-            if (!nK) return alert("Bitte Kürzel angeben.");
-            if (p && p !== pConf) return alert("Passwörter stimmen nicht überein.");
-            if (p && p.length < 8) return alert("Passwort muss mindestens 8 Zeichen lang sein.");
-
-            const btn = document.getElementById('saveKuerzelBtn');
-            btn.disabled = true; btn.innerText = "Speichert...";
-
-            const updateData = p.length >= 8 ? { password: p, data: { kuerzel: nK } } : { data: { kuerzel: nK } };
-            const { error } = await supabaseClient.auth.updateUser(updateData);
-            
-            if (error) {
-                alert("Fehler: " + error.message);
-                btn.disabled = false; btn.innerText = "Speichern & Weiter";
-            } else {
-                window.location.hash = '';
-                const url = new URL(window.location);
-                url.searchParams.delete('type');
-                window.history.replaceState({}, document.title, url);
-                
-                const { data } = await supabaseClient.auth.getSession();
-                if(data.session) processUserLogin(data.session.user);
-            }
         }
 
         // DATEN FÜR FILTER LADEN
@@ -810,10 +745,9 @@
             const filterSped = document.getElementById('exportSpediteurFilter').value;
             const sep = document.getElementById('exportSeparator').value;
 
-            // Mitarbeiter-Filter Logik basierend auf der Rolle
             let filterMit = document.getElementById('exportMitarbeiterFilter').value;
             if (currentUserRole === 'user') {
-                filterMit = document.getElementById('mitarbeiter').value; // Festsetzen auf eingeloggten Nutzer
+                filterMit = document.getElementById('mitarbeiter').value; 
             }
 
             let query = supabaseClient.from('wareneingang').select('*').gte('datum', start).lte('datum', ende);
@@ -881,7 +815,7 @@
             document.getElementById('mengeOk').value = data.mengeOk || "ja";
             
             berechneNetto();
-            editModeId = id; // Setzt die ID für das spätere Update
+            editModeId = id; 
             
             navigiereZu('formPage');
             showMessage("Bearbeitungsmodus aktiv. Bitte Daten anpassen und durchklicken.");
@@ -895,17 +829,14 @@
 
         // NAVIGATION & CORE FUNCTIONS
         function ladeNeuenEingang() {
-            editModeId = null; // Stellt sicher, dass wir wieder im Insert-Modus sind
+            editModeId = null; 
             resetFormFields();
             navigiereZu('formPage');
         }
 
         function zeigeSeite(id) {
-            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(p => {
-                const el = document.getElementById(p);
-                if (el) el.style.display = (p === id) ? 'block' : 'none';
-            });
-            document.getElementById('mainMenuContainer').style.display = (id === 'loginPage' || id === 'setupProfilePage' || id === 'setNewPasswordPage') ? 'none' : 'block';
+            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(p => document.getElementById(p).style.display = 'none');
+            document.getElementById(id).style.display = 'block';
         }
 
         function navigiereZu(id) {
@@ -978,12 +909,10 @@
                 showMessage("Offline gespeichert.");
             } else {
                 if (editModeId) {
-                    // Update bestehender Eintrag
                     const { error } = await supabaseClient.from('wareneingang').update(payload).eq('id', editModeId);
                     if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Erfolgreich aktualisiert.");
-                    editModeId = null; // Nach dem Update zurücksetzen
+                    editModeId = null; 
                 } else {
-                    // Neuer Eintrag
                     const { error } = await supabaseClient.from('wareneingang').insert([payload]);
                     if (error) showMessage("DB Fehler: " + error.message, true); else showMessage("Gespeichert.");
                 }
@@ -999,25 +928,28 @@
 
         // WEITERE LOGIK (Login, Formular-Berechnungen, Scanner)
         async function login() {
-            const e = document.getElementById('email').value; 
+            const e = document.getElementById('email').value.trim(); 
             const p = document.getElementById('passwort').value;
             const btn = document.getElementById('loginBtn'); 
+            
+            if(!e || !p) {
+                alert("Bitte E-Mail und Passwort eingeben.");
+                return;
+            }
             
             btn.disabled = true; 
             btn.innerText = "Prüft...";
             
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
             
+            btn.disabled = false; 
+            btn.innerText = "Einloggen";
+            
             if (error) { 
-                alert("Fehler: " + error.message); 
-                btn.disabled = false; 
-                btn.innerText = "Einloggen"; 
+                alert("Login fehlgeschlagen: " + error.message); 
             } else {
-                // Erfolgreicher Login -> explizit weiterleiten, damit nichts hängen bleibt
-                btn.disabled = false; 
-                btn.innerText = "Einloggen";
-                document.getElementById('email').value = '';
-                document.getElementById('passwort').value = '';
+                document.getElementById('email').value = "";
+                document.getElementById('passwort').value = "";
                 processUserLogin(data.user);
             }
         }
@@ -1130,10 +1062,102 @@
             d.style.display = 'block';
         }
 
+        // SONSTIGES
         function toggleAuthMode(m) {
             document.getElementById('loginForm').style.display = m === 'login' ? 'block' : 'none';
             document.getElementById('requestForm').style.display = m === 'request' ? 'block' : 'none';
         }
 
         async function sendeAnfrage() {
-            const name = document.getElementById('reqName').value.trim(); const
+            const name = document.getElementById('reqName').value.trim(); const email = document.getElementById('reqEmail').value.trim();
+            await supabaseClient.from('zugangsanfragen').insert([{ email: email, mitarbeiter: name, anmerkung: document.getElementById('reqAnmerkung').value }]);
+            alert("Anfrage gesendet!"); toggleAuthMode('login');
+        }
+
+        async function sendMagicLink() {
+            const email = document.getElementById('magicLinkEmail').value.trim();
+            if (!email) return alert("Bitte eine E-Mail-Adresse eingeben.");
+            const btn = document.querySelector('#ownerSection .camera-btn');
+            btn.disabled = true; btn.innerText = "Sende...";
+            const { error } = await supabaseClient.auth.signInWithOtp({ email: email });
+            btn.disabled = false; btn.innerText = "Zugangslink versenden";
+            if (error) alert("Fehler: " + error.message);
+            else { alert("Magic Link versendet!"); document.getElementById('magicLinkEmail').value = ''; }
+        }
+
+        async function saveNewPassword() {
+            const pwd = document.getElementById('recoveryPassword').value;
+            const pwdConf = document.getElementById('confirmRecoveryPassword').value;
+            if (pwd !== pwdConf) return alert("Passwörter stimmen nicht überein!");
+            if (pwd.length < 8) return alert("Passwort muss mind. 8 Zeichen haben!");
+            const btn = document.getElementById('saveRecoveryBtn');
+            btn.disabled = true; btn.innerText = "Speichere...";
+            const { error } = await supabaseClient.auth.updateUser({ password: pwd });
+            btn.disabled = false; btn.innerText = "Passwort speichern & Weiter";
+            if (error) alert("Fehler: " + error.message);
+            else { alert("Passwort aktualisiert!"); ueberspringePasswort(); }
+        }
+
+        function ueberspringePasswort() {
+            window.location.hash = ''; // Clean Hash
+            checkSession();
+        }
+
+        async function saveProfile() {
+            const nK = document.getElementById('newKuerzel').value.trim(); 
+            const p = document.getElementById('newPassword').value;
+            if (!nK) return alert("Bitte Kürzel eingeben!");
+            if (p.length > 0 && p.length < 8) return alert("Passwort muss mind. 8 Zeichen haben!");
+            const btn = document.getElementById('saveKuerzelBtn');
+            btn.disabled = true; btn.innerText = "Speichert...";
+            const updatePayload = p.length >= 8 ? { password: p, data: { kuerzel: nK } } : { data: { kuerzel: nK } };
+            const { error } = await supabaseClient.auth.updateUser(updatePayload);
+            btn.disabled = false; btn.innerText = "Speichern & Weiter";
+            if (error) alert("Fehler: " + error.message);
+            else {
+                document.getElementById('mitarbeiter').value = nK;
+                window.location.hash = '';
+                checkSession();
+            }
+        }
+
+        // START
+        window.onload = () => { 
+            initDates(); 
+            initSettings(); 
+            
+            const hash = window.location.hash;
+            let isMagicLink = hash.includes('type=magiclink') || hash.includes('type=invite');
+
+            if (!isMagicLink) {
+                checkSession();
+            }
+
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_IN' && session) {
+                    if (isMagicLink) {
+                        isMagicLink = false; // consume flag
+                        window.location.hash = ''; // clean URL
+                        if (!session.user.user_metadata?.kuerzel) {
+                            zeigeSeite('setupProfilePage');
+                        } else {
+                            zeigeSeite('setNewPasswordPage');
+                        }
+                    } else {
+                        if (document.getElementById('loginPage').style.display !== 'none') {
+                            processUserLogin(session.user);
+                        }
+                    }
+                } else if (event === 'SIGNED_OUT') {
+                    zeigeSeite('loginPage');
+                }
+            });
+        };
+
+        async function checkSession() {
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (data.session) processUserLogin(data.session.user); else zeigeSeite('loginPage');
+        }
+    </script>
+</body>
+</html>
