@@ -432,10 +432,10 @@
     </div>
 
     <script>
-        // GLOBALE VARIABLEN & ROUTING
-        const initialUrl = window.location.href;
-        let isRecoveryFlow = initialUrl.includes('type=recovery') || initialUrl.includes('recovery');
-        let isInviteFlow = initialUrl.includes('type=invite') || initialUrl.includes('invite');
+        // GANZ OBEN: URL VOR DEM LADEN DES SUPABASE-CLIENTS PRÜFEN
+        const startupUrl = window.location.href;
+        let isRecoveryFlow = startupUrl.includes('recovery');
+        let isInviteFlow = startupUrl.includes('invite');
 
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
@@ -1054,12 +1054,12 @@
                 showMessage("Fehler: " + error.message, true);
             } else { 
                 showMessage("Passwort erfolgreich aktualisiert!"); 
+                
+                isRecoveryFlow = false;
                 window.history.replaceState(null, null, window.location.pathname);
                 
                 const { data } = await supabaseClient.auth.getSession();
-                if(data.session) {
-                    processUserLogin(data.session.user);
-                }
+                if(data.session) processUserLogin(data.session.user);
             }
         }
 
@@ -1088,12 +1088,12 @@
                 showMessage("Fehler: " + error.message, true);
             } else { 
                 document.getElementById('mitarbeiter').value = nK; 
+                
+                isInviteFlow = false;
                 window.history.replaceState(null, null, window.location.pathname);
                 
                 const { data } = await supabaseClient.auth.getSession();
-                if(data.session) {
-                    processUserLogin(data.session.user);
-                }
+                if(data.session) processUserLogin(data.session.user);
             }
         }
 
@@ -1102,31 +1102,18 @@
             initDates(); 
             initSettings(); 
             
-            // Sofortige UI-Anpassung basierend auf dem ersten URL-Check
-            if (isRecoveryFlow) {
-                zeigeSeite('setNewPasswordPage');
-            } else if (isInviteFlow) {
-                zeigeSeite('setupProfilePage');
-            } else {
-                zeigeSeite('loginPage'); 
-            }
-
             supabaseClient.auth.onAuthStateChange((event, session) => {
-                console.log("Auth Event: ", event);
-
-                if (event === 'PASSWORD_RECOVERY') {
-                    isRecoveryFlow = true;
+                if (event === 'PASSWORD_RECOVERY' || (session && isRecoveryFlow)) {
                     zeigeSeite('setNewPasswordPage');
                 } 
+                else if (session && isInviteFlow) {
+                    zeigeSeite('setupProfilePage');
+                } 
                 else if (session) {
-                    // Verhindert, dass der Login die Wiederherstellungs-UI überschreibt
-                    if (isRecoveryFlow || document.getElementById('setNewPasswordPage').style.display === 'block') return; 
-                    if (isInviteFlow || document.getElementById('setupProfilePage').style.display === 'block') return; 
-                    
                     processUserLogin(session.user);
                 } 
-                else if (event === 'SIGNED_OUT' || !session) {
-                    if (!isRecoveryFlow && !isInviteFlow) zeigeSeite('loginPage');
+                else {
+                    zeigeSeite('loginPage');
                 }
             });
         };
