@@ -494,27 +494,6 @@
         function saveSetting(key, val) { localStorage.setItem('checkgate_' + key, val); }
 
         // AUTH & ROLLEN
-        async function checkSession() {
-            const url = window.location.href;
-            
-            // WICHTIG: URL-Parameter VOR dem Laden der Session prüfen,
-            // um kurzes Aufblitzen der Login-Seite bei Recovery- oder Invite-Links zu verhindern.
-            if (url.includes('type=recovery') || url.includes('recovery')) {
-                zeigeSeite('setNewPasswordPage');
-                await supabaseClient.auth.getSession(); // Token im Hintergrund laden
-                return;
-            }
-            if (url.includes('type=invite') || url.includes('invite')) {
-                zeigeSeite('setupProfilePage');
-                await supabaseClient.auth.getSession(); // Token im Hintergrund laden
-                return;
-            }
-
-            // Normaler Ablauf ohne spezielle Links
-            const { data, error } = await supabaseClient.auth.getSession();
-            if (data.session) processUserLogin(data.session.user); else zeigeSeite('loginPage');
-        }
-
         async function processUserLogin(user) {
             if (user.user_metadata?.kuerzel) { 
                 const kuerzel = user.user_metadata.kuerzel.toLowerCase();
@@ -548,7 +527,9 @@
                 
                 ladeDropdownDaten();
                 ladeNeuenEingang(); 
-            } else zeigeSeite('setupProfilePage');
+            } else {
+                zeigeSeite('setupProfilePage');
+            }
         }
 
         async function ladeBenutzerRollen() {
@@ -925,7 +906,8 @@
             const e = document.getElementById('email').value; const p = document.getElementById('passwort').value;
             const btn = document.getElementById('loginBtn'); btn.disabled = true;
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
-            if (error) { showMessage("Login fehlgeschlagen.", true); btn.disabled = false; } else processUserLogin(data.user);
+            if (error) { showMessage("Login fehlgeschlagen.", true); btn.disabled = false; }
+            // onAuthStateChange fängt das 'SIGNED_IN' Event automatisch ab
         }
 
         async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
@@ -1046,7 +1028,7 @@
         async function requestPasswordReset() {
             const email = document.getElementById('resetEmail').value.trim();
             if (!email) return alert("Bitte E-Mail angeben.");
-            await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
+            await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname + '?type=recovery' });
             alert("Link gesendet."); toggleAuthMode('login');
         }
 
@@ -1069,7 +1051,11 @@
             } else { 
                 showMessage("Passwort erfolgreich aktualisiert!"); 
                 window.history.replaceState(null, null, window.location.pathname);
-                checkSession(); 
+                
+                const { data } = await supabaseClient.auth.getSession();
+                if(data.session) {
+                    processUserLogin(data.session.user);
+                }
             }
         }
 
@@ -1098,8 +1084,12 @@
                 showMessage("Fehler: " + error.message, true);
             } else { 
                 document.getElementById('mitarbeiter').value = nK; 
-                window.history.replaceState(null, null, window.location.pathname); // URL säubern
-                checkSession(); 
+                window.history.replaceState(null, null, window.location.pathname);
+                
+                const { data } = await supabaseClient.auth.getSession();
+                if(data.session) {
+                    processUserLogin(data.session.user);
+                }
             }
         }
 
@@ -1108,12 +1098,39 @@
             initDates(); 
             initSettings(); 
             
-            // Supabase Listener für Events, die erst NACH dem Laden passieren
-            supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (event === 'PASSWORD_RECOVERY') zeigeSeite('setNewPasswordPage');
-            });
+            const url = window.location.href;
+            let isRecoveryLink = url.includes('type=recovery') || url.includes('recovery');
+            let isInviteLink = url.includes('type=invite') || url.includes('invite');
 
-            checkSession(); 
+            if (isRecoveryLink) {
+                zeigeSeite('setNewPasswordPage');
+            } else if (isInviteLink) {
+                zeigeSeite('setupProfilePage');
+            }
+
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                console.log("Auth Event: ", event);
+
+                if (event === 'PASSWORD_RECOVERY') {
+                    isRecoveryLink = true;
+                    zeigeSeite('setNewPasswordPage');
+                } 
+                else if (session) {
+                    if (isRecoveryLink || document.getElementById('setNewPasswordPage').style.display === 'block') {
+                        return; 
+                    }
+                    if (isInviteLink || document.getElementById('setupProfilePage').style.display === 'block') {
+                        return; 
+                    }
+                    
+                    processUserLogin(session.user);
+                } 
+                else if (event === 'SIGNED_OUT' || (event === 'INITIAL_SESSION' && !session)) {
+                    if (!isRecoveryLink && !isInviteLink) {
+                        zeigeSeite('loginPage');
+                    }
+                }
+            });
         };
     </script>
 </body>
