@@ -176,7 +176,7 @@
         </div>
 
         <div id="settingsPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <h2>Einstellungen</h2>
             
             <div class="action-section" style="border-top: none;">
@@ -235,14 +235,14 @@
         </div>
 
         <div id="historyPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <h2>Einträge der letzten 14 Tage</h2>
             <div id="historyList">Lade Historie...</div>
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
 
-        <div id="loginPage">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+        <div id="loginPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <div id="loginForm">
                 <h2>Mitarbeiter Login</h2>
                 <label for="email">E-Mail Adresse:</label><input type="email" id="email" placeholder="Eingabe: E-Mail">
@@ -261,8 +261,18 @@
             <a class="privacy-link" onclick="zeigeSeite('datenschutzPage')">Datenschutzerklärung (DSGVO)</a>
         </div>
 
+        <div id="setNewPasswordPage" style="display:none;">
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
+            <h2>Dauerhaften Zugang einrichten</h2>
+            <p style="text-align: center; font-size: 0.9em;">Lege ein Passwort fest, um dich zukünftig auch ohne E-Mail-Link anzumelden.</p>
+            <label for="magicPassword">Neues Passwort:</label><input type="password" id="magicPassword" placeholder="Min. 8 Zeichen">
+            <label for="confirmMagicPassword">Passwort bestätigen:</label><input type="password" id="confirmMagicPassword">
+            <button id="saveMagicPwdBtn" onclick="saveMagicPassword()">Passwort speichern & Weiter</button>
+            <button class="secondary-btn" onclick="ueberspringePasswort()">Überspringen</button>
+        </div>
+
         <div id="setupProfilePage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <h2>Profil einrichten</h2>
             <label for="newKuerzel">Dein Mitarbeiterkürzel:</label><input type="text" id="newKuerzel" placeholder="z. B. AB">
             <label for="newPassword">Neues Passwort (Optional):</label><input type="password" id="newPassword" placeholder="Min. 8 Zeichen für Login ohne Link">
@@ -270,7 +280,7 @@
         </div>
 
         <div id="formPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <label for="datum">Datum:</label><input type="date" id="datum">
             <label for="mitarbeiter">Mitarbeiterkürzel:</label><input type="text" id="mitarbeiter" readonly>
             
@@ -316,7 +326,7 @@
         </div>
 
         <div id="pruefungPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <div id="pruefungsAnweisung" class="instruction-box"></div>
             
             <div id="stichprobenRechner" class="calc-box" style="display:none;">
@@ -332,7 +342,7 @@
         </div>
 
         <div id="resultPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <div id="resultBox" class="result"></div>
             <div id="errorActions" class="action-section" style="display:none;">
                 <label for="mangelBeschreibung">Beschreibung der Schäden/Mängel:</label><textarea id="mangelBeschreibung" rows="4"></textarea>
@@ -350,7 +360,7 @@
         </div>
 
         <div id="adminPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <h2>Daten-Export</h2>
             <div class="export-filter-body">
                 <label for="exportStart">Von Datum:</label><input type="date" id="exportStart">
@@ -375,7 +385,7 @@
         </div>
 
         <div id="statistikPage" style="display:none;">
-            <div class="logo-container"><img src="logo.png" alt="CheckGate Logo"></div>
+            <div class="logo-container"><img src="logo.png" onerror="this.onerror=null; this.src='logo.png';" alt="CheckGate Logo"></div>
             <h2>Statistik</h2>
             
             <div class="filter-toggle-header" onclick="toggleStatsFilter()">Filter einstellen <span id="filterArrow">▼</span></div>
@@ -421,6 +431,12 @@
     </div>
 
     <script>
+        // GLOBALE URL-PRÜFUNG VOR DEM START
+        const startupHash = window.location.hash;
+        const startupSearch = window.location.search;
+        let isMagicLinkOrInvite = startupHash.includes('type=magiclink') || startupHash.includes('type=invite') || startupSearch.includes('type=magiclink');
+        let isRecovery = startupHash.includes('type=recovery') || startupSearch.includes('type=recovery');
+
         const supabaseUrl = 'https://wllbkqqkecfosarmfzgc.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndsbGJrcXFrZWNmb3Nhcm1memdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1NDc4NDEsImV4cCI6MjA5MTEyMzg0MX0.icIQIDEwEPbldL7jL0VNgM9KGLRT424_pGYA5NLyiL4';
         const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
@@ -464,7 +480,9 @@
 
         function updateLogoSource(isDark) {
             const src = isDark ? 'logo-dark.png' : 'logo.png';
-            document.querySelectorAll('.logo-container img').forEach(img => img.src = src);
+            document.querySelectorAll('.logo-container img').forEach(img => {
+                img.src = src;
+            });
         }
 
         function toggleDarkMode() {
@@ -483,46 +501,44 @@
         function saveSetting(key, val) { localStorage.setItem('checkgate_' + key, val); }
 
         // AUTH & ROLLEN
-        async function checkProfileAndRoute(user) {
-            if (!user.user_metadata?.kuerzel) {
-                zeigeSeite('setupProfilePage');
-            } else {
-                await processUserLogin(user);
-            }
-        }
-
         async function processUserLogin(user) {
-            const kuerzel = user.user_metadata.kuerzel.toLowerCase();
-            document.getElementById('mitarbeiter').value = kuerzel; 
+            if (user.user_metadata?.kuerzel) { 
+                const kuerzel = user.user_metadata.kuerzel.toLowerCase();
+                document.getElementById('mitarbeiter').value = kuerzel; 
 
-            let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
-            
-            if (error || !data) {
-                await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
-                currentUserRole = 'user';
+                // Prüfen ob Nutzer in DB existiert
+                let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
+                
+                if (data) {
+                    currentUserRole = data.role;
+                } else {
+                    // Versuche User anzulegen (wird ignoriert, wenn RLS blockiert)
+                    await supabaseClient.from('benutzer_rollen').insert([{ kuerzel: kuerzel, role: 'user' }]);
+                    currentUserRole = 'user';
+                }
+
+                const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
+                
+                document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
+                document.getElementById('menuExport').style.display = 'block'; 
+                
+                document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
+
+                if (currentUserRole === 'user') {
+                    document.getElementById('labelExportMitarbeiter').style.display = 'none';
+                    document.getElementById('exportMitarbeiterFilter').style.display = 'none';
+                } else {
+                    document.getElementById('labelExportMitarbeiter').style.display = 'block';
+                    document.getElementById('exportMitarbeiterFilter').style.display = 'block';
+                }
+
+                if (currentUserRole === 'owner') ladeBenutzerRollen();
+                
+                ladeDropdownDaten();
+                ladeNeuenEingang(); 
             } else {
-                currentUserRole = data.role;
+                zeigeSeite('setupProfilePage');
             }
-
-            const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
-            
-            document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
-            document.getElementById('menuExport').style.display = 'block'; 
-            
-            document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
-
-            if (currentUserRole === 'user') {
-                document.getElementById('labelExportMitarbeiter').style.display = 'none';
-                document.getElementById('exportMitarbeiterFilter').style.display = 'none';
-            } else {
-                document.getElementById('labelExportMitarbeiter').style.display = 'block';
-                document.getElementById('exportMitarbeiterFilter').style.display = 'block';
-            }
-
-            if (currentUserRole === 'owner') ladeBenutzerRollen();
-            
-            ladeDropdownDaten();
-            ladeNeuenEingang(); 
         }
 
         async function ladeBenutzerRollen() {
@@ -803,13 +819,13 @@
         }
 
         function zeigeSeite(id) {
-            ['loginPage', 'setupProfilePage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(p => document.getElementById(p).style.display = 'none');
+            ['loginPage', 'setupProfilePage', 'setNewPasswordPage', 'formPage', 'pruefungPage', 'resultPage', 'datenschutzPage', 'adminPage', 'statistikPage', 'settingsPage', 'historyPage'].forEach(p => document.getElementById(p).style.display = 'none');
             document.getElementById(id).style.display = 'block';
         }
 
         function navigiereZu(id) {
             zeigeSeite(id);
-            document.getElementById('mainMenuContainer').style.display = (id === 'loginPage' || id === 'setupProfilePage') ? 'none' : 'block';
+            document.getElementById('mainMenuContainer').style.display = (id === 'loginPage' || id === 'setupProfilePage' || id === 'setNewPasswordPage') ? 'none' : 'block';
             if (id === 'statistikPage') ladeStatistiken();
             if (id === 'historyPage') ladeHistorie();
         }
@@ -894,9 +910,9 @@
             navigiereZu('formPage');
         }
 
-        // WEITERE LOGIK (Login, Formular-Berechnungen, Scanner)
+        // LOGIN UND AUTH STEUERUNG
         async function login() {
-            const e = document.getElementById('email').value; 
+            const e = document.getElementById('email').value.trim(); 
             const p = document.getElementById('passwort').value;
             const btn = document.getElementById('loginBtn'); 
             
@@ -904,12 +920,21 @@
                 return showMessage("Bitte E-Mail und Passwort eingeben", true);
             }
             
-            btn.disabled = true; btn.innerText = "Prüft...";
+            btn.disabled = true; 
+            btn.innerText = "Prüft...";
             
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
+            
+            btn.disabled = false; 
+            btn.innerText = "Einloggen";
+
             if (error) { 
-                showMessage("Login fehlgeschlagen.", true); 
-                btn.disabled = false; btn.innerText = "Einloggen"; 
+                showMessage("Login fehlgeschlagen: " + error.message, true); 
+            } else {
+                document.getElementById('email').value = "";
+                document.getElementById('passwort').value = "";
+                // Manuelles Anstoßen, falls onAuthStateChange hier nicht feuert
+                processUserLogin(data.user);
             }
         }
 
@@ -1021,6 +1046,7 @@
             d.style.display = 'block';
         }
 
+        // SONSTIGES
         function toggleAuthMode(m) {
             document.getElementById('loginForm').style.display = m === 'login' ? 'block' : 'none';
             document.getElementById('requestForm').style.display = m === 'request' ? 'block' : 'none';
@@ -1087,41 +1113,64 @@
             }
         }
 
-        // START-LOGIK & ROUTING LISTENER
+        async function saveMagicPassword() {
+            const pwd = document.getElementById('magicPassword').value;
+            const pwdConf = document.getElementById('confirmMagicPassword').value;
+            
+            if(pwd !== pwdConf) return showMessage("Passwörter stimmen nicht überein.", true);
+            if(pwd.length < 8) return showMessage("Passwort muss mind. 8 Zeichen lang sein.", true);
+            
+            const btn = document.getElementById('saveMagicPwdBtn'); 
+            btn.disabled = true; btn.innerText = "Speichere...";
+            
+            const { error } = await supabaseClient.auth.updateUser({ password: pwd });
+            
+            btn.disabled = false; btn.innerText = "Passwort speichern & Weiter";
+            
+            if (error) {
+                showMessage("Fehler: " + error.message, true);
+            } else { 
+                showMessage("Passwort erfolgreich gespeichert!"); 
+                ueberspringePasswort();
+            }
+        }
+
+        function ueberspringePasswort() {
+            window.location.hash = ''; // Clean URL
+            supabaseClient.auth.getSession().then(({ data }) => {
+                if(data.session) processUserLogin(data.session.user);
+            });
+        }
+
+        // START-LOGIK
         window.onload = async () => { 
             initDates(); 
             initSettings(); 
-            
-            const hash = window.location.hash;
 
-            // Warten, bis Supabase das Token aus der URL verarbeitet hat
-            if (hash.includes('type=magiclink') || hash.includes('type=invite')) {
-                const { data } = await supabaseClient.auth.getSession();
-                if (data.session) {
-                    checkProfileAndRoute(data.session.user);
+            // Zeige Login als Standard. Die Routen springen um, sobald Session da ist.
+            zeigeSeite('loginPage');
+
+            const { data } = await supabaseClient.auth.getSession();
+            
+            if (data.session) {
+                // Bei Magic-Link Klick vergeben wir noch Passwort falls nötig
+                if (isMagicLinkOrInvite) {
+                    if (!data.session.user.user_metadata?.kuerzel) {
+                        zeigeSeite('setupProfilePage');
+                    } else {
+                        zeigeSeite('setNewPasswordPage');
+                    }
                 } else {
-                    // Fallback, falls Session noch lädt
-                    supabaseClient.auth.onAuthStateChange((event, session) => {
-                        if (event === 'SIGNED_IN' && session) {
-                            checkProfileAndRoute(session.user);
-                        }
-                    });
-                }
-            } else {
-                // Normaler Aufruf ohne Magic Link
-                const { data } = await supabaseClient.auth.getSession();
-                if (data.session) {
                     processUserLogin(data.session.user);
-                } else {
+                }
+            } 
+            
+            // Nur fürs Ausloggen noch den Listener behalten
+            supabaseClient.auth.onAuthStateChange((event, session) => {
+                if (event === 'SIGNED_OUT') {
                     zeigeSeite('loginPage');
                 }
-
-                // Genereller Listener für Logins/Logouts im laufenden Betrieb
-                supabaseClient.auth.onAuthStateChange((event, session) => {
-                    if (event === 'SIGNED_OUT') zeigeSeite('loginPage');
-                    if (event === 'SIGNED_IN' && session) processUserLogin(session.user);
-                });
-            }
+            });
         };
     </script>
 </body>
