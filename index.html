@@ -236,7 +236,7 @@
             <button class="secondary-btn" onclick="navigiereZu('formPage')">Zurück</button>
         </div>
 
-        <div id="loginPage" style="display:none;">
+        <div id="loginPage">
             <div class="logo-container"><img src="logo.png" id="logoImgLogin" alt="CheckGate Logo"></div>
             <div id="loginForm">
                 <h2>Mitarbeiter Login</h2>
@@ -494,47 +494,61 @@
         function saveSetting(key, val) { localStorage.setItem('checkgate_' + key, val); }
 
         // AUTH & ROLLEN
-        async function processUserLogin(user) {
-            try {
-                if (user.user_metadata?.kuerzel) { 
-                    const kuerzel = user.user_metadata.kuerzel.toLowerCase();
-                    document.getElementById('mitarbeiter').value = kuerzel; 
-
-                    let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
-                    
-                    if (error || !data) {
-                        await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
-                        currentUserRole = 'user';
-                    } else {
-                        currentUserRole = data.role;
-                    }
-
-                    const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
-                    
-                    document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
-                    document.getElementById('menuExport').style.display = 'block'; 
-                    
-                    document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
-
-                    if (currentUserRole === 'user') {
-                        document.getElementById('labelExportMitarbeiter').style.display = 'none';
-                        document.getElementById('exportMitarbeiterFilter').style.display = 'none';
-                    } else {
-                        document.getElementById('labelExportMitarbeiter').style.display = 'block';
-                        document.getElementById('exportMitarbeiterFilter').style.display = 'block';
-                    }
-
-                    if (currentUserRole === 'owner') ladeBenutzerRollen();
-                    
-                    ladeDropdownDaten();
-                    ladeNeuenEingang(); 
-                } else {
-                    zeigeSeite('setupProfilePage');
-                }
-            } catch (err) {
-                console.error("Fehler beim Profil-Laden:", err);
-                showMessage("Fehler beim Laden des Profils.", true);
+        async function checkSession() {
+            const url = window.location.href;
+            
+            // WICHTIG: URL-Parameter VOR dem Laden der Session prüfen,
+            // um kurzes Aufblitzen der Login-Seite bei Recovery- oder Invite-Links zu verhindern.
+            if (url.includes('type=recovery') || url.includes('recovery')) {
+                zeigeSeite('setNewPasswordPage');
+                await supabaseClient.auth.getSession(); // Token im Hintergrund laden
+                return;
             }
+            if (url.includes('type=invite') || url.includes('invite')) {
+                zeigeSeite('setupProfilePage');
+                await supabaseClient.auth.getSession(); // Token im Hintergrund laden
+                return;
+            }
+
+            // Normaler Ablauf ohne spezielle Links
+            const { data, error } = await supabaseClient.auth.getSession();
+            if (data.session) processUserLogin(data.session.user); else zeigeSeite('loginPage');
+        }
+
+        async function processUserLogin(user) {
+            if (user.user_metadata?.kuerzel) { 
+                const kuerzel = user.user_metadata.kuerzel.toLowerCase();
+                document.getElementById('mitarbeiter').value = kuerzel; 
+
+                let { data, error } = await supabaseClient.from('benutzer_rollen').select('role').eq('kuerzel', kuerzel).single();
+                
+                if (error || !data) {
+                    await supabaseClient.from('benutzer_rollen').upsert([{ kuerzel: kuerzel, role: 'user' }]);
+                    currentUserRole = 'user';
+                } else {
+                    currentUserRole = data.role;
+                }
+
+                const isAdminOrOwner = (currentUserRole === 'admin' || currentUserRole === 'owner');
+                
+                document.getElementById('menuStatistik').style.display = isAdminOrOwner ? 'block' : 'none';
+                document.getElementById('menuExport').style.display = 'block'; 
+                
+                document.getElementById('ownerSection').style.display = (currentUserRole === 'owner') ? 'block' : 'none';
+
+                if (currentUserRole === 'user') {
+                    document.getElementById('labelExportMitarbeiter').style.display = 'none';
+                    document.getElementById('exportMitarbeiterFilter').style.display = 'none';
+                } else {
+                    document.getElementById('labelExportMitarbeiter').style.display = 'block';
+                    document.getElementById('exportMitarbeiterFilter').style.display = 'block';
+                }
+
+                if (currentUserRole === 'owner') ladeBenutzerRollen();
+                
+                ladeDropdownDaten();
+                ladeNeuenEingang(); 
+            } else zeigeSeite('setupProfilePage');
         }
 
         async function ladeBenutzerRollen() {
@@ -908,25 +922,10 @@
 
         // WEITERE LOGIK (Login, Formular-Berechnungen, Scanner)
         async function login() {
-            const e = document.getElementById('email').value; 
-            const p = document.getElementById('passwort').value;
-            const btn = document.getElementById('loginBtn'); 
-            btn.disabled = true; 
-            btn.innerText = "Prüfe Daten...";
-            
+            const e = document.getElementById('email').value; const p = document.getElementById('passwort').value;
+            const btn = document.getElementById('loginBtn'); btn.disabled = true;
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email: e, password: p });
-            
-            if (error) { 
-                showMessage("Login fehlgeschlagen: " + error.message, true); 
-                btn.disabled = false; 
-                btn.innerText = "Einloggen";
-            } else {
-                btn.disabled = false; 
-                btn.innerText = "Einloggen";
-                document.getElementById('email').value = "";
-                document.getElementById('passwort').value = "";
-                processUserLogin(data.user);
-            }
+            if (error) { showMessage("Login fehlgeschlagen.", true); btn.disabled = false; } else processUserLogin(data.user);
         }
 
         async function logout() { await supabaseClient.auth.signOut(); location.reload(); }
@@ -1047,7 +1046,7 @@
         async function requestPasswordReset() {
             const email = document.getElementById('resetEmail').value.trim();
             if (!email) return alert("Bitte E-Mail angeben.");
-            await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname + '#type=recovery' });
+            await supabaseClient.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname });
             alert("Link gesendet."); toggleAuthMode('login');
         }
 
@@ -1070,10 +1069,7 @@
             } else { 
                 showMessage("Passwort erfolgreich aktualisiert!"); 
                 window.history.replaceState(null, null, window.location.pathname);
-                
-                const { data } = await supabaseClient.auth.getSession();
-                if(data.session) processUserLogin(data.session.user);
-                else zeigeSeite('loginPage');
+                checkSession(); 
             }
         }
 
@@ -1102,41 +1098,22 @@
                 showMessage("Fehler: " + error.message, true);
             } else { 
                 document.getElementById('mitarbeiter').value = nK; 
-                window.history.replaceState(null, null, window.location.pathname); 
-                
-                const { data } = await supabaseClient.auth.getSession();
-                if(data.session) processUserLogin(data.session.user);
-                else zeigeSeite('loginPage');
+                window.history.replaceState(null, null, window.location.pathname); // URL säubern
+                checkSession(); 
             }
         }
 
         // START & ROUTING
-        window.onload = async () => { 
+        window.onload = () => { 
             initDates(); 
             initSettings(); 
             
-            const hash = window.location.hash;
-
-            if (hash.includes('type=recovery')) {
-                zeigeSeite('setNewPasswordPage');
-            } else if (hash.includes('type=invite')) {
-                zeigeSeite('setupProfilePage');
-            } else {
-                const { data } = await supabaseClient.auth.getSession();
-                if (data.session) {
-                    processUserLogin(data.session.user);
-                } else {
-                    zeigeSeite('loginPage');
-                }
-            }
-
+            // Supabase Listener für Events, die erst NACH dem Laden passieren
             supabaseClient.auth.onAuthStateChange((event, session) => {
-                if (event === 'PASSWORD_RECOVERY') {
-                    zeigeSeite('setNewPasswordPage');
-                } else if (event === 'SIGNED_OUT') {
-                    zeigeSeite('loginPage');
-                }
+                if (event === 'PASSWORD_RECOVERY') zeigeSeite('setNewPasswordPage');
             });
+
+            checkSession(); 
         };
     </script>
 </body>
